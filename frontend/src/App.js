@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import AuthPage from './pages/AuthPage';
-import MainPage from './pages/MainPage';
+import AuthPage from './pages/AuthPage/AuthPage';
+import MainPage from './pages/MainPage/MainPage';
 import DegreesPage from './pages/DegreesPage/DegreesPage';
 import MyLearningPage from './pages/MyLearning/MyLearningPage';
 import CoursePage from './pages/CoursePage/CoursePage';
@@ -18,8 +18,8 @@ function App() {
           <Route path="/course" element={<CoursePage />} />
           <Route path="/notifications" element={<NotificationPage />} />
           <Route path="/degrees" element={<DegreesPage />} />
-          <Route path="/" element={<Navigate to="/home" />} />
-          <Route path="*" element={<Navigate to="/home" />} />
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </div>
     </Router>
