@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './MyLearningPage.css';
-
+import CourseReviewPopup from './ReviewPopUp';
 const MyLearningPage = () => {
   // Mockup enrolled courses with completion percentages
   const [enrolledCourses] = useState([
@@ -9,12 +9,10 @@ const MyLearningPage = () => {
       title: "Introduction to JavaScript Programming",
       instructor: "David Mitchell",
       category: "Web Development",
-      completionPercentage: 75,
-      lastAccessed: "2024-11-15",
+      completionPercentage: 100,
       thumbnail: "javascript",
       totalLectures: 42,
-      completedLectures: 32,
-      estimatedTimeLeft: "3 hours"
+      completedLectures: 32
     },
     {
       id: 2,
@@ -22,11 +20,9 @@ const MyLearningPage = () => {
       instructor: "Sarah Johnson",
       category: "Data Science",
       completionPercentage: 35,
-      lastAccessed: "2024-11-10",
       thumbnail: "python",
       totalLectures: 56,
-      completedLectures: 20,
-      estimatedTimeLeft: "8 hours"
+      completedLectures: 20
     },
     {
       id: 3,
@@ -34,11 +30,9 @@ const MyLearningPage = () => {
       instructor: "Michael Wong",
       category: "Design",
       completionPercentage: 100,
-      lastAccessed: "2024-10-28",
       thumbnail: "design",
       totalLectures: 38,
-      completedLectures: 38,
-      estimatedTimeLeft: "0 hours"
+      completedLectures: 38
     },
     {
       id: 4,
@@ -46,17 +40,29 @@ const MyLearningPage = () => {
       instructor: "Elena Rodriguez",
       category: "Artificial Intelligence",
       completionPercentage: 10,
-      lastAccessed: "2024-11-18",
       thumbnail: "ml",
       totalLectures: 65,
-      completedLectures: 7,
-      estimatedTimeLeft: "15 hours"
+      completedLectures: 7
     }
   ]);
 
   // Filter state
   const [activeFilter, setActiveFilter] = useState("all");
+  
+  // Review popup state
+  const [showReviewPopup, setShowReviewPopup] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
+  // Handle review button click
+  const handleReviewClick = (course) => {
+    setSelectedCourse(course);
+    setShowReviewPopup(true);
+  };
+
+  const handleReviewSubmit = (reviewData) => {
+    console.log("Review submitted:", reviewData);
+    // Here you would typically send this data to your backend
+  };
   // Handle filter click
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
@@ -73,12 +79,6 @@ const MyLearningPage = () => {
 
   // Get filtered courses
   const filteredCourses = getFilteredCourses();
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
 
   return (
     <div className="my-learning-page">
@@ -97,7 +97,7 @@ const MyLearningPage = () => {
         <div className="header-right">
           <div className="search-bar">
             <input type="text" placeholder="Search my courses..." />
-            <button className="search-button">Search</button>
+            <button className="search-button1">Search</button>
           </div>
           <div className="profile-icon">JS</div>
         </div>
@@ -131,13 +131,17 @@ const MyLearningPage = () => {
             </div>
             <div className="stat-label">Average Completion</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-number">26</div>
-            <div className="stat-label">Learning Hours</div>
-          </div>
         </div>
 
         {/* Filter Tabs */}
+        {/* Review Popup */}
+      {showReviewPopup && selectedCourse && (
+        <CourseReviewPopup 
+          course={selectedCourse}
+          onClose={() => setShowReviewPopup(false)}
+          onSubmit={handleReviewSubmit}
+        />
+      )}
         <div className="learning-filters">
           <button 
             className={`filter-button ${activeFilter === 'all' ? 'active' : ''}`}
@@ -199,23 +203,24 @@ const MyLearningPage = () => {
                         ></div>
                       </div>
                     </div>
-                    
-                    <div className="course-meta">
-                      <div className="meta-item">
-                        <span className="meta-label">Last accessed:</span>
-                        <span className="meta-value">{formatDate(course.lastAccessed)}</span>
-                      </div>
-                      <div className="meta-item">
-                        <span className="meta-label">Time left:</span>
-                        <span className="meta-value">{course.estimatedTimeLeft}</span>
-                      </div>
-                    </div>
                   </div>
                   <div className="course-actions">
-                    <button className="primary-button">
-                      {course.completionPercentage === 100 ? 'Review Again' : 'Continue Learning'}
-                    </button>
-                    <button className="secondary-button">Course Details</button>
+                    {course.completionPercentage === 100 ? (
+                      <>
+                        <button 
+                          className="primary-button"
+                          onClick={() => handleReviewClick(course)}
+                        >
+                          Review Course
+                        </button>
+                        <button className="secondary-button">Course Details</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="primary-button">Continue Learning</button>
+                        <button className="secondary-button">Course Details</button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -248,6 +253,8 @@ const MyLearningPage = () => {
           </div>
         </div>
       </div>
+
+      
     </div>
   );
 };

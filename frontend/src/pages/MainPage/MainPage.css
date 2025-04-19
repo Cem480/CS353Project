@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 /* Main Page Styles */
 :root {
     --primary-color: #0c6349;
@@ -433,3 +434,428 @@
       padding: 10px;
     }
   }
+=======
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  color: #333;
+  background-color: white;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+/* Header Styles */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  height: 64px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+}
+
+.header-center {
+  flex-grow: 1;
+  margin: 0 20px;
+}
+
+/* Logo */
+.logo h1 {
+  font-size: 1.5rem;
+  color: #0c6349;
+  font-weight: 700;
+}
+
+/* Navigation */
+.main-nav ul {
+  display: flex;
+}
+
+.main-nav a {
+  display: block;
+  padding: 0 15px;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.main-nav a:hover {
+  color: #0c6349;
+}
+
+/* Search Bar */
+.search-bar {
+  display: flex;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px 0 0 4px;
+  font-size: 0.875rem;
+}
+
+.search-bar input:focus {
+  outline: none;
+  background-color: #0f7856;
+}
+
+.search-button1 {
+  padding: 10px 15px;
+  background-color: #0f7856;
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.search-button:hover {
+  background-color: #0f7856;
+}
+
+/* Dropdown Menus */
+.explore-dropdown, .profile-dropdown {
+  position: relative;
+}
+
+.explore-button, .profile-button {
+  background: none;
+  border: none;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.explore-button:hover, .profile-button:hover {
+  color: #0c6349;
+}
+
+.arrow-icon {
+  display: inline-block;
+  margin-left: 5px;
+  border: solid #333;
+  border-width: 0 2px 2px 0;
+  padding: 3px;
+  transition: transform 0.3s;
+}
+
+.arrow-icon.down {
+  transform: rotate(45deg);
+}
+
+.arrow-icon.up {
+  transform: rotate(225deg);
+}
+
+.profile-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #0c6349;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  width: 240px;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.explore-menu {
+  left: 0;
+  right: auto;
+  width: 280px;
+}
+
+.dropdown-menu ul {
+  padding: 8px 0;
+}
+
+.dropdown-menu li a {
+  display: block;
+  padding: 8px 16px;
+  color: #333;
+  transition: background-color 0.3s;
+}
+
+.dropdown-menu li a:hover {
+  background-color: #f5f5f5;
+  color: #0c6349;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 8px 0;
+}
+
+.menu-category {
+  padding: 8px 16px;
+  font-weight: 600;
+  color: #757575;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Profile Menu */
+.profile-info {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+}
+
+.profile-avatar-large {
+  width: 40px;
+  height: 40px;
+  background-color: #0c6349;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  margin-right: 12px;
+}
+
+.profile-details {
+  flex: 1;
+}
+
+.profile-name {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.profile-email {
+  font-size: 0.75rem;
+  color: #757575;
+}
+
+/* Main Content */
+.main-content {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Hero Section */
+.hero-section {
+  background-color: #0c6349;
+  color: white;
+  padding: 40px;
+  border-radius: 8px;
+  margin-bottom: 40px;
+}
+
+.hero-content h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.hero-content p {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+.hero-button {
+  background-color: white;
+  color: #0c6349;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.hero-button:hover {
+  background-color: #f5f5f5;
+}
+
+/* Courses Section */
+.courses-section, .skills-section {
+  margin-bottom: 40px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.view-all {
+  color: #0c6349;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.view-all:hover {
+  color: #0f7856;
+  text-decoration: underline;
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.course-card {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.course-image {
+  height: 140px;
+  background-color: #0c6349;
+  opacity: 0.8;
+}
+
+.course-info {
+  padding: 15px;
+}
+
+.course-title {
+  font-size: 1rem;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: 600;
+}
+
+.course-provider {
+  font-size: 0.875rem;
+  color: #757575;
+  margin-bottom: 10px;
+}
+
+.course-level {
+  display: inline-block;
+  padding: 3px 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #757575;
+}
+
+/* Skills Section */
+.skills-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.skill-card {
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.skill-card:hover {
+  background-color: #e0e0e0;
+}
+
+.skill-card h3 {
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+  color: #0c6349;
+}
+
+.skill-card p {
+  font-size: 0.875rem;
+  color: #757575;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .header-center {
+    display: none;
+  }
+  
+  .main-nav {
+    display: none;
+  }
+  
+  .hero-section {
+    padding: 30px 20px;
+  }
+  
+  .hero-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .courses-grid, .skills-container {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .main-header {
+    padding: 0 10px;
+  }
+  
+  .courses-grid, .skills-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .main-content {
+    padding: 10px;
+  }
+}
+>>>>>>> Stashed changes

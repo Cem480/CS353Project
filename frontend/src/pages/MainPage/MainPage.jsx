@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import './MainPage.css';
 
 const MainPage = () => {
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [isExploreMenuOpen, setIsExploreMenuOpen] = useState(false);
   
   // Mockup course data
   const recommendedCourses = [
@@ -17,17 +15,6 @@ const MainPage = () => {
     { id: 8, title: 'Mobile App Development', provider: 'App Masters', level: 'Intermediate' }
   ];
 
-  const toggleProfileMenu = () => {
-    setIsProfileMenuOpen(!isProfileMenuOpen);
-    // Close explore menu if open
-    if (isExploreMenuOpen) setIsExploreMenuOpen(false);
-  };
-
-  const toggleExploreMenu = () => {
-    setIsExploreMenuOpen(!isExploreMenuOpen);
-    // Close profile menu if open
-    if (isProfileMenuOpen) setIsProfileMenuOpen(false);
-  };
 
   return (
     <div className="main-page">
@@ -37,67 +24,18 @@ const MainPage = () => {
           <div className="logo">
             <h1>LearnHub</h1>
           </div>
-          <div className="explore-dropdown">
-            <button className="explore-button" onClick={toggleExploreMenu}>
-              Explore
-              <span className={`arrow-icon ${isExploreMenuOpen ? 'up' : 'down'}`}></span>
-            </button>
-            {isExploreMenuOpen && (
-              <div className="dropdown-menu explore-menu">
-                <ul>
-                  <li><a href="#">Online Degrees</a></li>
-                  <li><a href="#">Find Your New Career</a></li>
-                  <li><a href="#">For Enterprise</a></li>
-                  <li><a href="#">For Universities</a></li>
-                  <li className="menu-divider"></li>
-                  <li className="menu-category">Browse by Subject</li>
-                  <li><a href="#">Data Science</a></li>
-                  <li><a href="#">Business</a></li>
-                  <li><a href="#">Computer Science</a></li>
-                  <li><a href="#">Health</a></li>
-                  <li><a href="#">Social Sciences</a></li>
-                  <li><a href="#">Arts & Humanities</a></li>
-                  <li><a href="#">Personal Development</a></li>
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="header-center">
-          <div className="search-bar">
-            <input type="text" placeholder="What do you want to learn?" />
-            <button className="search-button">Search</button>
+          <div className="nav-links">
+            <a href="#" className="active">Home</a>
+            <a href="#">Online Degrees</a>
+            <a href="#" >My Learning</a>
           </div>
         </div>
         <div className="header-right">
-          <nav className="main-nav">
-            <ul>
-              <li><a href="#">My Learning</a></li>
-            </ul>
-          </nav>
-          <div className="notifications-icon">🔔</div>
-          <div className="profile-dropdown">
-            <button className="profile-button" onClick={toggleProfileMenu}>
-              <div className="profile-avatar">JS</div>
-            </button>
-            {isProfileMenuOpen && (
-              <div className="dropdown-menu profile-menu">
-                <div className="profile-info">
-                  <div className="profile-avatar-large">JS</div>
-                  <div className="profile-details">
-                    <p className="profile-name">John Smith</p>
-                    <p className="profile-email">john.smith@example.com</p>
-                  </div>
-                </div>
-                <ul>
-                  <li><a href="#">Account Settings</a></li>
-                  <li><a href="#">Help Center</a></li>
-                  <li className="menu-divider"></li>
-                  <li><a href="#">Sign Out</a></li>
-                </ul>
-              </div>
-            )}
+          <div className="search-bar">
+            <input type="text" placeholder="Search my courses..." />
+            <button className="search-button1">Search</button>
           </div>
+          <div className="profile-icon">JS</div>
         </div>
       </header>
 

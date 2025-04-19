@@ -1,0 +1,380 @@
+.course-details-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+  }
+  
+  .course-details-header {
+    padding: 20px 0;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 30px;
+  }
+  
+  .back-button {
+    background: none;
+    border: none;
+    color: #0A6E4D;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px 0;
+    margin-bottom: 15px;
+    font-weight: 500;
+  }
+  
+  .back-button:hover {
+    text-decoration: underline;
+  }
+  
+  .header-content h1 {
+    font-size: 32px;
+    margin: 0 0 10px 0;
+    color: #0A6E4D;
+  }
+  
+  .header-content h3 {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0;
+    color: #555;
+  }
+  
+  .course-details-main {
+    display: flex;
+    gap: 30px;
+  }
+  
+  .course-info-container {
+    flex: 2;
+  }
+  
+  .course-enrollment {
+    flex: 1;
+  }
+  
+  .course-overview {
+    margin-bottom: 40px;
+  }
+  
+  .course-overview h2 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #0A6E4D;
+  }
+  
+  .course-overview p {
+    line-height: 1.6;
+    margin-bottom: 25px;
+  }
+  
+  .course-metadata {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .metadata-item {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .metadata-label {
+    font-weight: bold;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 5px;
+  }
+  
+  .metadata-value {
+    font-size: 16px;
+  }
+  
+  .skills-section h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #0A6E4D;
+  }
+  
+  .skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .skill-tag {
+    background-color: #e6f3f0;
+    color: #0A6E4D;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .course-syllabus {
+    margin-bottom: 40px;
+  }
+  
+  .course-syllabus h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #0A6E4D;
+  }
+  
+  .syllabus-module {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .module-header h4 {
+    font-size: 18px;
+    margin: 0;
+  }
+  
+  .module-duration {
+    background-color: #e6f3f0;
+    color: #0A6E4D;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .module-topics {
+    padding-left: 20px;
+    margin: 0;
+  }
+  
+  .module-topics li {
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  
+  .instructors-section h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #0A6E4D;
+  }
+  
+  .instructors-list {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .instructor-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    width: calc(50% - 10px);
+  }
+  
+  .instructor-image-placeholder {
+    width: 60px;
+    height: 60px;
+    background-color: #e0e0e0;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  
+  .instructor-info h4 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+  }
+  
+  .instructor-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .enrollment-card {
+    position: sticky;
+    top: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    background-color: white;
+  }
+  
+  .enrollment-card h2 {
+    font-size: 20px;
+    margin: 0 0 15px 0;
+    color: #0A6E4D;
+  }
+  
+  .enrollment-price {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .apply-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #0A6E4D;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background-color 0.2s;
+  }
+  
+  .apply-button:hover {
+    background-color: #085940;
+  }
+  
+  .financial-aid-button {
+    width: 100%;
+    padding: 12px;
+    background-color: white;
+    color: #0A6E4D;
+    border: 1px solid #0A6E4D;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: background-color 0.2s;
+  }
+  
+  .financial-aid-button:hover {
+    background-color: #f0f8f6;
+  }
+  
+  .enrollment-details {
+    margin-top: 20px;
+  }
+  
+  .enrollment-detail {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .detail-icon {
+    margin-right: 10px;
+    font-size: 18px;
+  }
+  
+  .financial-aid-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .financial-aid-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  .close-modal {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #555;
+  }
+  
+  .financial-aid-content h2 {
+    margin-top: 0;
+    color: #0A6E4D;
+    margin-bottom: 15px;
+  }
+  
+  .financial-aid-content p {
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .form-group textarea {
+    resize: vertical;
+  }
+  
+  .submit-aid-button {
+    padding: 12px 20px;
+    background-color: #0A6E4D;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .submit-aid-button:hover {
+    background-color: #085940;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 992px) {
+    .course-details-main {
+      flex-direction: column;
+    }
+    
+    .instructor-card {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .course-metadata {
+      grid-template-columns: 1fr;
+    }
+  }

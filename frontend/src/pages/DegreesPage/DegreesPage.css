@@ -1,4 +1,4 @@
-/* Variables */
+
 :root {
     --primary-color: #0c6349;
     --primary-light: #0f7856;
@@ -11,7 +11,6 @@
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
   
-  /* Base Styles */
   * {
     margin: 0;
     padding: 0;
@@ -31,7 +30,6 @@
     color: inherit;
   }
   
-  /* Header Styles */
   .main-header {
     display: flex;
     justify-content: space-between;
@@ -427,8 +425,7 @@
   .degree-learn-more:hover {
     background-color: var(--primary-light);
   }
-  
-  /* Pagination */
+
   .pagination {
     display: flex;
     justify-content: center;

@@ -89,9 +89,10 @@ const AuthPage = () => {
           <div className="auth-form-container">
             <form onSubmit={handleSubmit} className="auth-form">
               {!isLogin && (
+                
                 <div className="form-group">
                   <label htmlFor="username" className="form-label">
-                    Username
+                    FirstName
                   </label>
                   <input
                     type="text"
@@ -100,12 +101,85 @@ const AuthPage = () => {
                     value={formData.username}
                     onChange={handleInputChange}
                     className="form-input"
-                    placeholder="Enter your username"
+                    placeholder="Enter your FirstName"
+                    required={!isLogin}
+                  />
+                </div>
+              )}
+              {!isLogin && (
+                
+                <div className="form-group">
+                  <label htmlFor="username" className="form-label">
+                    MiddleName
+                  </label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="Enter your MiddleName"
                     required={!isLogin}
                   />
                 </div>
               )}
 
+              {!isLogin && (
+                
+                <div className="form-group">
+                  <label htmlFor="username" className="form-label">
+                    LastName
+                  </label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="Enter your LastName"
+                    required={!isLogin}
+                  />
+                </div>
+              )}
+              {!isLogin && (
+                
+                <div className="form-group">
+                  <label htmlFor="username" className="form-label">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="+90XXX-XXX-XX-XX"
+                    required={!isLogin}
+                  />
+                </div>
+              )}
+
+              {!isLogin && (
+                
+                <div className="form-group">
+                  <label htmlFor="username" className="form-label">
+                    Birth Date
+                  </label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="XX/XX/XXXX"
+                    required={!isLogin}
+                  />
+                </div>
+              )}
               <div className="form-group">
                 <label htmlFor="email" className="form-label">
                   Email

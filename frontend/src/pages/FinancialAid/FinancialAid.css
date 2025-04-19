@@ -1,0 +1,461 @@
+.learnhub-header {
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+  }
+  
+  .header-left {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo {
+    font-size: 22px;
+    font-weight: bold;
+    color: #0A6E4D;
+    text-decoration: none;
+    margin-right: 30px;
+  }
+  
+  .main-nav {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .nav-link {
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 5px 0;
+    position: relative;
+  }
+  
+  .nav-link.active {
+    color: #0A6E4D;
+    font-weight: 500;
+  }
+  
+  .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #0A6E4D;
+  }
+  
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .search-container {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .search-input {
+    border: none;
+    padding: 8px 12px;
+    width: 200px;
+    outline: none;
+    font-size: 14px;
+  }
+  
+  .search-button {
+    background-color: #0A6E4D;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .user-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .notification-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  
+  .user-profile {
+    width: 35px;
+    height: 35px;
+    background-color: #0A6E4D;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+  }
+  
+  /* Financial Aid Page Styles */
+  .financial-aid-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+  }
+  
+  .financial-aid-header {
+    margin-bottom: 30px;
+  }
+  
+  .back-button {
+    background: none;
+    border: none;
+    color: #0A6E4D;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px 0;
+    margin-bottom: 15px;
+    font-weight: 500;
+  }
+  
+  .back-button:hover {
+    text-decoration: underline;
+  }
+  
+  .financial-aid-header h1 {
+    font-size: 28px;
+    margin: 0 0 10px 0;
+    color: #0A6E4D;
+  }
+  
+  .course-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 15px 0;
+  }
+  
+  .aid-description {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #555;
+    margin-bottom: 20px;
+  }
+  
+  /* Progress Indicator */
+  .progress-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    position: relative;
+  }
+  
+  .progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+  }
+  
+  .step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #555;
+    z-index: 2;
+  }
+  
+  .step-label {
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+  }
+  
+  .step-connector {
+    position: absolute;
+    top: 15px;
+    right: -50%;
+    width: 100%;
+    height: 2px;
+    background-color: #e0e0e0;
+    z-index: 1;
+  }
+  
+  .progress-step.active .step-number {
+    background-color: #0A6E4D;
+    color: white;
+  }
+  
+  .progress-step.active .step-label {
+    color: #0A6E4D;
+    font-weight: 500;
+  }
+  
+  .progress-step.completed .step-number {
+    background-color: #0A6E4D;
+    color: white;
+  }
+  
+  .progress-step.completed .step-connector {
+    background-color: #0A6E4D;
+  }
+  
+  /* Form Styling */
+  .financial-aid-form {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .step-content {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .step-content h2 {
+    font-size: 22px;
+    margin: 0 0 10px 0;
+    color: #0A6E4D;
+  }
+  
+  .step-description {
+    color: #555;
+    margin-bottom: 25px;
+    line-height: 1.5;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="number"],
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: #0A6E4D;
+    outline: none;
+  }
+  
+  .form-group small {
+    display: block;
+    color: #777;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+  
+  .radio-group {
+    margin-top: 8px;
+  }
+  
+  .radio-label {
+    display: block;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  
+  .radio-label input {
+    margin-right: 10px;
+  }
+  
+  .checkbox-group {
+    margin-top: 25px;
+  }
+  
+  .checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+  }
+  
+  .checkbox-label input {
+    margin-right: 10px;
+    margin-top: 3px;
+  }
+  
+  /* Form Actions */
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  .primary-button {
+    padding: 12px 24px;
+    background-color: #0A6E4D;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .primary-button:hover {
+    background-color: #085940;
+  }
+  
+  .primary-button:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
+  }
+  
+  .secondary-button {
+    padding: 12px 24px;
+    background-color: white;
+    color: #0A6E4D;
+    border: 1px solid #0A6E4D;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .secondary-button:hover {
+    background-color: #f0f8f6;
+  }
+  
+  /* Confirmation Step */
+  .confirmation-step {
+    text-align: center;
+  }
+  
+  .confirmation-icon {
+    width: 70px;
+    height: 70px;
+    background-color: #0A6E4D;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    color: white;
+    font-size: 35px;
+  }
+  
+  .confirmation-message {
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+  }
+  
+  .confirmation-details {
+    text-align: left;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+  }
+  
+  .confirmation-details h3 {
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #0A6E4D;
+  }
+  
+  .confirmation-details ol {
+    padding-left: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .confirmation-details li {
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  
+  .confirmation-details a {
+    color: #0A6E4D;
+    text-decoration: none;
+  }
+  
+  .confirmation-details a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .progress-indicator {
+      flex-wrap: wrap;
+    }
+    
+    .step-connector {
+      display: none;
+    }
+    
+    .progress-step {
+      flex-basis: 50%;
+      margin-bottom: 15px;
+    }
+    
+    .form-actions {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .form-actions button {
+      width: 100%;
+    }
+    
+    .secondary-button {
+      order: 2;
+    }
+    
+    .primary-button {
+      order: 1;
+    }
+  }

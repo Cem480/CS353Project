@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import './DegreesPage.css';
 
 const DegreesPage = () => {
-  // Mockup degree data
   const mockDegrees = [
     {
       id: 1,
@@ -96,7 +95,6 @@ const DegreesPage = () => {
     }
   ];
 
-  // State for filter values
   const [filters, setFilters] = useState({
     title: "",
     description: "",
@@ -115,10 +113,8 @@ const DegreesPage = () => {
     level: ""
   });
 
-  // State for showing filter section on mobile
   const [showFilters, setShowFilters] = useState(false);
 
-  // Handle filter input changes
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFilters(prevFilters => ({
@@ -127,28 +123,21 @@ const DegreesPage = () => {
     }));
   };
 
-  // Apply filters function (mockup - not actually filtering)
   const getFilteredDegrees = () => {
-    // In a real app, we would filter the degrees based on filters state
-    // For this mockup, we'll just return all degrees
     return mockDegrees;
   };
 
-  // Get filtered degrees
   const filteredDegrees = getFilteredDegrees();
 
-  // Toggle filters visibility on mobile
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
 
-  // Format date for display
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
   
-  // Format price for display
   const formatPrice = (price) => {
     if (price === 0) return "Free";
     return `$${price.toLocaleString()}`;
