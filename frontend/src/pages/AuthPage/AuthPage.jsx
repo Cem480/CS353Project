@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './AuthPage.css';
+import { loginUser, registerUser } from '../../services/auth';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,11 +19,33 @@ const AuthPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // This would be where you integrate your authentication logic
+    
+    try {
+      if (isLogin) {
+        const user = await loginUser(formData.email, formData.password);
+        console.log('Logged in successfully:', user);
+        // Redirect to homepage or dashboard here
+      } else {
+        if (formData.password !== formData.confirmPassword) {
+          alert("Passwords don't match");
+          return;
+        }
+        const newUser = await registerUser({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        });
+        console.log('Registered successfully:', newUser);
+        // Maybe automatically login or redirect to login page
+      }
+    } catch (error) {
+      console.error('Error:', error.message);
+      alert(error.message);
+    }
   };
+  
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
