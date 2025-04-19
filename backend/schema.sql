@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS "user";
-
 CREATE TABLE "user" (
     ID VARCHAR(8),
     first_name VARCHAR(50) NOT NULL,

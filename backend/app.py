@@ -7,9 +7,9 @@ app = Flask(__name__)
 
 load_dotenv()
 
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 
@@ -20,8 +20,8 @@ because we can not drop a database that we currently use.
 def connect_postgres_db():
     return psycopg2.connect(
         dbname="postgres",
-        user=DB_USER,
-        password=DB_PASSWORD,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD,
         host=DB_HOST,
         port=DB_PORT
     )
@@ -29,9 +29,9 @@ def connect_postgres_db():
 # To connect learn_hub_db
 def connect_project_db():
     return psycopg2.connect(
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
+        dbname=POSTGRES_DB,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD,
         host=DB_HOST,
         port=DB_PORT
     )
@@ -46,16 +46,16 @@ def reset_database():
     cursor.execute(f"""
         SELECT pg_terminate_backend(pg_stat_activity.pid)
         FROM pg_stat_activity
-        WHERE pg_stat_activity.datname = '{DB_NAME}'
+        WHERE pg_stat_activity.datname = '{POSTGRES_DB}'
             AND pid <> pg_backend_pid();
     """)
-    print(f"Disconnected all users from {DB_NAME}")
+    print(f"Disconnected all users from {POSTGRES_DB}")
 
-    cursor.execute(f"DROP DATABASE IF EXISTS {DB_NAME};")
-    print(f"Dropped database {DB_NAME}")
+    cursor.execute(f"DROP DATABASE IF EXISTS {POSTGRES_DB};")
+    print(f"Dropped database {POSTGRES_DB}")
 
-    cursor.execute(f"CREATE DATABASE {DB_NAME};")
-    print(f"Created database {DB_NAME}")
+    cursor.execute(f"CREATE DATABASE {POSTGRES_DB};")
+    print(f"Created database {POSTGRES_DB}")
 
     cursor.close()
     conn.close()
@@ -82,4 +82,4 @@ def home():
 if __name__ == '__main__':
     reset_database()     # Clean full database first
     initialize_tables()  # Create tables
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
