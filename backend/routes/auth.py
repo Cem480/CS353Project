@@ -68,6 +68,7 @@ def register():
                     "success": True,
                     "message": "User registered successfully",
                     "user_id": user_id,
+                    "role": data["role"],
                 }
             ),
             201,
