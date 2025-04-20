@@ -8,11 +8,12 @@ CREATE TABLE "user" (
     password VARCHAR(100) NOT NULL,
     registration_date DATE NOT NULL,
     birth_date DATE NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('student', 'instructor', 'admin')),
     PRIMARY KEY (ID),
     CHECK (registration_date <= CURRENT_DATE)
 );
 
-INSERT INTO "user" (ID, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date)
+INSERT INTO "user" (ID, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
 VALUES 
 (
     'U0000001',
@@ -23,5 +24,6 @@ VALUES
     'john.doe@example.com',
     'password123', -- (later we will hash passwords)
     CURRENT_DATE,
-    '1995-06-15'
+    '1995-06-15',
+    'student'
 );
