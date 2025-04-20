@@ -1,5 +1,3 @@
-// src/services/api/auth.js
-
 const BASE_URL = 'http://localhost:5000';
 
 // Function to login a user
