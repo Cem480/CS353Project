@@ -23,3 +23,9 @@ yarn-debug.log*
 yarn-error.log*
 
 .env
+
+# SQL Tools session files
+*.session.sql
+
+# VS Code settings
+.vscode/
