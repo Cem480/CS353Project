@@ -1,10 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-<<<<<<< Updated upstream
 import AuthPage from './pages/AuthPage/AuthPage';
-=======
-import AuthPage from './pages/AuthPage';
->>>>>>> Stashed changes
 import MainPage from './pages/MainPage/MainPage';
 import DegreesPage from './pages/DegreesPage/DegreesPage';
 import MyLearningPage from './pages/MyLearning/MyLearningPage';
@@ -14,29 +10,38 @@ import CourseDetails from './pages/CourseDetails/CourseDetails';
 import FinancialAid from './pages/FinancialAid/FinancialAid';
 import TransactionPage from './pages/TransactionPage/TransactionPage';
 import InstructorApplicationsPage from './pages/Applications/InstructorApplicationsPage';
+import { isLoggedIn } from './services/auth';
 
 function App() {
+  // Simple Protected Route component
+  const ProtectedRoute = ({ element }) => {
+    return isLoggedIn() ? element : <Navigate to="/login" />;
+  };
+
   return (
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/home" element={<MainPage />} />
-          <Route path="/my-learning" element={<MyLearningPage />} />
-          <Route path="/course" element={<CoursePage />} />
-          <Route path="/notifications" element={<NotificationPage />} />
-          <Route path="/course-details" element={<CourseDetails />} />
-          <Route path="/FinancialAid" element={<FinancialAid />} />
-          <Route path="/Transaction" element={<TransactionPage />} />
-          <Route path="/degrees" element={<DegreesPage />} />
-<<<<<<< Updated upstream
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="*" element={<Navigate to="/login" />} />
-=======
-          <Route path="/applicaitons" element={<InstructorApplicationsPage />} />
-          <Route path="/" element={<Navigate to="/home" />} />
-          <Route path="*" element={<Navigate to="/home" />} />
->>>>>>> Stashed changes
+          {/* Public routes */}
+          <Route 
+            path="/login" 
+            element={isLoggedIn() ? <Navigate to="/home" /> : <AuthPage />} 
+          />
+          
+          {/* Protected routes */}
+          <Route path="/home" element={<ProtectedRoute element={<MainPage />} />} />
+          <Route path="/my-learning" element={<ProtectedRoute element={<MyLearningPage />} />} />
+          <Route path="/course" element={<ProtectedRoute element={<CoursePage />} />} />
+          <Route path="/notifications" element={<ProtectedRoute element={<NotificationPage />} />} />
+          <Route path="/course-details" element={<ProtectedRoute element={<CourseDetails />} />} />
+          <Route path="/financial-aid" element={<ProtectedRoute element={<FinancialAid />} />} />
+          <Route path="/transaction" element={<ProtectedRoute element={<TransactionPage />} />} />
+          <Route path="/degrees" element={<ProtectedRoute element={<DegreesPage />} />} />
+          <Route path="/applications" element={<ProtectedRoute element={<InstructorApplicationsPage />} />} />
+          
+          {/* Default routes */}
+          <Route path="/" element={isLoggedIn() ? <Navigate to="/home" /> : <Navigate to="/login" />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </Router>

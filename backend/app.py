@@ -20,8 +20,7 @@ because we can not drop a database that we currently use.
 """
 
 app.secret_key = os.getenv("SECRET_KEY", "your_default_secret_key")
-CORS(app)
-
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 def reset_database():
     conn = connect_postgres_db()

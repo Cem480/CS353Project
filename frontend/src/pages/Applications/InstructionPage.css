@@ -16,8 +16,7 @@
     flex-direction: column;
     min-height: 100vh;
   }
-  
-  /* Header styles */
+
   .instructor-header {
     display: flex;
     justify-content: space-between;
@@ -156,10 +155,9 @@
     color: #666666;
     cursor: not-allowed;
     opacity: 0.7;
-    pointer-events: none; /* This prevents any click events */
+    pointer-events: none; 
   }
-  
-  /* Optional: you can style each button type differently if needed */
+
   .approve-btn.disabled {
     border-color: #cccccc;
   }
@@ -231,8 +229,7 @@
   .view-all-btn:hover {
     background-color: #ffa000;
   }
-  
-  /* Applications grid */
+
   .applications-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -354,8 +351,6 @@
   .details-btn:hover, .approve-btn:hover, .reject-btn:hover {
     opacity: 0.9;
   }
-  
-  /* Table styles */
   .applications-table {
     width: 100%;
     border-collapse: collapse;

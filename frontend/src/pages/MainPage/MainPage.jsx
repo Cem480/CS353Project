@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MainPage.css';
+import { getCurrentUser, logout } from '../../services/auth';
 
 const MainPage = () => {
+  const navigate = useNavigate();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  
+  // Get current user data
+  const userData = getCurrentUser();
   
   // Mockup course data
   const recommendedCourses = [
@@ -15,6 +22,18 @@ const MainPage = () => {
     { id: 8, title: 'Mobile App Development', provider: 'App Masters', level: 'Intermediate' }
   ];
 
+  // Assuming user's first name is John for demo purposes
+  // In a real app, you might extract this from the user ID or other stored data
+  const firstName = "John";
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const toggleProfileMenu = () => {
+    setShowProfileMenu(!showProfileMenu);
+  };
 
   return (
     <div className="main-page">
@@ -25,9 +44,9 @@ const MainPage = () => {
             <h1>LearnHub</h1>
           </div>
           <div className="nav-links">
-            <a href="#" className="active">Home</a>
-            <a href="#">Online Degrees</a>
-            <a href="#" >My Learning</a>
+            <a href="/home" className="active">Home</a>
+            <a href="/degrees">Online Degrees</a>
+            <a href="/my-learning">My Learning</a>
           </div>
         </div>
         <div className="header-right">
@@ -35,7 +54,35 @@ const MainPage = () => {
             <input type="text" placeholder="Search my courses..." />
             <button className="search-button1">Search</button>
           </div>
-          <div className="profile-icon">JS</div>
+          <div className="profile-dropdown">
+            <div className="profile-icon" onClick={toggleProfileMenu}>
+              {userData ? userData.user_id.charAt(0) : 'U'}
+            </div>
+            
+            {showProfileMenu && (
+              <div className="dropdown-menu">
+                <div className="profile-info">
+                  <div className="profile-avatar-large">
+                    {userData ? userData.user_id.charAt(0) : 'U'}
+                  </div>
+                  <div className="profile-details">
+                    <div className="profile-name">{firstName}</div>
+                    <div className="profile-role">{userData ? userData.role : 'Student'}</div>
+                  </div>
+                </div>
+                <ul>
+                  <li><a href="/my-learning">My Learning</a></li>
+                  <li><a href="/notifications">Notifications</a></li>
+                  <li><a href="/transaction">Transactions</a></li>
+                  {userData && userData.role === 'instructor' && (
+                    <li><a href="/applications">Instructor Applications</a></li>
+                  )}
+                  <div className="menu-divider"></div>
+                  <li><a href="#" onClick={handleLogout}>Logout</a></li>
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -44,7 +91,7 @@ const MainPage = () => {
         {/* Hero Section */}
         <section className="hero-section">
           <div className="hero-content">
-            <h2>Welcome back, John!</h2>
+            <h2>Welcome back, {firstName}!</h2>
             <p>Ready to continue your learning journey?</p>
             <button className="hero-button">Resume Learning</button>
           </div>
