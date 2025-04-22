@@ -9,23 +9,23 @@ CREATE TABLE "user" (
     registration_date DATE NOT NULL,
     birth_date DATE NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('student', 'instructor', 'admin')),
-    PRIMARY KEY (ID),
+    PRIMARY KEY (id),
     CHECK (registration_date <= CURRENT_DATE)
 );
 
 CREATE TABLE admin (
-    ID VARCHAR(8),
+    id VARCHAR(8),
     report_count INTEGER DEFAULT 0 CHECK (report_count >= 0) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id) REFERENCES "user"(id)
 );
 
 CREATE TABLE instructor (
-    ID VARCHAR(8),
+    id VARCHAR(8),
     i_rating FLOAT CHECK (i_rating BETWEEN 0 AND 5),
     course_count INTEGER DEFAULT 0 CHECK (course_count >= 0),
     PRIMARY KEY (id),
-    FOREIGN KEY (id) REFERENCES "user"(ID)
+    FOREIGN KEY (id) REFERENCES "user"(id)
 );
 
 CREATE TABLE course(

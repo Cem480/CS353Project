@@ -1,11 +1,12 @@
 from flask import Blueprint, request, jsonify, session
 from db import connect_project_db
 import psycopg2.extras
+import uuid
 from passlib.context import CryptContext
 
 course_bp = Blueprint("create_course", __name__)
 
-@course_bp.route("/api/course", methods=["POST"])
+@course_bp.route("/api/add/course", methods=["POST"])
 def create_overall_course():
     data = request.json
     required_fields = [
@@ -25,9 +26,7 @@ def create_overall_course():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     try:
-        cursor.execute('SELECT COUNT(*) FROM "course"')
-        course_count = cursor.fetchone()[0]
-        course_id = f"C{course_count + 1:07d}"
+        course_id = f"C{uuid.uuid4().hex[:7].upper()}"  # UUID-based course_id   Total length = 8
 
         cursor.execute(
             """
@@ -58,12 +57,13 @@ def create_overall_course():
 
     except Exception as e:
         conn.rollback()
+        print(f"[ERROR] {str(e)}")
         return jsonify({"success": False, "message": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
 
-@course_bp.route("/api/course/<course_id>/section", methods=["POST"])
+@course_bp.route("/api/add/course/<course_id>/section", methods=["POST"])
 def add_section(course_id):
     data = request.json
     required_fields = [
@@ -85,9 +85,7 @@ def add_section(course_id):
         if not course:
             return jsonify({"success": False, "message": "Course not found"}), 404
 
-        cursor.execute('SELECT COUNT(*) FROM "section" WHERE course_id = %s', (course_id,))
-        section_count = cursor.fetchone()[0]
-        sec_id = f"S{section_count + 1:07d}"
+        sec_id = f"S{uuid.uuid4().hex[:7].upper()}"
 
         cursor.execute(
             'SELECT * FROM "section" WHERE course_id = %s AND order_number = %s', 
@@ -132,12 +130,13 @@ def add_section(course_id):
 
     except Exception as e:
         conn.rollback()
+        print(f"[ERROR] {str(e)}")
         return jsonify({"success": False, "message": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
 
-@course_bp.route("/api/course/<course_id>/section/<sec_id>/content", methods=["POST"])
+@course_bp.route("/api/add/course/<course_id>/section/<sec_id>/content", methods=["POST"])
 def add_content(course_id, sec_id):
     data = request.json
     required_fields = [
@@ -168,12 +167,7 @@ def add_content(course_id, sec_id):
         if not section:
             return jsonify({"success": False, "message": "Section not found"}), 404
 
-        cursor.execute(
-            'SELECT COUNT(*) FROM "content" WHERE course_id = %s AND sec_id = %s', 
-            (course_id, sec_id)
-        )
-        content_count = cursor.fetchone()[0]
-        content_id = f"CT{content_count + 1:06d}"
+        content_id = f"CT{uuid.uuid4().hex[:6].upper()}"    # CT + 6 = 8 total
 
         cursor.execute(
             """
@@ -212,6 +206,7 @@ def add_content(course_id, sec_id):
 
     except Exception as e:
         conn.rollback()
+        print(f"[ERROR] {str(e)}")
         return jsonify({"success": False, "message": str(e)}), 500
     finally:
         cursor.close()
