@@ -67,8 +67,10 @@ def home():
 
 
 from routes.auth import auth_bp
+from routes.create_course import course_bp
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(course_bp)
 
 RESET_DB = os.getenv("RESET_DB", "false").lower() == "true"
 

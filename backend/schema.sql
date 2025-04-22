@@ -13,6 +13,40 @@ CREATE TABLE "user" (
     CHECK (registration_date <= CURRENT_DATE)
 );
 
+CREATE TABLE admin (
+    ID VARCHAR(8),
+    report_count INTEGER DEFAULT 0 CHECK (report_count >= 0) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES "user"(id)
+);
+
+CREATE TABLE instructor (
+    ID VARCHAR(8),
+    i_rating FLOAT CHECK (i_rating BETWEEN 0 AND 5),
+    course_count INTEGER DEFAULT 0 CHECK (course_count >= 0),
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES "user"(ID)
+);
+
+CREATE TABLE course(
+    course_id VARCHAR(8),
+    title VARCHAR(150) NOT NULL,
+    description VARCHAR(2000),
+    category VARCHAR(50),
+    price INTEGER CHECK (price >= 0),
+    creation_date DATE,
+    last_update_date DATE,
+    status VARCHAR(20) CHECK (status IN ('draft', 'pending', 'accepted', 'rejected')) DEFAULT 'draft',
+    enrollment_count INTEGER CHECK (enrollment_count >= 0),
+    qna_link VARCHAR(100),
+    difficulty_level INTEGER CHECK (difficulty_level BETWEEN 1 AND 5),
+    creator_id VARCHAR(8) NOT NULL,
+    approver_id VARCHAR(8),
+    PRIMARY KEY (course_id),
+    FOREIGN KEY (creator_id) REFERENCES instructor(id),
+    FOREIGN KEY (approver_id) REFERENCES admin(id)
+);
+
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
 VALUES 
 (
@@ -27,3 +61,22 @@ VALUES
     '1995-06-15',
     'student'
 );
+
+INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
+VALUES 
+(
+    'U0000002',
+    'Alice',
+    'M.',
+    'Smith',
+    '555-5678',
+    'alice.smith@example.com',
+    'password456', -- use hashed password in production
+    CURRENT_DATE,
+    '1988-04-22',
+    'instructor'
+);
+
+INSERT INTO instructor (id, i_rating, course_count)
+VALUES ('U0000002', 0.0, 0);
+
