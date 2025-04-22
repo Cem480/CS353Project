@@ -47,6 +47,17 @@ CREATE TABLE course(
     FOREIGN KEY (approver_id) REFERENCES admin(id)
 );
 
+CREATE TABLE section(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    title VARCHAR(150) NOT NULL,
+    description TEXT,
+    order_number INTEGER NOT NULL CHECK (order_number >= 0),
+    allocated_time INTEGER CHECK (allocated_time >= 0),
+    PRIMARY KEY (course_id, sec_id),
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+);
+
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
 VALUES 
 (

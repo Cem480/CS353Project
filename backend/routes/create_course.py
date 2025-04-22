@@ -61,4 +61,78 @@ def create_overall_course():
         return jsonify({"success": False, "message": str(e)}), 500
     finally:
         cursor.close()
-        conn.close()  
+        conn.close()
+
+@course_bp.route("/api/course/<course_id>/section", methods=["POST"])
+def add_section(course_id):
+    data = request.json
+    required_fields = [
+        "title",
+        "description", 
+        "order_number",
+        "allocated_time"
+    ]
+
+    if not all(field in data for field in required_fields):
+        return jsonify({"success": False, "message": "Missing required fields"}), 400
+
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute('SELECT * FROM "course" WHERE course_id = %s', (course_id,))
+        course = cursor.fetchone()
+        if not course:
+            return jsonify({"success": False, "message": "Course not found"}), 404
+
+        cursor.execute('SELECT COUNT(*) FROM "section" WHERE course_id = %s', (course_id,))
+        section_count = cursor.fetchone()[0]
+        sec_id = f"S{section_count + 1:07d}"
+
+        cursor.execute(
+            'SELECT * FROM "section" WHERE course_id = %s AND order_number = %s', 
+            (course_id, data["order_number"])
+        )
+        existing_section = cursor.fetchone()
+        if existing_section:
+            return jsonify({
+                "success": False, 
+                "message": f"A section with order number {data['order_number']} already exists for this course"
+            }), 400
+
+        cursor.execute(
+            """
+            INSERT INTO section (
+                course_id, sec_id, title, description,
+                order_number, allocated_time
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                course_id,
+                sec_id,
+                data["title"],
+                data["description"],
+                int(data["order_number"]),
+                int(data["allocated_time"])
+            ),
+        )
+
+        # Update last_update_date in course table (as we discussed earlier)
+        cursor.execute(
+            """
+            UPDATE course 
+            SET last_update_date = CURRENT_DATE
+            WHERE course_id = %s
+            """,
+            (course_id,)
+        )
+
+        conn.commit()
+        return jsonify({"success": True, "section_id": sec_id, "course_id": course_id}), 201
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
