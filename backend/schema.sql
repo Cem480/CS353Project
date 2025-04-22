@@ -58,6 +58,17 @@ CREATE TABLE section(
     FOREIGN KEY (course_id) REFERENCES course(course_id)
 );
 
+CREATE TABLE content(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    title VARCHAR(150) NOT NULL,
+    allocated_time INTEGER CHECK (allocated_time >= 0),
+    content_type VARCHAR(20) CHECK(content_type IN ('task', 'document', 'visual_material')),
+    PRIMARY KEY (course_id, sec_id, content_id),
+    FOREIGN KEY (course_id, sec_id) REFERENCES section(course_id, sec_id)
+);
+
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
 VALUES 
 (
