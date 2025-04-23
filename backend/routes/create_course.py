@@ -299,3 +299,67 @@ def add_content(course_id, sec_id):
     finally:
         cursor.close()
         conn.close()
+
+
+@course_bp.route("/api/add/course/<course_id>/section/<sec_id>/content/<content_id>/question", methods=["POST"])
+def add_question(course_id, sec_id, content_id):
+    data = request.json
+    question_type = data.get("question_type")  # "multiple_choice" or "open_ended"
+    question_id = f"Q{uuid.uuid4().hex[:6].upper()}"
+
+    required_fields = ["question_body", "max_time", "question_type"]
+    if not all(field in data for field in required_fields):
+        return jsonify({"success": False, "message": "Missing required fields"}), 400
+
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        # Insert into `question`
+        cursor.execute("""
+            INSERT INTO question (
+                course_id, sec_id, content_id, question_id, question_body, max_time
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+        """, (
+            course_id, sec_id, content_id, question_id,
+            data["question_body"], int(data["max_time"])
+        ))
+
+        if question_type == "multiple_choice":
+            if "correct_answer" not in data:
+                raise Exception("Missing correct_answer for multiple choice")
+            cursor.execute("""
+                INSERT INTO multiple_choice (
+                    course_id, sec_id, content_id, question_id, correct_answer
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (
+                course_id, sec_id, content_id, question_id, data["correct_answer"]
+            ))
+
+        elif question_type == "open_ended":
+            if "answer" not in data:
+                raise Exception("Missing answer for open-ended question")
+            cursor.execute("""
+                INSERT INTO open_ended (
+                    course_id, sec_id, content_id, question_id, answer
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (
+                course_id, sec_id, content_id, question_id, data["answer"]
+            ))
+        else:
+            raise Exception("Invalid question_type")
+
+        conn.commit()
+        return jsonify({
+            "success": True,
+            "question_id": question_id,
+            "question_type": question_type
+        }), 201
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+

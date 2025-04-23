@@ -123,6 +123,40 @@ CREATE TABLE visual_material(
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
 );
 
+CREATE TABLE question (
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    question_id VARCHAR(8),
+    question_body VARCHAR(2000),
+    max_time INTEGER CHECK (max_time >= 0),
+    PRIMARY KEY (course_id, sec_id, content_id, question_id),
+    FOREIGN KEY (course_id, sec_id, content_id)
+        REFERENCES assessment(course_id, sec_id, content_id)
+);
+
+CREATE TABLE multiple_choice (
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    question_id VARCHAR(8),
+    correct_answer CHAR(1) CHECK (correct_answer IN ('A', 'B', 'C', 'D', 'E')),
+    PRIMARY KEY (course_id, sec_id, content_id, question_id),
+    FOREIGN KEY (course_id, sec_id, content_id, question_id)
+        REFERENCES question(course_id, sec_id, content_id, question_id)
+);
+
+CREATE TABLE open_ended (
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    question_id VARCHAR(8),
+    answer TEXT,
+    PRIMARY KEY (course_id, sec_id, content_id, question_id),
+    FOREIGN KEY (course_id, sec_id, content_id, question_id)
+        REFERENCES question(course_id, sec_id, content_id, question_id)
+);
+
 
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
 VALUES 
