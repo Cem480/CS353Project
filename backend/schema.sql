@@ -69,6 +69,61 @@ CREATE TABLE content(
     FOREIGN KEY (course_id, sec_id) REFERENCES section(course_id, sec_id)
 );
 
+CREATE TABLE task(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    passing_grade INTEGER NOT NULL CHECK (passing_grade BETWEEN 0 AND 100),
+    max_time INTEGER CHECK (max_time > 0),
+    task_type VARCHAR(20) CHECK (task_type IN ('assessment', 'assignment')),
+    percentage INTEGER NOT NULL CHECK (percentage BETWEEN 0 AND 100),
+    PRIMARY KEY (course_id, sec_id, content_id),
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
+);
+
+CREATE TABLE assessment(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    question_count INTEGER CHECK (question_count >= 0),
+    PRIMARY KEY (course_id, sec_id, content_id),
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES task(course_id, sec_id, content_id)
+);
+
+CREATE TABLE assignment(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    upload_material VARCHAR(10) NOT NULL CHECK (upload_material IN 
+        ('zip', 'pdf', 'xls', 'xlsx', 'doc', 'docx', 'txt', 'ppt', 'pptx')),
+    body TEXT,
+    PRIMARY KEY (course_id, sec_id, content_id),
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES task(course_id, sec_id, content_id),
+    CHECK (end_date > start_date)
+);
+
+CREATE TABLE document(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    body TEXT,  -- Store actual file content here
+    PRIMARY KEY (course_id, sec_id, content_id),
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
+);
+
+CREATE TABLE visual_material(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    duration INTEGER CHECK (duration >= 0),
+    body TEXT,  -- Binary file data
+    PRIMARY KEY (course_id, sec_id, content_id),
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
+);
+
+
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
 VALUES 
 (
