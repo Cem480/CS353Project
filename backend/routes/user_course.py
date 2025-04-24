@@ -152,3 +152,4 @@ def add_comment(course_id, sec_id, content_id, user_id):
 
 
 # Certificate will be added
+# Financial aid will be added

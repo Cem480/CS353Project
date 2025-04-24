@@ -230,6 +230,189 @@ CREATE TABLE comment(
 );
 
 
+-- VIEWS
+-- User with computed age
+CREATE VIEW user_with_age AS
+SELECT 
+    id,
+    first_name,
+    last_name,
+    birth_date,
+    EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM birth_date) AS age
+FROM "user";
+
+-- Instructor_with_experience_year
+CREATE VIEW instructor_with_experience_year AS
+SELECT 
+    i.ID,
+    u.first_name,
+    u.last_name,
+    EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM u.registration_date) AS experience_year
+FROM instructor i
+JOIN "user" u ON i.ID = u.ID;
+
+-- Course_with_is_free
+CREATE VIEW course_with_is_free AS
+SELECT
+    course_id,
+    title,
+    price,
+    CASE 
+        WHEN price = 0 THEN TRUE
+        ELSE FALSE
+    END AS is_free
+FROM course;
+
+-- Course content count
+CREATE VIEW course_content_count AS 
+SELECT 
+    e.student_id, 
+    c.course_id, 
+    SUM(CASE WHEN ct.content_id IS NULL THEN 0 ELSE 1 END) AS total_content_count,
+    SUM(CASE WHEN cmp.is_completed = TRUE THEN 1 ELSE 0 END) AS completed_content_count
+FROM enroll e
+LEFT JOIN course c ON e.course_id = c.course_id
+LEFT JOIN section s ON s.course_id = c.course_id
+LEFT JOIN content ct ON ct.course_id = s.course_id AND ct.sec_id = s.sec_id
+LEFT JOIN complete cmp 
+    ON cmp.course_id = ct.course_id 
+   AND cmp.sec_id = ct.sec_id 
+   AND cmp.content_id = ct.content_id 
+   AND cmp.student_id = e.student_id 
+   AND cmp.is_completed = TRUE
+GROUP BY e.student_id, c.course_id;
+
+
+-- TRIGGERS
+-- Update instructor rating when feedback is added
+CREATE OR REPLACE FUNCTION update_instructor_rating()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE instructor
+    SET i_rating = (
+        SELECT AVG(f.rating)
+        FROM feedback f
+        JOIN course c ON f.course_id = c.course_id
+        WHERE c.creator_id = instructor.id
+    )
+    WHERE instructor.id = (
+        SELECT c.creator_id
+        FROM course c
+        WHERE c.course_id = NEW.course_id
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_i_rating
+AFTER INSERT ON feedback
+FOR EACH ROW
+EXECUTE FUNCTION update_instructor_rating();
+
+-- Update enrollment count when a student enrolls
+CREATE OR REPLACE FUNCTION update_enrollment_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE course
+    SET enrollment_count = enrollment_count + 1
+    WHERE course_id = NEW.course_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER enrollment_count_updater
+AFTER INSERT ON enroll
+FOR EACH ROW
+EXECUTE FUNCTION update_enrollment_count();
+
+-- Update section allocated_time after new content is added
+CREATE OR REPLACE FUNCTION update_section_allocated_time()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE section
+    SET allocated_time = (
+        SELECT SUM(c.allocated_time)
+        FROM content c
+        WHERE c.course_id = NEW.course_id AND c.sec_id = NEW.sec_id
+    )
+    WHERE section.course_id = NEW.course_id
+    AND section.sec_id = NEW.sec_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_section_allocated_time
+AFTER INSERT ON content
+FOR EACH ROW
+EXECUTE FUNCTION update_section_allocated_time();
+
+-- Update enroll progress_rate after a content is completed
+CREATE OR REPLACE FUNCTION update_progress_rate()
+RETURNS TRIGGER AS $$
+DECLARE
+    total_count INTEGER;
+    completed_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO total_count
+    FROM content
+    WHERE course_id = NEW.course_id;
+
+    SELECT COUNT(*) INTO completed_count
+    FROM complete
+    WHERE course_id = NEW.course_id AND student_id = NEW.student_id AND is_completed = TRUE;
+
+    UPDATE enroll
+    SET progress_rate = CASE
+        WHEN total_count = 0 THEN 0
+        ELSE ROUND(100.0 * completed_count / total_count)
+    END
+    WHERE course_id = NEW.course_id AND student_id = NEW.student_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_progress_rate
+AFTER INSERT OR UPDATE ON complete
+FOR EACH ROW
+WHEN (NEW.is_completed = TRUE)
+EXECUTE FUNCTION update_progress_rate();
+
+-- Update enroll progress_rate after new content is added
+CREATE OR REPLACE FUNCTION update_progress_rate_on_content()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Update progress_rate for all students enrolled in the course
+    UPDATE enroll
+    SET progress_rate = CASE 
+        WHEN total.total_count = 0 THEN 0
+        ELSE ROUND(100.0 * COALESCE(completed.completed_count, 0) / total.total_count)
+    END
+    FROM (
+        SELECT course_id, COUNT(*) AS total_count
+        FROM content
+        WHERE course_id = NEW.course_id
+        GROUP BY course_id
+    ) AS total,
+    (
+        SELECT course_id, student_id, COUNT(*) AS completed_count
+        FROM complete
+        WHERE course_id = NEW.course_id AND is_completed = TRUE
+        GROUP BY course_id, student_id
+    ) AS completed
+    WHERE enroll.course_id = NEW.course_id
+    AND enroll.course_id = total.course_id
+    AND enroll.student_id = completed.student_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_progress_rate_on_content
+AFTER INSERT ON content
+FOR EACH ROW
+EXECUTE FUNCTION update_progress_rate_on_content();
+
+
 -- INSERTIONS
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
 VALUES 
