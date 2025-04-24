@@ -412,6 +412,23 @@ AFTER INSERT ON content
 FOR EACH ROW
 EXECUTE FUNCTION update_progress_rate_on_content();
 
+-- Update course count of instructor when a new course is added
+CREATE OR REPLACE FUNCTION update_instructor_course_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE instructor
+    SET course_count = course_count + 1
+    WHERE id = NEW.creator_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_instructor_course_count
+AFTER INSERT ON course
+FOR EACH ROW
+EXECUTE FUNCTION update_instructor_course_count();
+
 
 -- INSERTIONS
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)

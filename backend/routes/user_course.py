@@ -135,6 +135,13 @@ def add_comment(course_id, sec_id, content_id, user_id):
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     try:
+        # Check if user is enrolled
+        cursor.execute("""
+            SELECT 1 FROM enroll WHERE course_id = %s AND student_id = %s
+        """, (course_id, user_id))
+        if cursor.fetchone() is None:
+            return jsonify({"success": False, "message": "User is not enrolled in the course"}), 403
+
         cursor.execute("""
             INSERT INTO comment (course_id, sec_id, content_id, user_id, text, timestamp)
             VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
