@@ -1,3 +1,4 @@
+-- USER TABLES
 CREATE TABLE "user" (
     id VARCHAR(8),
     first_name VARCHAR(50) NOT NULL,
@@ -12,6 +13,16 @@ CREATE TABLE "user" (
     PRIMARY KEY (id),
     CHECK (registration_date <= CURRENT_DATE)
 );
+
+CREATE TABLE student (
+    id VARCHAR(8),
+    major VARCHAR(50),
+    account_status VARCHAR(20),
+    certificate_count INTEGER DEFAULT 0 CHECK (certificate_count >= 0),
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES "user"(id)
+);
+
 
 CREATE TABLE admin (
     id VARCHAR(8),
@@ -28,6 +39,8 @@ CREATE TABLE instructor (
     FOREIGN KEY (id) REFERENCES "user"(id)
 );
 
+
+-- COURSE TABLES
 CREATE TABLE course(
     course_id VARCHAR(8),
     title VARCHAR(150) NOT NULL,
@@ -158,6 +171,66 @@ CREATE TABLE open_ended (
 );
 
 
+-- STUDENT COURSE OPERATIONS
+CREATE TABLE enroll(
+    course_id VARCHAR(8),
+    student_id VARCHAR(8),
+    enroll_date DATE, 
+    progress_rate INTEGER CHECK (progress_rate BETWEEN 0 AND 100),
+    PRIMARY KEY (course_id, student_id),
+    FOREIGN KEY (course_id) REFERENCES course(course_id),
+    FOREIGN KEY (student_id) REFERENCES student(id)
+);
+
+CREATE TABLE submit(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    student_id VARCHAR(8),
+    grade INTEGER CHECK (grade BETWEEN 0 AND 100),
+    submission_date DATE, 
+    answers TEXT,
+    PRIMARY KEY (course_id, sec_id, content_id, student_id),
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES task(course_id, sec_id, content_id),
+    FOREIGN KEY (student_id) REFERENCES student(id)
+);
+
+CREATE TABLE complete(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    student_id VARCHAR(8),
+    is_completed BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (course_id, sec_id, content_id, student_id),
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id),
+    FOREIGN KEY (student_id) REFERENCES student(id)
+);
+
+CREATE TABLE feedback(
+    course_id VARCHAR(8),
+    student_id VARCHAR(8),
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 0 AND 5),
+    comment VARCHAR(500),
+    feedback_date DATE,
+    PRIMARY KEY (course_id, student_id),
+    FOREIGN KEY (course_id) REFERENCES course(course_id),
+    FOREIGN KEY (student_id) REFERENCES student(id)
+);
+
+CREATE TABLE comment(
+    course_id VARCHAR(8),
+    sec_id VARCHAR(8),
+    content_id VARCHAR(8),
+    user_id VARCHAR(8),
+    text VARCHAR(500) NOT NULL,
+    timestamp TIMESTAMP,
+    PRIMARY KEY (course_id, sec_id, content_id, user_id),
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id),
+    FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
+
+
+-- INSERTIONS
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
 VALUES 
 (
@@ -191,3 +264,56 @@ VALUES
 INSERT INTO instructor (id, i_rating, course_count)
 VALUES ('U0000002', 0.0, 0);
 
+INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role) 
+VALUES (
+    'U0000003', 'Jane', NULL, 'Doe', '555-9999',
+    'jane.doe@example.com', 'hashedpassword', CURRENT_DATE, '2000-01-01', 'student'
+);
+
+INSERT INTO student (major, ID, account_status, certificate_count) 
+VALUES (
+    'Computer Science', 'U0000003', 'active', 0
+);
+
+-- INSERT SAMPLE COURSE
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status,
+                    enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES
+('C0000001', 'Intro to Python', 'Learn Python from scratch.', 'Programming', 99, CURRENT_DATE, CURRENT_DATE,
+ 'accepted', 0, 'https://forum.learnhub.com/python', 2, 'U0000002');
+
+-- INSERT SECTION
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time)
+VALUES
+('C0000001', 'S000001', 'Getting Started', 'Basics of Python', 1, 30);
+
+-- INSERT CONTENT - TASK
+INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
+VALUES
+('C0000001', 'S000001', 'CT000001', 'Python Quiz 1', 15, 'task');
+
+INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage)
+VALUES
+('C0000001', 'S000001', 'CT000001', 50, 30, 'assessment', 100);
+
+INSERT INTO assessment (course_id, sec_id, content_id, question_count)
+VALUES
+('C0000001', 'S000001', 'CT000001', 5);
+
+-- INSERT CONTENT - DOCUMENT
+INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
+VALUES
+('C0000001', 'S000001', 'CT000002', 'Python Basics Document', 10, 'document');
+
+INSERT INTO document (course_id, sec_id, content_id, body)
+VALUES
+('C0000001', 'S000001', 'CT000002', 'This document explains basic Python syntax.');
+
+-- INSERT CONTENT - VISUAL MATERIAL
+INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
+VALUES
+('C0000001', 'S000001', 'CT000003', 'Intro Video', 20, 'visual_material');
+
+INSERT INTO visual_material (course_id, sec_id, content_id, duration, body)
+VALUES
+('C0000001', 'S000001', 'CT000003', 120, 'intro_video.mp4');
