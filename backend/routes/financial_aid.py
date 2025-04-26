@@ -43,10 +43,11 @@ def apply_financial_aid(course_id, student_id):
         if cursor.fetchone():
             return jsonify({"success": False, "message": "Already enrolled in this course!"}), 409
 
-        # Insert the application
+        # Insert the application with default 'pending' status
         cursor.execute("""
-            INSERT INTO apply_financial_aid (course_id, student_id, income, statement)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO apply_financial_aid (
+                course_id, student_id, income, statement, application_date, status, evaluator_id
+            ) VALUES (%s, %s, %s, %s, CURRENT_DATE, 'pending', NULL)
         """, (course_id, student_id, float(data["income"]), data["statement"]))
 
         conn.commit()
@@ -55,7 +56,7 @@ def apply_financial_aid(course_id, student_id):
     except Exception as e:
         conn.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
-    
+
     finally:
         cursor.close()
         conn.close()
@@ -101,19 +102,57 @@ def evaluate_financial_aid(course_id, student_id, instructor_id):
         if cursor.fetchone() is None:
             return jsonify({"success": False, "message": "No financial aid application found!"}), 404
 
-        # Insert or update evaluation
+        # Update the application with evaluation result
         cursor.execute("""
-            INSERT INTO evaluate_financial_aid (course_id, student_id, instructor_id, is_accepted)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (course_id, student_id, instructor_id)
-            DO UPDATE SET is_accepted = EXCLUDED.is_accepted
-        """, (course_id, student_id, instructor_id, is_accepted))
+            UPDATE apply_financial_aid
+            SET status = %s,
+                evaluator_id = %s
+            WHERE course_id = %s AND student_id = %s
+        """, (
+            'approved' if is_accepted else 'rejected',
+            instructor_id,
+            course_id,
+            student_id
+        ))
 
         conn.commit()
-        return jsonify({"success": True, "message": "Evaluation submitted"}), 201
+        return jsonify({"success": True, "message": "Financial aid evaluation submitted!"}), 200
 
     except Exception as e:
         conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+# Get financial aid statistics
+@financial_aid_bp.route("/api/instructor/<instructor_id>/financial_aid_stats", methods=["GET"])
+def get_financial_aid_stats(instructor_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute("""
+            SELECT 
+                SUM(CASE WHEN afa.status = 'approved' THEN 1 ELSE 0 END) AS approved,
+                SUM(CASE WHEN afa.status = 'rejected' THEN 1 ELSE 0 END) AS rejected,
+                SUM(CASE WHEN afa.status = 'pending' THEN 1 ELSE 0 END) AS pending
+            FROM apply_financial_aid afa
+            JOIN course c ON afa.course_id = c.course_id
+            WHERE c.creator_id = %s
+        """, (instructor_id,))
+
+        row = cursor.fetchone()
+
+        return jsonify({
+            "approved": row["approved"],
+            "rejected": row["rejected"],
+            "pending": row["pending"]
+        }), 200
+
+    except Exception as e:
+        print(f"Error fetching financial aid stats: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
     finally:
         cursor.close()

@@ -93,11 +93,16 @@ const AuthPage = () => {
         console.log('Login successful:', result);
         
         if (result.success) {
+
+          // Store session data
+          localStorage.setItem("user_id", result.user_id);
+          localStorage.setItem("role", result.role);
+
           // Navigate based on role
           if (result.role === 'student') {
             navigate('/home');
           } else if (result.role === 'instructor') {
-            navigate('/my-learning');
+            navigate('/applications');
           } else {
             navigate('/home'); // Default fallback
           }

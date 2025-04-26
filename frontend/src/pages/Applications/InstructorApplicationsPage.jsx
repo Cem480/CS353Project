@@ -1,7 +1,26 @@
 import React, { useState } from 'react';
 import './InstructionPage.css';
+import { useEffect } from 'react';
+import axios from 'axios';
 
 const InstructorApplicationsPage = () => {
+
+  const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const instructorId = localStorage.getItem("user_id");
+        const res = await axios.get(`http://localhost:5001/api/instructor/${instructorId}/financial_aid_stats`);
+        setStats(res.data);
+      } catch (err) {
+        console.error("Failed to fetch stats:", err);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   // Mock data for instructor courses
   const instructorCourses = [
     {
@@ -155,15 +174,15 @@ const InstructorApplicationsPage = () => {
           <p>Review and manage student financial aid applications for your courses</p>
           <div className="financial-aid-summary">
             <div className="summary-item">
-              <span className="count">{financialAidApplications.filter(app => app.status === 'pending').length}</span>
+              <span className="count">{stats.pending}</span>
               <span className="label">Pending</span>
             </div>
             <div className="summary-item">
-              <span className="count">{financialAidApplications.filter(app => app.status === 'approved').length}</span>
+              <span className="count">{stats.approved}</span>
               <span className="label">Approved</span>
             </div>
             <div className="summary-item">
-              <span className="count">{financialAidApplications.filter(app => app.status === 'rejected').length}</span>
+              <span className="count">{stats.rejected}</span>
               <span className="label">Rejected</span>
             </div>
           </div>
