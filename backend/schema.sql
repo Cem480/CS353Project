@@ -229,6 +229,27 @@ CREATE TABLE comment(
     FOREIGN KEY (user_id) REFERENCES "user"(id)
 );
 
+CREATE TABLE apply_financial_aid (
+    course_id VARCHAR(8),
+    student_id VARCHAR(8),
+    income DECIMAL(10,2) CHECK (income >= 0),
+    statement TEXT,
+    PRIMARY KEY (course_id, student_id),
+    FOREIGN KEY (course_id) REFERENCES course(course_id),
+    FOREIGN KEY (student_id) REFERENCES student(ID)
+);
+
+CREATE TABLE evaluate_financial_aid(
+    course_id VARCHAR(8),
+    student_id VARCHAR(8),
+    instructor_id VARCHAR(8),
+    is_accepted BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (course_id, student_id, instructor_id),
+    FOREIGN KEY (course_id, student_id)
+    REFERENCES apply_financial_aid(course_id, student_id),
+    FOREIGN KEY (instructor_id) REFERENCES instructor(ID)
+);
+
 
 -- VIEWS
 -- User with computed age

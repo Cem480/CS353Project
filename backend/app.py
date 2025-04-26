@@ -14,14 +14,15 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 
-"""
-To drop learn_hub_db database, connect to postgres database 
-because we can not drop a database that we currently use.
-"""
+
 
 app.secret_key = os.getenv("SECRET_KEY", "your_default_secret_key")
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
+"""
+To drop learn_hub_db database, connect to postgres database 
+because we can not drop a database that we currently use.
+"""
 def reset_database():
     conn = connect_postgres_db()
     conn.autocommit = True
@@ -69,10 +70,12 @@ def home():
 from routes.auth import auth_bp
 from routes.create_course import course_bp
 from routes.user_course import user_course_bp
+from routes.financial_aid import financial_aid_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(course_bp)
 app.register_blueprint(user_course_bp)
+app.register_blueprint(financial_aid_bp)
 
 RESET_DB = os.getenv("RESET_DB", "false").lower() == "true"
 

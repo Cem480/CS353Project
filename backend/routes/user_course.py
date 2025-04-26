@@ -145,7 +145,7 @@ def give_feedback(course_id, student_id):
         if cursor.fetchone() is None:
             return jsonify({"success": False, "message": "User is not enrolled in the course"}), 403
         
-        # ✅ Check if progress_rate is 100
+        # Check if progress_rate is 100
         cursor.execute("""
             SELECT progress_rate FROM enroll
             WHERE course_id = %s AND student_id = %s
@@ -226,7 +226,6 @@ def add_comment(course_id, sec_id, content_id, user_id):
         conn.close()
 
 
-
-
 # Certificate will be added
-# Financial aid will be added
+
+""
