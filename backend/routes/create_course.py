@@ -512,7 +512,7 @@ def get_instructor_courses(instructor_id):
             
             # Get student count for this course
             cursor.execute(
-                'SELECT COUNT(*) FROM "enrollment" WHERE course_id = %s', 
+                'SELECT COUNT(*) FROM "enroll" WHERE course_id = %s', 
                 (course_id,)
             )
             count_result = cursor.fetchone()
