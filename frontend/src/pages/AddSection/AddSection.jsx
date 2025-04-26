@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './AddSection.css';
 import { getCurrentUser } from '../../services/auth';
+import { getCourseById, getCourseSections, getSectionContent } from '../../services/course';
 
 const AddSection = () => {
   const { courseId } = useParams();
@@ -9,6 +10,7 @@ const AddSection = () => {
   
   // State variables
   const [activeTab, setActiveTab] = useState('sections'); // 'sections' or 'content'
+  const [courseData, setCourseData] = useState(null);
   const [courseName, setCourseName] = useState('');
   const [sections, setSections] = useState([]);
   const [contents, setContents] = useState([]);
@@ -20,6 +22,7 @@ const AddSection = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Forms state
   const [sectionForm, setSectionForm] = useState({
@@ -61,79 +64,67 @@ const AddSection = () => {
     }
     
     fetchCourseData();
-    fetchSections();
-  }, [courseId]);
+  }, [courseId, navigate]);
   
   // Fetch course data
   const fetchCourseData = async () => {
+    setIsLoading(true);
     try {
-      // Simulated data for this demo - in real app you'd fetch from your API
-      setCourseName('Course Name'); // Replace with actual API call
+      // Fetch course details from backend
+      const data = await getCourseById(courseId);
+      
+      if (data.success) {
+        setCourseData(data.course);
+        setCourseName(data.course.title);
+        console.log('Course data loaded:', data.course);
+        
+        // Also fetch sections
+        fetchSections();
+      } else {
+        setErrorMessage('Failed to load course data');
+      }
     } catch (error) {
       console.error('Error fetching course data:', error);
-      setErrorMessage('Failed to load course data');
+      setErrorMessage('Failed to load course data: ' + error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
   
   // Fetch sections
   const fetchSections = async () => {
     try {
-      // Simulated data for demo - replace with actual API call
-      const mockSections = [
-        { 
-          sec_id: 'S1A2B3C4',
-          title: 'Introduction to the Course',
-          description: 'Overview of what we will learn',
-          order_number: 1,
-          allocated_time: 30,
-        },
-        {
-          sec_id: 'S5D6E7F8',
-          title: 'Basic Concepts',
-          description: 'Learning the fundamentals',
-          order_number: 2,
-          allocated_time: 60,
-        }
-      ];
+      const data = await getCourseSections(courseId);
       
-      setSections(mockSections);
+      if (data.success) {
+        setSections(data.sections);
+        console.log('Sections loaded:', data.sections);
+      } else {
+        setErrorMessage('Failed to load course sections');
+      }
     } catch (error) {
       console.error('Error fetching sections:', error);
-      setErrorMessage('Failed to load course sections');
+      setErrorMessage('Failed to load course sections: ' + error.message);
     }
   };
   
   // Fetch content for a section
   const fetchSectionContent = async (sectionId) => {
     try {
-      // Simulated data - replace with actual API call
-      const mockContents = [
-        {
-          content_id: 'CT1A2B3C',
-          title: 'Introduction Video',
-          allocated_time: 15,
-          content_type: 'visual_material',
-          duration: 900 // 15 minutes in seconds
-        },
-        {
-          content_id: 'CT4D5E6F',
-          title: 'Course Syllabus',
-          allocated_time: 10,
-          content_type: 'document'
-        },
-        {
-          content_id: 'CT7G8H9I',
-          title: 'Initial Assessment',
-          allocated_time: 20,
-          content_type: 'task',
-          task_type: 'assessment'
-        }
-      ];
+      const data = await getSectionContent(courseId, sectionId);
       
-      setContents(mockContents);
+      if (data.success) {
+        setContents(data.content);
+        console.log('Section content loaded:', data.content);
+      } else {
+        setErrorMessage('Failed to load section content');
+      }
     } catch (error) {
       console.error('Error fetching section content:', error);
-      setErrorMessage('Failed to load section content');
+      setErrorMessage('Failed to load section content: ' + error.message);
+      
+      // Fallback to empty content if API fails
+      setContents([]);
     }
   };
   
@@ -164,6 +155,10 @@ const AddSection = () => {
       allocated_time: ''
     });
     setShowSectionForm(true);
+    
+    // Clear any existing messages
+    setSuccessMessage('');
+    setErrorMessage('');
   };
   
   // Close section form
@@ -177,6 +172,10 @@ const AddSection = () => {
       setErrorMessage('Please select a section first');
       return;
     }
+    
+    // Clear any existing messages
+    setSuccessMessage('');
+    setErrorMessage('');
     
     setContentForm({
       title: '',
@@ -229,6 +228,8 @@ const AddSection = () => {
     }
     
     setIsSubmitting(true);
+    setErrorMessage('');
+    setSuccessMessage('');
     
     try {
       const requestData = {
@@ -239,7 +240,7 @@ const AddSection = () => {
       };
       
       // Make API call to add section
-      const response = await fetch(`http://localhost:5001/api/add/course/${courseId}/section`, {
+      const response = await fetch(`http://localhost:5000/api/add/course/${courseId}/section`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -259,7 +260,7 @@ const AddSection = () => {
       }
     } catch (error) {
       console.error('Error adding section:', error);
-      setErrorMessage('An error occurred while adding the section');
+      setErrorMessage('An error occurred while adding the section: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -307,6 +308,8 @@ const AddSection = () => {
     }
     
     setIsSubmitting(true);
+    setErrorMessage('');
+    setSuccessMessage('');
     
     try {
       // Create FormData for file upload
@@ -344,7 +347,7 @@ const AddSection = () => {
       }
       
       // Make API call to add content
-      const response = await fetch(`http://localhost:5001/api/add/course/${courseId}/section/${selectedSectionId}/content`, {
+      const response = await fetch(`http://localhost:5000/api/add/course/${courseId}/section/${selectedSectionId}/content`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -362,7 +365,7 @@ const AddSection = () => {
       }
     } catch (error) {
       console.error('Error adding content:', error);
-      setErrorMessage('An error occurred while adding the content');
+      setErrorMessage('An error occurred while adding the content: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -388,576 +391,6 @@ const AddSection = () => {
   const goBack = () => {
     navigate('/home');
   };
-  
-  return (
-    <div className="add-section-container">
-      {/* Header */}
-      <div className="section-header">
-        <button className="back-button" onClick={goBack}>←</button>
-        <h1 className="course-title">{courseName}</h1>
-      </div>
-      
-      {/* Success message */}
-      {successMessage && (
-        <div className="success-message">
-          <span className="success-icon">✓</span>
-          {successMessage}
-        </div>
-      )}
-      
-      {/* Error message */}
-      {errorMessage && (
-        <div className="error-message" style={{marginBottom: '20px'}}>
-          {errorMessage}
-        </div>
-      )}
-      
-      {/* Tabs */}
-      <div className="content-tabs">
-        <div 
-          className={`content-tab ${activeTab === 'sections' ? 'active' : ''}`}
-          onClick={() => setActiveTab('sections')}
-        >
-          Course Sections
-        </div>
-        <div 
-          className={`content-tab ${activeTab === 'content' ? 'active' : ''}`}
-          onClick={() => setActiveTab('content')}
-        >
-          Course Content
-        </div>
-      </div>
-      
-      {/* Sections Tab */}
-      {activeTab === 'sections' && (
-        <>
-          {/* Sections List */}
-          <div className="sections-container">
-            <div className="sections-header">
-              <h2 className="sections-title">Course Sections</h2>
-              <button className="add-btn" onClick={openSectionForm}>
-                <i>+</i> Add Section
-              </button>
-            </div>
-            
-            {sections.length > 0 ? (
-              <ul className="section-list">
-                {sections.map((section) => (
-                  <li className="section-item" key={section.sec_id}>
-                    <div className="section-info">
-                      <div className="section-item-title">{section.title}</div>
-                      <div className="section-item-meta">
-                        <span>Order: {section.order_number}</span>
-                        <span>Time: {section.allocated_time} min</span>
-                      </div>
-                    </div>
-                    <div className="section-actions">
-                      <button 
-                        className="section-action-btn"
-                        onClick={() => {
-                          setSelectedSectionId(section.sec_id);
-                          setActiveTab('content');
-                          fetchSectionContent(section.sec_id);
-                        }}
-                      >
-                        Add Content
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{padding: '20px', textAlign: 'center'}}>
-                No sections added yet. Create your first section to get started.
-              </p>
-            )}
-          </div>
-          
-          {/* Section Form */}
-          {showSectionForm && (
-            <div className="section-form-container">
-              <h2 className="form-title">Add New Section</h2>
-              <form onSubmit={submitSectionForm}>
-                <div className="form-row">
-                  <label htmlFor="title">Section Title *</label>
-                  <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    className="form-input"
-                    value={sectionForm.title}
-                    onChange={handleSectionInputChange}
-                    placeholder="Enter section title"
-                    required
-                  />
-                </div>
-                
-                <div className="form-row">
-                  <label htmlFor="description">Section Description</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    className="form-input"
-                    value={sectionForm.description}
-                    onChange={handleSectionInputChange}
-                    placeholder="Enter section description"
-                  />
-                </div>
-                
-                <div className="form-row-2">
-                  <div className="form-row">
-                    <label htmlFor="order_number">Order Number *</label>
-                    <input
-                      type="number"
-                      id="order_number"
-                      name="order_number"
-                      className="form-input"
-                      value={sectionForm.order_number}
-                      onChange={handleSectionInputChange}
-                      min="1"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="form-row">
-                    <label htmlFor="allocated_time">Time (minutes) *</label>
-                    <input
-                      type="number"
-                      id="allocated_time"
-                      name="allocated_time"
-                      className="form-input"
-                      value={sectionForm.allocated_time}
-                      onChange={handleSectionInputChange}
-                      min="1"
-                      placeholder="e.g. 60"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-actions">
-                  <button 
-                    type="button" 
-                    className="cancel-btn"
-                    onClick={closeSectionForm}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="save-btn"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Saving...' : 'Save Section'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-        </>
-      )}
-      
-      {/* Content Tab */}
-      {activeTab === 'content' && (
-        <>
-          {/* Section Selector */}
-          <div className="content-container">
-            <div className="content-header">
-              <h2 className="content-title">Course Content</h2>
-              <div className="content-section-dropdown">
-                <select 
-                  className="section-select"
-                  onChange={handleSectionSelect}
-                  value={selectedSectionId}
-                >
-                  <option value="">Select a section</option>
-                  {sections.map((section) => (
-                    <option key={section.sec_id} value={section.sec_id}>
-                      {section.order_number}. {section.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            {selectedSectionId ? (
-              <>
-                <div style={{padding: '15px 20px', borderBottom: '1px solid var(--gray-light)'}}>
-                  <button className="add-btn" onClick={openContentForm}>
-                    <i>+</i> Add Content
-                  </button>
-                </div>
-                
-                {contents.length > 0 ? (
-                  <ul className="content-list">
-                    {contents.map((content) => (
-                      <li className="content-item" key={content.content_id}>
-                        <div className="content-info">
-                          <div className="content-item-title">
-                            {content.title}
-                            <span className={`content-type-badge type-${content.content_type === 'visual_material' ? 'visual' : content.content_type}`}>
-                              {content.content_type.replace('_', ' ')}
-                            </span>
-                          </div>
-                          <div className="content-item-meta">
-                            Time: {content.allocated_time} min
-                            {content.content_type === 'task' && content.task_type && (
-                              ` | Type: ${content.task_type}`
-                            )}
-                          </div>
-                        </div>
-                        <div className="content-actions">
-                          <button className="content-action-btn">Edit</button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p style={{padding: '20px', textAlign: 'center'}}>
-                    No content added to this section yet.
-                  </p>
-                )}
-              </>
-            ) : (
-              <p style={{padding: '20px', textAlign: 'center'}}>
-                Please select a section to view or add content.
-              </p>
-            )}
-          </div>
-          
-          {/* Content Form */}
-          {showContentForm && (
-            <div className="content-form-container">
-              <h2 className="form-title">Add Content to Section</h2>
-              
-              {/* Content Type Selector */}
-              {!selectedContentType && (
-                <>
-                  <h3 style={{marginBottom: '15px'}}>Select Content Type</h3>
-                  <div className="content-type-selector">
-                    <div 
-                      className={`type-option ${selectedContentType === 'document' ? 'active' : ''}`}
-                      onClick={() => setSelectedContentType('document')}
-                    >
-                      <div className="type-option-icon">📄</div>
-                      <div className="type-option-title">Document</div>
-                      <div className="type-option-desc">Upload PDF, presentation, or other document</div>
-                    </div>
-                    
-                    <div 
-                      className={`type-option ${selectedContentType === 'visual_material' ? 'active' : ''}`}
-                      onClick={() => setSelectedContentType('visual_material')}
-                    >
-                      <div className="type-option-icon">🎬</div>
-                      <div className="type-option-title">Video/Audio</div>
-                      <div className="type-option-desc">Upload video or audio content</div>
-                    </div>
-                    
-                    <div 
-                      className={`type-option ${selectedContentType === 'task' ? 'active' : ''}`}
-                      onClick={() => setSelectedContentType('task')}
-                    >
-                      <div className="type-option-icon">📝</div>
-                      <div className="type-option-title">Task</div>
-                      <div className="type-option-desc">Create assessment or assignment</div>
-                    </div>
-                  </div>
-                </>
-              )}
-              
-              {/* Content Form based on selected type */}
-              {selectedContentType && (
-                <form onSubmit={submitContentForm}>
-                  <div className="form-row">
-                    <label htmlFor="content-title">Content Title *</label>
-                    <input
-                      type="text"
-                      id="content-title"
-                      name="title"
-                      className="form-input"
-                      value={contentForm.title}
-                      onChange={handleContentInputChange}
-                      placeholder="Enter content title"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="form-row">
-                    <label htmlFor="allocated_time">Time (minutes) *</label>
-                    <input
-                      type="number"
-                      id="allocated_time"
-                      name="allocated_time"
-                      className="form-input"
-                      value={contentForm.allocated_time}
-                      onChange={handleContentInputChange}
-                      min="1"
-                      placeholder="Time required to complete"
-                      required
-                    />
-                  </div>
-                  
-                  {/* Document Specific Fields */}
-                  {selectedContentType === 'document' && (
-                    <div className="form-row">
-                      <label>Upload Document *</label>
-                      <div className="file-upload-container">
-                        {!uploadedFile ? (
-                          <>
-                            <div className="file-upload-icon">📄</div>
-                            <p className="file-upload-text">Drag and drop your file or click to browse</p>
-                            <input
-                              type="file"
-                              id="document-file"
-                              style={{ display: 'none' }}
-                              onChange={handleFileUpload}
-                              accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
-                            />
-                            <label htmlFor="document-file" className="file-upload-btn">
-                              Browse Files
-                            </label>
-                          </>
-                        ) : (
-                          <div className="file-details">
-                            <span className="file-name">{uploadedFile.name}</span>
-                            <span className="file-size">{formatFileSize(uploadedFile.size)}</span>
-                            <button
-                              type="button"
-                              className="remove-file-btn"
-                              onClick={removeUploadedFile}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Visual Material Specific Fields */}
-                  {selectedContentType === 'visual_material' && (
-                    <>
-                      <div className="form-row">
-                        <label htmlFor="duration">Duration (seconds) *</label>
-                        <input
-                          type="number"
-                          id="duration"
-                          name="duration"
-                          className="form-input"
-                          value={contentForm.duration}
-                          onChange={handleContentInputChange}
-                          min="1"
-                          placeholder="Video/Audio duration in seconds"
-                          required
-                        />
-                      </div>
-                      
-                      <div className="form-row">
-                        <label>Upload Video/Audio *</label>
-                        <div className="file-upload-container">
-                          {!uploadedFile ? (
-                            <>
-                              <div className="file-upload-icon">🎬</div>
-                              <p className="file-upload-text">Drag and drop your file or click to browse</p>
-                              <input
-                                type="file"
-                                id="visual-file"
-                                style={{ display: 'none' }}
-                                onChange={handleFileUpload}
-                                accept="video/*,audio/*"
-                              />
-                              <label htmlFor="visual-file" className="file-upload-btn">
-                                Browse Files
-                              </label>
-                            </>
-                          ) : (
-                            <div className="file-details">
-                              <span className="file-name">{uploadedFile.name}</span>
-                              <span className="file-size">{formatFileSize(uploadedFile.size)}</span>
-                              <button
-                                type="button"
-                                className="remove-file-btn"
-                                onClick={removeUploadedFile}
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  
-                  {/* Task Specific Fields */}
-                  {selectedContentType === 'task' && (
-                    <>
-                      <div className="form-row-2">
-                        <div className="form-row">
-                          <label htmlFor="passing_grade">Passing Grade (%) *</label>
-                          <input
-                            type="number"
-                            id="passing_grade"
-                            name="passing_grade"
-                            className="form-input"
-                            value={contentForm.passing_grade}
-                            onChange={handleContentInputChange}
-                            min="1"
-                            max="100"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="form-row">
-                          <label htmlFor="max_time">Time Limit (minutes) *</label>
-                          <input
-                            type="number"
-                            id="max_time"
-                            name="max_time"
-                            className="form-input"
-                            value={contentForm.max_time}
-                            onChange={handleContentInputChange}
-                            min="1"
-                            required
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="form-row-2">
-                        <div className="form-row">
-                          <label htmlFor="task_type">Task Type *</label>
-                          <select
-                            id="task_type"
-                            name="task_type"
-                            className="form-input"
-                            value={contentForm.task_type}
-                            onChange={handleContentInputChange}
-                            required
-                          >
-                            <option value="assessment">Assessment</option>
-                            <option value="assignment">Assignment</option>
-                          </select>
-                        </div>
-                        
-                        <div className="form-row">
-                          <label htmlFor="percentage">Grade Percentage *</label>
-                          <input
-                            type="number"
-                            id="percentage"
-                            name="percentage"
-                            className="form-input"
-                            value={contentForm.percentage}
-                            onChange={handleContentInputChange}
-                            min="1"
-                            max="100"
-                            required
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Assessment specific fields */}
-                      {contentForm.task_type === 'assessment' && (
-                        <div className="form-row">
-                          <label htmlFor="question_count">Number of Questions *</label>
-                          <input
-                            type="number"
-                            id="question_count"
-                            name="question_count"
-                            className="form-input"
-                            value={contentForm.question_count}
-                            onChange={handleContentInputChange}
-                            min="1"
-                            required
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Assignment specific fields */}
-                      {contentForm.task_type === 'assignment' && (
-                        <>
-                          <div className="form-row date-inputs">
-                            <div className="form-row">
-                              <label htmlFor="start_date">Start Date *</label>
-                              <input
-                                type="date"
-                                id="start_date"
-                                name="start_date"
-                                className="form-input"
-                                value={contentForm.start_date}
-                                onChange={handleContentInputChange}
-                                required
-                              />
-                            </div>
-                            
-                            <div className="form-row">
-                              <label htmlFor="end_date">End Date *</label>
-                              <input
-                                type="date"
-                                id="end_date"
-                                name="end_date"
-                                className="form-input"
-                                value={contentForm.end_date}
-                                onChange={handleContentInputChange}
-                                required
-                              />
-                            </div>
-                          </div>
-                          
-                          <div className="form-row">
-                            <label htmlFor="upload_material">Allow File Upload</label>
-                            <select
-                              id="upload_material"
-                              name="upload_material"
-                              className="form-input"
-                              value={contentForm.upload_material}
-                              onChange={handleContentInputChange}
-                            >
-                              <option value="yes">Yes</option>
-                              <option value="no">No</option>
-                            </select>
-                          </div>
-                          
-                          <div className="form-row">
-                            <label htmlFor="body">Assignment Instructions *</label>
-                            <textarea
-                              id="body"
-                              name="body"
-                              className="form-input"
-                              value={contentForm.body}
-                              onChange={handleContentInputChange}
-                              rows={5}
-                              placeholder="Provide detailed instructions for this assignment"
-                              required
-                            />
-                          </div>
-                        </>
-                      )}
-                    </>
-                  )}
-                  
-                  <div className="form-actions">
-                    <button
-                      type="button"
-                      className="cancel-btn"
-                      onClick={closeContentForm}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="save-btn"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Adding...' : 'Add Content'}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
 };
 
 export default AddSection;

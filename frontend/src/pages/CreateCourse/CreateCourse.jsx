@@ -129,11 +129,20 @@ const CreateCourse = () => {
       const data = await createCourse(submitData);
       
       if (data.success) {
-        setCreatedCourseId(data.course_id);
+        const courseId = data.course_id;
+        setCreatedCourseId(courseId);
         setSuccessMessage(isDraft 
           ? 'Course draft saved successfully!' 
           : 'Course created successfully!'
         );
+        
+        // Store course ID in localStorage for potential future reference
+        localStorage.setItem('lastCreatedCourseId', courseId);
+        
+        // Automatically navigate to the section page after a short delay
+        setTimeout(() => {
+          navigate(`/course/${courseId}/add-section`);
+        }, 1500);
         
         // Reset form if not in draft mode
         if (!isDraft) {
@@ -176,7 +185,7 @@ const CreateCourse = () => {
       return;
     }
     
-    // This would navigate to or open a section to add course sections
+    // Navigate to the section page
     navigate(`/course/${createdCourseId}/add-section`);
   };
   
@@ -191,6 +200,7 @@ const CreateCourse = () => {
         <div className="success-message">
           <span className="success-icon">✓</span>
           {successMessage}
+          {createdCourseId && <span> Redirecting to add sections...</span>}
         </div>
       )}
       
