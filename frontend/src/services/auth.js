@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5001';
+const BASE_URL = 'http://localhost:5000';
 
 // Function to login a user
 export async function loginUser(email, password) {
@@ -90,5 +90,7 @@ export function getCurrentUser() {
 // Simple logout function
 export function logout() {
   localStorage.removeItem('userData');
-  // You could also add a call to a logout endpoint if you create one later
+  
+  // Clear any other user-related data
+  // Note: If other items are stored, they should be cleared here as well
 }

@@ -363,3 +363,178 @@ def add_question(course_id, sec_id, content_id):
         cursor.close()
         conn.close()
 
+@course_bp.route("/api/course/<course_id>", methods=["GET"])
+def get_course(course_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute('SELECT * FROM "course" WHERE course_id = %s', (course_id,))
+        course = cursor.fetchone()
+        
+        if not course:
+            return jsonify({"success": False, "message": "Course not found"}), 404
+        
+        # Convert DictRow to a regular dict
+        course_dict = dict(course)
+        
+        return jsonify({"success": True, "course": course_dict}), 200
+    
+    except Exception as e:
+        print(f"[ERROR] {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+@course_bp.route("/api/course/<course_id>/sections", methods=["GET"])
+def get_course_sections(course_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute('SELECT * FROM "course" WHERE course_id = %s', (course_id,))
+        course = cursor.fetchone()
+        
+        if not course:
+            return jsonify({"success": False, "message": "Course not found"}), 404
+        
+        cursor.execute(
+            'SELECT * FROM "section" WHERE course_id = %s ORDER BY order_number', 
+            (course_id,)
+        )
+        sections = cursor.fetchall()
+        
+        # Convert DictRow objects to regular dicts
+        sections_list = [dict(section) for section in sections]
+        
+        return jsonify({"success": True, "sections": sections_list}), 200
+    
+    except Exception as e:
+        print(f"[ERROR] {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+@course_bp.route("/api/course/<course_id>/section/<sec_id>/content", methods=["GET"])
+def get_section_content(course_id, sec_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute(
+            'SELECT * FROM "section" WHERE course_id = %s AND sec_id = %s', 
+            (course_id, sec_id)
+        )
+        section = cursor.fetchone()
+        
+        if not section:
+            return jsonify({"success": False, "message": "Section not found"}), 404
+        
+        cursor.execute(
+            'SELECT * FROM "content" WHERE course_id = %s AND sec_id = %s ORDER BY allocated_time', 
+            (course_id, sec_id)
+        )
+        content = cursor.fetchall()
+        
+        # Convert DictRow objects to regular dicts
+        content_list = [dict(item) for item in content]
+        
+        # Get additional information based on content type
+        for item in content_list:
+            content_type = item['content_type']
+            content_id = item['content_id']
+            
+            if content_type == 'task':
+                cursor.execute(
+                    'SELECT * FROM "task" WHERE course_id = %s AND sec_id = %s AND content_id = %s',
+                    (course_id, sec_id, content_id)
+                )
+                task_info = cursor.fetchone()
+                if task_info:
+                    item['task_info'] = dict(task_info)
+                    
+                    # Get assessment or assignment specific info
+                    task_type = task_info['task_type']
+                    if task_type == 'assessment':
+                        cursor.execute(
+                            'SELECT * FROM "assessment" WHERE course_id = %s AND sec_id = %s AND content_id = %s',
+                            (course_id, sec_id, content_id)
+                        )
+                        assessment_info = cursor.fetchone()
+                        if assessment_info:
+                            item['assessment_info'] = dict(assessment_info)
+                    
+                    elif task_type == 'assignment':
+                        cursor.execute(
+                            'SELECT * FROM "assignment" WHERE course_id = %s AND sec_id = %s AND content_id = %s',
+                            (course_id, sec_id, content_id)
+                        )
+                        assignment_info = cursor.fetchone()
+                        if assignment_info:
+                            item['assignment_info'] = dict(assignment_info)
+        
+        return jsonify({"success": True, "content": content_list}), 200
+    
+    except Exception as e:
+        print(f"[ERROR] {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+@course_bp.route("/api/instructor/<instructor_id>/courses", methods=["GET"])
+def get_instructor_courses(instructor_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute(
+            'SELECT * FROM "course" WHERE creator_id = %s ORDER BY creation_date DESC', 
+            (instructor_id,)
+        )
+        courses = cursor.fetchall()
+        
+        # Convert DictRow objects to regular dicts
+        courses_list = [dict(course) for course in courses]
+        
+        # Add additional information like student count for each course
+        for course in courses_list:
+            course_id = course['course_id']
+            
+            # Get student count for this course
+            cursor.execute(
+                'SELECT COUNT(*) FROM "enrollment" WHERE course_id = %s', 
+                (course_id,)
+            )
+            count_result = cursor.fetchone()
+            course['students'] = count_result[0] if count_result else 0
+            
+            # Determine course progress if it's in draft status
+            if course['status'] == 'draft':
+                # This is a simplified progress calculation
+                # You might want to implement a more sophisticated algorithm
+                cursor.execute(
+                    'SELECT COUNT(*) FROM "section" WHERE course_id = %s', 
+                    (course_id,)
+                )
+                section_count = cursor.fetchone()[0] or 0
+                
+                # Simple progress: if there are sections, assume 50% progress
+                course['progress'] = 50 if section_count > 0 else 25
+            else:
+                course['progress'] = 100  # Published courses are complete
+        
+        return jsonify({"success": True, "courses": courses_list}), 200
+    
+    except Exception as e:
+        print(f"[ERROR] {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+    finally:
+        cursor.close()
+        conn.close()

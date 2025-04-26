@@ -29,6 +29,12 @@ def register():
     if not all(field in data and data[field] for field in required_fields):
         return jsonify({"success": False, "message": "Missing required fields"}), 400
 
+    if data["role"] == "student" and "major" not in data:
+        return (
+            jsonify({"success": False, "message": "Major is required for students"}),
+            400,
+        )
+
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -66,6 +72,35 @@ def register():
                 data["role"],
             ),
         )
+
+        if data["role"] == "student":
+            cursor.execute(
+                """
+                INSERT INTO student (id, major, account_status, certificate_count)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (user_id, data["major"], "active", 0),
+            )
+        elif data["role"] == "instructor":
+            cursor.execute(
+                """
+                INSERT INTO instructor (id, i_rating, course_count)
+                VALUES (%s, %s, %s)
+                """,
+                (
+                    user_id,
+                    0.0,
+                    0,
+                ),  # should we put no rating or something like that on rating
+            )
+        elif data["role"] == "admin":
+            cursor.execute(
+                """
+                INSERT INTO admin (id, report_count)
+                VALUES (%s, %s)
+                """,
+                (user_id, 0),
+            )
 
         conn.commit()
         return (
@@ -266,3 +301,12 @@ def change_password():
     finally:
         cursor.close()
         conn.close()
+
+
+@auth_bp.route("/api/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return (
+        jsonify({"success": True, "message": "Logged out successfully!"}),
+        200,
+    )
