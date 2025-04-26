@@ -25,8 +25,12 @@ def create_overall_course():
         "instructor_id"
     ]
 
-    if not all(field in data and data[field] for field in required_fields):
-        return jsonify({"success": False, "message": "Missing required fields"}), 400
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"success": False, "message": f"Missing field: {field}"}), 400
+        if isinstance(data[field], str) and not data[field].strip():
+            return jsonify({"success": False, "message": f"Field {field} cannot be empty"}), 400
+
 
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
