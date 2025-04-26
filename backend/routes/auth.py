@@ -301,3 +301,12 @@ def change_password():
     finally:
         cursor.close()
         conn.close()
+
+
+@auth_bp.route("/api/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return (
+        jsonify({"success": True, "message": "Logged out successfully!"}),
+        200,
+    )
