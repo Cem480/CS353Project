@@ -127,17 +127,6 @@ const AddSection = () => {
       setCourseName('Course: ' + courseId);
     }
     
-    // Add a default section if we can't load from backend
-    const defaultSection = {
-      sec_id: 'S' + Date.now(),
-      title: 'ZXZCZ',
-      description: 'Initial section for your course',
-      order_number: 1,
-      allocated_time: 60
-    };
-    
-    setSections([defaultSection]);
-    setSelectedSectionId(defaultSection.sec_id);
   };
   
   // Set course data from API or localStorage
