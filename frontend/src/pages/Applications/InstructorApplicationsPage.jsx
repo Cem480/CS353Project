@@ -8,129 +8,80 @@ const InstructorApplicationsPage = () => {
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const instructorId = localStorage.getItem("user_id");
-        const res = await axios.get(`http://localhost:5001/api/instructor/${instructorId}/financial_aid_stats`);
-        setStats(res.data);
-      } catch (err) {
-        console.error("Failed to fetch stats:", err);
-      }
-    };
-
     fetchStats();
+    fetchApplications();
   }, []);
 
-  // Mock data for instructor courses
-  const instructorCourses = [
-    {
-      id: 1,
-      title: "Introduction to Data Science",
-      image: "data-science.jpg",
-      provider: "Tech University",
-      level: "Beginner"
-    },
-    {
-      id: 2,
-      title: "Advanced Web Development",
-      image: "web-dev.jpg",
-      provider: "Code Academy",
-      level: "Intermediate"
-    },
-    {
-      id: 3,
-      title: "UX/UI Design Principles",
-      image: "uxui-design.jpg",
-      provider: "Design School",
-      level: "Intermediate"
+  const fetchStats = async () => {
+    try {
+      const instructorId = localStorage.getItem("user_id");
+      const res = await axios.get(`http://localhost:5001/api/instructor/${instructorId}/financial_aid_stats`);
+      setStats(res.data);
+    } catch (err) {
+      console.error("Failed to fetch stats:", err);
     }
-  ];
-
-  // Mock data for financial aid applications
-  const financialAidApplications = [
-    // Course 1 applications (5)
-    {
-      id: 101,
-      courseId: 1,
-      studentName: "Alex Johnson",
-      status: "pending",
-      date: "Mar 20, 2025",
-      reason: "Career transition into data science field.",
-      aidAmount: "$99",
-      progress: "75% completed application"
-    },
-    {
-      id: 102,
-      courseId: 1,
-      studentName: "Jamie Smith",
-      status: "pending",
-      date: "Mar 19, 2025",
-      reason: "Unable to afford course due to recent job loss."
-    },
-    {
-      id: 103,
-      courseId: 1,
-      studentName: "Taylor Rodriguez",
-      status: "approved",
-      date: "Mar 15, 2025",
-      reason: "Need skills for current job position."
-    },
-    {
-      id: 104,
-      courseId: 1,
-      studentName: "Morgan Lee",
-      status: "rejected",
-      date: "Mar 10, 2025",
-      reason: "Looking to expand knowledge in data analysis."
-    },
-    {
-      id: 105,
-      courseId: 1,
-      studentName: "Casey Martin",
-      status: "pending",
-      date: "Mar 21, 2025",
-      reason: "Student with limited financial resources."
-    },
-    
-    // Course 2 applications (1)
-    {
-      id: 201,
-      courseId: 2,
-      studentName: "Jordan Parker",
-      status: "pending",
-      date: "Mar 18, 2025",
-      reason: "Need to learn modern web development for startup."
-    },
-    
-    // Course 3 applications (2)
-    {
-      id: 301,
-      courseId: 3,
-      studentName: "Riley Thompson",
-      status: "pending",
-      date: "Mar 22, 2025",
-      reason: "Transitioning to UX career from graphic design."
-    },
-    {
-      id: 302,
-      courseId: 3,
-      studentName: "Sam Wilson",
-      status: "pending",
-      date: "Mar 21, 2025",
-      reason: "Want to improve portfolio with proper design skills."
-    }
-  ];
-
-  const getApplicationsByCourse = (courseId) => {
-    return financialAidApplications.filter(app => app.courseId === courseId);
   };
 
-  const recentApplications = [...financialAidApplications]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5); 
+  const [applications, setApplications] = useState([]);
 
-  const handleApplicationAction = (applicationId, action) => {
-    console.log(`Application ${applicationId}: ${action} action triggered`);
+  const fetchApplications = async () => {
+    try {
+      const instructorId = localStorage.getItem("user_id");
+      const response = await axios.post(
+        `http://localhost:5001/api/instructor/${instructorId}/financial_aid_applications`,
+        { status: "pending" },
+        {
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+      setApplications(response.data);
+    } catch (error) {
+      console.error("Failed to fetch applications:", error);
+    }
+  };
+
+
+  // Group applications by course
+  const applicationsByCourse = {};
+
+  applications.forEach(app => {
+    if (!applicationsByCourse[app.courseId]) {
+      applicationsByCourse[app.courseId] = {
+        courseTitle: app.courseTitle,
+        applications: []
+      };
+    }
+    applicationsByCourse[app.courseId].applications.push(app);
+  });
+ 
+
+  const handleApplicationAction = async (courseId, studentId, action) => {
+    try {
+      const instructorId = localStorage.getItem("user_id"); // Get current logged in instructor
+  
+      const isAccepted = action === "approve"; // if "approve", true; if "reject", false
+  
+      const response = await axios.post(
+        `http://localhost:5001/api/financial_aid/evaluate/${courseId}/${studentId}/${instructorId}`,
+        {
+          is_accepted: isAccepted
+        },
+        {
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+  
+      if (response.data.success) {
+        console.log(`Application ${studentId} for course ${courseId} successfully ${isAccepted ? "approved" : "rejected"}.`);
+        fetchApplications(); // 🔥 Re-fetch applications to refresh the screen!
+        fetchStats();         // 🔥 Re-fetch stats (pending, approved, rejected counts)!
+      } else {
+        console.error("Evaluation failed:", response.data.message);
+      }
+  
+    } catch (error) {
+      console.error("Error during evaluation:", error);
+    }
   };
 
   return (
@@ -171,7 +122,7 @@ const InstructorApplicationsPage = () => {
       <main className="instructor-main">
         <section className="welcome-section">
           <h1>Financial Aid Requests</h1>
-          <p>Review and manage student financial aid applications for your courses</p>
+          <p>Review and anage student financial aid applications for your courses!</p>
           <div className="financial-aid-summary">
             <div className="summary-item">
               <span className="count">{stats.pending}</span>
@@ -189,122 +140,68 @@ const InstructorApplicationsPage = () => {
         </section>
 
         {/* Applications for each course */}
-        {instructorCourses.map(course => {
-          const courseApplications = getApplicationsByCourse(course.id);
-          
+        {Object.entries(applicationsByCourse).map(([courseId, courseData]) => {
+          const courseApplications = courseData.applications;
+
           if (courseApplications.length === 0) return null;
-          
+
           return (
-            <section key={course.id} className="applications-overview">
+            <section key={courseId} className="applications-overview">
               <div className="section-header">
-                <h2>Financial Aid Requests: {course.title}</h2>
+                <h2>Financial Aid Requests: {courseData.courseTitle}</h2>
                 <span className="application-count">{courseApplications.length} requests</span>
               </div>
-              
+
               <div className="applications-grid">
-  {courseApplications.map(application => {
-    const isProcessed = application.status === 'approved' || application.status === 'rejected';
-    
-    return (
-      <div key={application.id} className="application-card">
-        <div className="course-image"></div>
-        <div className="application-details">
-          <h3>{course.title}</h3>
-          <p className="student-name">From: {application.studentName}</p>
-          <p className="aid-type">{application.aidType || "Financial Aid Request"}</p>
-          <div className="application-meta">
-            <span className={`status ${application.status}`}>
-              {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-            </span>
-            <span className="date">Submitted: {application.date}</span>
-          </div>
-          <p className="aid-reason">"{application.reason?.substring(0, 60)}..."</p>
-          <div className="action-buttons">
-            <button 
-              className={`details-btn ${isProcessed ? 'disabled' : ''}`}
-              onClick={() => handleApplicationAction(application.id, 'details')}
-              disabled={isProcessed}
-            >
-              Details
-            </button>
-            <button 
-              className={`approve-btn ${isProcessed ? 'disabled' : ''}`}
-              onClick={() => handleApplicationAction(application.id, 'approve')}
-              disabled={isProcessed}
-            >
-              Accept
-            </button>
-            <button 
-              className={`reject-btn ${isProcessed ? 'disabled' : ''}`}
-              onClick={() => handleApplicationAction(application.id, 'reject')}
-              disabled={isProcessed}
-            >
-              Reject
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
+                {courseApplications.map(application => {
+                  const isProcessed = application.status === 'approved' || application.status === 'rejected';
+
+                  return (
+                    <div key={`${application.courseId}-${application.studentId}`} className="application-card">
+                      <div className="application-details">
+                        <h3>{application.courseTitle}</h3>
+                        <p className="student-name">From: {application.studentName}</p>
+                        <p className="aid-type">Financial Aid Request</p>
+                        <div className="application-meta">
+                          <span className={`status ${application.status}`}>
+                            {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                          </span>
+                          <span className="date">
+                            Submitted: {new Date(application.applicationDate).toLocaleDateString()}
+                          </span>
+                        </div>
+
+                        {/* Income and full statement */}
+                        <div className="aid-info">
+                          <p className="income-info"><strong>Income:</strong> ${application.income}</p>
+                          <p className="full-statement">"{application.statement}"</p>
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="action-buttons">
+                          <button
+                            className={`approve-btn ${isProcessed ? 'disabled' : ''}`}
+                            onClick={() => handleApplicationAction(application.courseId, application.studentId, 'approve')}
+                            disabled={isProcessed}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            className={`reject-btn ${isProcessed ? 'disabled' : ''}`}
+                            onClick={() => handleApplicationAction(application.courseId, application.studentId, 'reject')}
+                            disabled={isProcessed}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                </div>
             </section>
           );
         })}
-
-        {/* Recent applications section */}
-        <section className="recent-applications">
-          <div className="section-header">
-            <h2>Recent Financial Aid Requests</h2>
-            <button className="view-all-btn">View All Financial Aid History</button>
-          </div>
-          
-          <table className="applications-table">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Course</th>
-                <th>Request Date</th>
-                <th>Aid Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentApplications.map(app => {
-                const course = instructorCourses.find(c => c.id === app.courseId);
-                return (
-                  <tr key={app.id}>
-                    <td>{app.studentName}</td>
-                    <td>{course.title}</td>
-                    <td>{app.date}</td>
-                    <td><span className={`status ${app.status}`}>
-                      {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                    </span></td>
-                    <td className="action-cell">
-                      <button 
-                        className="small-btn details"
-                        onClick={() => handleApplicationAction(app.id, 'details')}
-                      >
-                        i
-                      </button>
-                      <button 
-                        className="small-btn approve"
-                        onClick={() => handleApplicationAction(app.id, 'approve')}
-                      >
-                        ✓
-                      </button>
-                      <button 
-                        className="small-btn reject"
-                        onClick={() => handleApplicationAction(app.id, 'reject')}
-                      >
-                        ✗
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
       </main>
     </div>
   );

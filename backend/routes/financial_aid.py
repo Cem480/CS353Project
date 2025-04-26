@@ -62,6 +62,7 @@ def apply_financial_aid(course_id, student_id):
         conn.close()
 
 # To evaluate a financial aid application
+# If approved add enroll relation if not exists before
 @financial_aid_bp.route("/api/financial_aid/evaluate/<course_id>/<student_id>/<instructor_id>", methods=["POST"])
 def evaluate_financial_aid(course_id, student_id, instructor_id):
     data = request.json
@@ -153,6 +154,70 @@ def get_financial_aid_stats(instructor_id):
 
     except Exception as e:
         print(f"Error fetching financial aid stats: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+# Get all financial_aid_applications
+@financial_aid_bp.route("/api/instructor/<instructor_id>/financial_aid_applications", methods=["POST"])
+def get_financial_aid_applications(instructor_id):
+
+    data = request.json or {}
+    status = data.get("status", None)  # Example expected: "pending", "approved", "rejected", or None
+
+    allowed_statuses = {"pending", "approved", "rejected"}
+
+    if status and status not in allowed_statuses:
+        return jsonify({"success": False, "message": "Invalid status value!"}), 400
+
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    try:
+        base_query="""
+            SELECT 
+                afa.course_id,
+                afa.student_id,
+                u.first_name || ' ' || u.last_name AS student_name,
+                c.title AS course_title,
+                afa.statement,
+                afa.income,
+                afa.application_date,
+                afa.status
+            FROM apply_financial_aid afa
+            JOIN course c ON afa.course_id = c.course_id
+            JOIN "user" u ON afa.student_id = u.id
+            WHERE c.creator_id = %s
+        """
+        params = [instructor_id]
+
+        if status:
+            base_query += " AND afa.status = %s"
+            params.append(status)
+
+        base_query += " ORDER BY c.title, afa.application_date DESC"
+        cursor.execute(base_query, tuple(params))
+
+        rows = cursor.fetchall()
+
+        applications = []
+        for row in rows:
+            applications.append({
+                "courseId": row["course_id"],
+                "studentId": row["student_id"],
+                "studentName": row["student_name"],
+                "courseTitle": row["course_title"],
+                "statement": row["statement"],
+                "income": float(row["income"]),
+                "applicationDate": row["application_date"].strftime("%Y-%m-%d"),
+                "status": row["status"]
+            })
+
+        return jsonify(applications), 200
+
+    except Exception as e:
+        print(f"Error fetching financial aid applications: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
     finally:
         cursor.close()
