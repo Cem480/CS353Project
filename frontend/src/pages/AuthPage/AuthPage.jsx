@@ -103,12 +103,8 @@ const AuthPage = () => {
             navigate('/home');
           } else if (result.role === 'instructor') {
             navigate('/applications');
-=======
-          if (result.role === 'instructor') {
-            navigate('/instructor/dashboard'); // Use the instructor dashboard
->>>>>>> Stashed changes
           } else {
-            navigate('/home'); // Default fallback
+            navigate('/home'); // Default for students and other roles
           }
         } else {
           // This shouldn't happen due to fetch behavior, but just in case
