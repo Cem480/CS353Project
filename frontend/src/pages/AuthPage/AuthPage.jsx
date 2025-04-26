@@ -103,6 +103,10 @@ const AuthPage = () => {
             navigate('/home');
           } else if (result.role === 'instructor') {
             navigate('/applications');
+=======
+          if (result.role === 'instructor') {
+            navigate('/instructor/dashboard'); // Use the instructor dashboard
+>>>>>>> Stashed changes
           } else {
             navigate('/home'); // Default fallback
           }

@@ -1,0 +1,181 @@
+              
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './InstructorsMainPage.css';
+import { getCurrentUser, logout } from '../../services/auth';
+import { getInstructorCourses } from '../../services/course';
+
+const InstructorMainPage = () => {
+const navigate = useNavigate();
+const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+// Get current user data
+const userData = getCurrentUser();
+
+// State for instructor courses
+const [instructorCourses, setInstructorCourses] = useState([]);
+const [isLoading, setIsLoading] = useState(true);
+
+// Fetch instructor courses
+useEffect(() => {
+const fetchCourses = async () => {
+if (userData && userData.user_id) {
+try {
+setIsLoading(true);
+const response = await getInstructorCourses(userData.user_id);
+if (response.success) {
+  setInstructorCourses(response.courses);
+}
+} catch (error) {
+console.error('Error fetching instructor courses:', error);
+} finally {
+setIsLoading(false);
+}
+}
+};
+
+fetchCourses();
+}, [userData]);
+
+// Instructor stats 
+const stats = [
+{ value: 2, label: 'Published Courses' },
+{ value: 70, label: 'Total Students' },
+{ value: 4.8, label: 'Average Rating' },
+{ value: '$1,240', label: 'Monthly Revenue' }
+];
+
+// Assuming instructor's first name for display
+const firstName = userData ? 
+(userData.user_id.charAt(0).toUpperCase() + userData.user_id.slice(1).split('@')[0]) : 
+"Instructor";
+
+const handleLogout = () => {
+logout();
+navigate('/login');
+};
+
+const toggleProfileMenu = () => {
+setShowProfileMenu(!showProfileMenu);
+};
+
+const handleCreateCourse = () => {
+navigate('/create-course');
+};
+
+return (
+<div className="instructor-main-page">
+{/* Header */}
+<header className="main-header">
+<div className="header-left">
+<div className="logo">
+  <h1>LearnHub</h1>
+</div>
+<div className="nav-links">
+  <a href="/home" className="active">Dashboard</a>
+  <a href="/my-courses">My Courses</a>
+  <a href="/analytics">Analytics</a>
+</div>
+</div>
+<div className="header-right">
+<div className="search-bar">
+  <input type="text" placeholder="Search courses..." />
+  <button className="search-button">Search</button>
+</div>
+<div className="profile-dropdown">
+  <div className="profile-icon" onClick={toggleProfileMenu}>
+    {userData ? userData.user_id.charAt(0).toUpperCase() : 'I'}
+  </div>
+  
+  {showProfileMenu && (
+    <div className="dropdown-menu active">
+      <div className="profile-info">
+        <div className="profile-avatar-large">
+          {userData ? userData.user_id.charAt(0).toUpperCase() : 'I'}
+        </div>
+        <div className="profile-details">
+          <div className="profile-name">{firstName}</div>
+          <div className="profile-role">{userData ? userData.role : 'instructor'}</div>
+        </div>
+      </div>
+      <ul>
+        <li><a href="/my-courses">My Courses</a></li>
+        <li><a href="/earnings">Earnings</a></li>
+        <li><a href="/notifications">Notifications</a></li>
+        <li><a href="/settings">Account Settings</a></li>
+        <div className="menu-divider"></div>
+        <li><a href="#" onClick={handleLogout}>Logout</a></li>
+      </ul>
+    </div>
+  )}
+</div>
+</div>
+</header>
+
+{/* Main Content */}
+<main className="main-content">
+{/* Welcome Section */}
+<section className="welcome-section">
+<h2>Welcome back, {firstName}!</h2>
+<p>Create engaging courses and share your knowledge with students around the world.</p>
+<button className="create-course-btn" onClick={handleCreateCourse}>
+  <i className="plus-icon">+</i> Create New Course
+</button>
+</section>
+
+{/* Stats Section */}
+<section className="stats-section">
+{stats.map((stat, index) => (
+  <div className="stat-card" key={index}>
+    <div className="stat-value">{stat.value}</div>
+    <div className="stat-label">{stat.label}</div>
+  </div>
+))}
+</section>
+
+{/* Courses Section */}
+<section className="courses-section">
+<div className="section-header">
+  <h2>Your Courses</h2>
+  <a href="/my-courses" className="view-all">View all</a>
+</div>
+<div className="courses-grid">
+  {instructorCourses.map(course => (
+    <div className="course-card" key={course.id}>
+      <div className="course-image">
+        {/* Course thumbnail placeholder */}
+      </div>
+      <div className="course-info">
+        <h3 className="course-title">{course.title}</h3>
+        <div className="course-meta">
+          <span className="course-students">
+            {course.students} {course.students === 1 ? 'student' : 'students'}
+          </span>
+          <span className={`course-status status-${course.status}`}>
+            {course.status}
+          </span>
+        </div>
+        {course.status === 'draft' && (
+          <>
+            <div className="completion-text">
+              Completion: {course.progress}%
+            </div>
+            <div className="progress-bar">
+              <div 
+                className="progress-fill" 
+                style={{ width: `${course.progress}%` }}
+              ></div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  ))}
+</div>
+</section>
+</main>
+</div>
+);
+};
+
+export default InstructorMainPage;

@@ -1,0 +1,252 @@
+/* Create Course Page Styles */
+:root {
+    --primary-color: #d4a800;    /* Yellow main color */
+    --primary-light: #ffca28;
+    --primary-dark: #a38000;
+    --text-light: #f5f5f5;
+    --text-dark: #333;
+    --gray-light: #f5f5f5;
+    --gray-medium: #e0e0e0;
+    --gray-dark: #757575;
+    --success-color: #4caf50;
+    --error-color: #f44336;
+  }
+  
+  /* Form Container */
+  .create-course-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .page-title {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+  }
+  
+  .back-button {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 1.5rem;
+    margin-right: 10px;
+    transition: transform 0.2s;
+  }
+  
+  .back-button:hover {
+    transform: translateX(-3px);
+  }
+  
+  .form-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 30px;
+    margin-bottom: 30px;
+  }
+  
+  .form-title {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--gray-medium);
+    padding-bottom: 10px;
+  }
+  
+  /* Form Elements */
+  .form-row {
+    margin-bottom: 20px;
+  }
+  
+  .form-row label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--gray-medium);
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  
+  .form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(212, 168, 0, 0.2);
+  }
+  
+  select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1.2em;
+  }
+  
+  textarea.form-input {
+    min-height: 120px;
+    resize: vertical;
+  }
+  
+  .form-input.error {
+    border-color: var(--error-color);
+  }
+  
+  .error-message {
+    color: var(--error-color);
+    font-size: 0.875rem;
+    margin-top: 5px;
+  }
+  
+  /* Form Layout Utilities */
+  .form-group {
+    margin-bottom: 30px;
+  }
+  
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  .form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+  
+  .form-hint {
+    font-size: 0.875rem;
+    color: var(--gray-dark);
+    margin-top: 5px;
+  }
+  
+  .required-mark {
+    color: var(--error-color);
+    margin-left: 2px;
+  }
+  
+  /* Form Actions */
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--gray-medium);
+  }
+  
+  .save-draft-btn, .submit-course-btn {
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  
+  .save-draft-btn {
+    background-color: white;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+  }
+  
+  .save-draft-btn:hover {
+    background-color: rgba(212, 168, 0, 0.1);
+  }
+  
+  .submit-course-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+  }
+  
+  .submit-course-btn:hover {
+    background-color: var(--primary-light);
+    transform: translateY(-2px);
+  }
+  
+  /* Success Message */
+  .success-message {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: var(--success-color);
+    padding: 12px 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .success-icon {
+    margin-right: 10px;
+    font-size: 1.2rem;
+  }
+  
+  /* Section Adding */
+  .section-container {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: var(--gray-light);
+    border-radius: 4px;
+  }
+  
+  .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .section-title h3 {
+    font-size: 1.2rem;
+    color: var(--text-dark);
+  }
+  
+  .add-section-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s;
+  }
+  
+  .add-section-btn:hover {
+    background-color: var(--primary-light);
+  }
+  
+  .add-section-btn i {
+    margin-right: 5px;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .form-container {
+      padding: 20px;
+    }
+    
+    .form-row-2, .form-row-3 {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    
+    .form-actions {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .save-draft-btn, .submit-course-btn {
+      width: 100%;
+    }
+  }
