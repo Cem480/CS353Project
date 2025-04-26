@@ -116,8 +116,25 @@ def evaluate_financial_aid(course_id, student_id, instructor_id):
             student_id
         ))
 
+        # If accepted, enroll the student if not already enrolled
+        if is_accepted:
+            # Check if already enrolled
+            cursor.execute("""
+                SELECT 1 FROM enroll
+                WHERE course_id = %s AND student_id = %s
+            """, (course_id, student_id))
+
+            already_enrolled = cursor.fetchone()
+
+        if not already_enrolled:
+            # Insert into enroll table
+            cursor.execute("""
+                INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate)
+                VALUES (%s, %s, CURRENT_DATE, 0)
+            """, (course_id, student_id))
+
         conn.commit()
-        return jsonify({"success": True, "message": "Financial aid evaluation submitted!"}), 200
+        return jsonify({"success": True, "message": "Financial aid is evaluated!"}), 200
 
     except Exception as e:
         conn.rollback()
