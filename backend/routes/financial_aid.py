@@ -62,7 +62,7 @@ def apply_financial_aid(course_id, student_id):
         conn.close()
 
 # To evaluate a financial aid application
-# If approved add enroll relation if not exists before
+# If approved add enroll relation if not exists before!!!
 @financial_aid_bp.route("/api/financial_aid/evaluate/<course_id>/<student_id>/<instructor_id>", methods=["POST"])
 def evaluate_financial_aid(course_id, student_id, instructor_id):
     data = request.json
