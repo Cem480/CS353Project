@@ -1,25 +1,61 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './InstructionPage.css';
 import { useEffect } from 'react';
 import axios from 'axios';
+import { getCurrentUser, logout } from '../../services/auth';
 
 const InstructorApplicationsPage = () => {
-
+  const navigate = useNavigate();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
+
+  // Get current user data
+  const userData = getCurrentUser();
+
+  // Assuming instructor's first name for display
+  const firstName = userData ? 
+  (userData.user_id.charAt(0).toUpperCase() + userData.user_id.slice(1).split('@')[0]) : 
+  "Instructor";
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const toggleProfileMenu = () => {
+    setShowProfileMenu(!showProfileMenu);
+  };
+
+  // Close the menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showProfileMenu && !event.target.closest('.profile-dropdown')) {
+        setShowProfileMenu(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileMenu]);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const instructorId = localStorage.getItem("user_id");
-        const res = await axios.get(`http://localhost:5001/api/instructor/${instructorId}/financial_aid_stats`);
-        setStats(res.data);
+        const instructorId = userData?.user_id;
+        if (instructorId) {
+          const res = await axios.get(`http://localhost:5001/api/instructor/${instructorId}/financial_aid_stats`);
+          setStats(res.data);
+        }
       } catch (err) {
         console.error("Failed to fetch stats:", err);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [userData]);
 
   // Mock data for instructor courses
   const instructorCourses = [
@@ -133,39 +169,60 @@ const InstructorApplicationsPage = () => {
     console.log(`Application ${applicationId}: ${action} action triggered`);
   };
 
+  const navigateToInstructorHome = () => {
+    navigate('/home');
+  };
+
   return (
     <div className="instructor-container">
-      {/* Header */}
-      <header className="instructor-header">
-        <div className="logo-container">
-          <a href="/" className="instructor-logo">LearnHub-Instructor</a>
+      {/* Header - Updated to match InstructorMainPage style */}
+      <header className="main-header">
+        <div className="header-left">
+          <div className="logo">
+            <h1>LearnHub</h1>
+          </div>
+          <div className="nav-links">
+            <a href="/home">Dashboard</a>
+            <a href="/my-courses">My Courses</a>
+            <a href="/analytics">Analytics</a>
+            <a href="/applications" className="active">Financial Aid</a>
+          </div>
         </div>
-        <div className="search-container">
-          <input 
-            type="text" 
-            placeholder="What do you want to teach?" 
-            className="search-input" 
-          />
-          <button className="search-button">Search</button>
-        </div>
-        <div className="user-actions">
-          <a href="#" className="notifications">
-            <span className="notification-icon">🔔</span>
-          </a>
-          <div className="user-profile">
-            <span className="profile-icon">C</span>
+        <div className="header-right">
+          <div className="search-bar">
+            <input type="text" placeholder="Search courses..." />
+            <button className="search-button">Search</button>
+          </div>
+          <div className="profile-dropdown">
+            <div className="profile-icon" onClick={toggleProfileMenu}>
+              {userData ? userData.user_id.charAt(0).toUpperCase() : 'I'}
+            </div>
+            
+            {showProfileMenu && (
+              <div className="dropdown-menu active">
+                <div className="profile-info">
+                  <div className="profile-avatar-large">
+                    {userData ? userData.user_id.charAt(0).toUpperCase() : 'I'}
+                  </div>
+                  <div className="profile-details">
+                    <div className="profile-name">{firstName}</div>
+                    <div className="profile-role">{userData ? userData.role : 'instructor'}</div>
+                  </div>
+                </div>
+                <ul>
+                  <li><a href="/my-courses">My Courses</a></li>
+                  <li><a href="/earnings">Earnings</a></li>
+                  <li><a href="/notifications">Notifications</a></li>
+                  <li><a href="/applications">Financial Aid</a></li>
+                  <li><a href="/settings">Account Settings</a></li>
+                  <div className="menu-divider"></div>
+                  <li><a onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</a></li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </header>
-
-      {/* Navigation Bar */}
-      <nav className="instructor-nav">
-        <ul>
-          <li><a href="/instructor/courses">Courses</a></li>
-          <li><a href="/instructor/students">Students</a></li>
-          <li className="active"><a href="/instructor/applications">Financial Aid</a></li>
-        </ul>
-      </nav>
 
       {/* Main Content */}
       <main className="instructor-main">
@@ -202,51 +259,51 @@ const InstructorApplicationsPage = () => {
               </div>
               
               <div className="applications-grid">
-  {courseApplications.map(application => {
-    const isProcessed = application.status === 'approved' || application.status === 'rejected';
-    
-    return (
-      <div key={application.id} className="application-card">
-        <div className="course-image"></div>
-        <div className="application-details">
-          <h3>{course.title}</h3>
-          <p className="student-name">From: {application.studentName}</p>
-          <p className="aid-type">{application.aidType || "Financial Aid Request"}</p>
-          <div className="application-meta">
-            <span className={`status ${application.status}`}>
-              {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-            </span>
-            <span className="date">Submitted: {application.date}</span>
-          </div>
-          <p className="aid-reason">"{application.reason?.substring(0, 60)}..."</p>
-          <div className="action-buttons">
-            <button 
-              className={`details-btn ${isProcessed ? 'disabled' : ''}`}
-              onClick={() => handleApplicationAction(application.id, 'details')}
-              disabled={isProcessed}
-            >
-              Details
-            </button>
-            <button 
-              className={`approve-btn ${isProcessed ? 'disabled' : ''}`}
-              onClick={() => handleApplicationAction(application.id, 'approve')}
-              disabled={isProcessed}
-            >
-              Accept
-            </button>
-            <button 
-              className={`reject-btn ${isProcessed ? 'disabled' : ''}`}
-              onClick={() => handleApplicationAction(application.id, 'reject')}
-              disabled={isProcessed}
-            >
-              Reject
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
+                {courseApplications.map(application => {
+                  const isProcessed = application.status === 'approved' || application.status === 'rejected';
+                  
+                  return (
+                    <div key={application.id} className="application-card">
+                      <div className="course-image"></div>
+                      <div className="application-details">
+                        <h3>{course.title}</h3>
+                        <p className="student-name">From: {application.studentName}</p>
+                        <p className="aid-type">{application.aidType || "Financial Aid Request"}</p>
+                        <div className="application-meta">
+                          <span className={`status ${application.status}`}>
+                            {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                          </span>
+                          <span className="date">Submitted: {application.date}</span>
+                        </div>
+                        <p className="aid-reason">"{application.reason?.substring(0, 60)}..."</p>
+                        <div className="action-buttons">
+                          <button 
+                            className={`details-btn ${isProcessed ? 'disabled' : ''}`}
+                            onClick={() => handleApplicationAction(application.id, 'details')}
+                            disabled={isProcessed}
+                          >
+                            Details
+                          </button>
+                          <button 
+                            className={`approve-btn ${isProcessed ? 'disabled' : ''}`}
+                            onClick={() => handleApplicationAction(application.id, 'approve')}
+                            disabled={isProcessed}
+                          >
+                            Accept
+                          </button>
+                          <button 
+                            className={`reject-btn ${isProcessed ? 'disabled' : ''}`}
+                            onClick={() => handleApplicationAction(application.id, 'reject')}
+                            disabled={isProcessed}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </section>
           );
         })}

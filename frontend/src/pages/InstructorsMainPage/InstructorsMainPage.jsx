@@ -1,4 +1,3 @@
-              
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './InstructorsMainPage.css';
@@ -56,11 +55,29 @@ navigate('/login');
 };
 
 const toggleProfileMenu = () => {
-setShowProfileMenu(!showProfileMenu);
+  setShowProfileMenu(!showProfileMenu);
 };
+
+// Close the menu when clicking outside
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (showProfileMenu && !event.target.closest('.profile-dropdown')) {
+      setShowProfileMenu(false);
+    }
+  };
+  
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, [showProfileMenu]);
 
 const handleCreateCourse = () => {
 navigate('/create-course');
+};
+
+const navigateToFinancialAid = () => {
+navigate('/applications');
 };
 
 return (
@@ -75,6 +92,7 @@ return (
   <a href="/home" className="active">Dashboard</a>
   <a href="/my-courses">My Courses</a>
   <a href="/analytics">Analytics</a>
+  <a href="/applications">Financial Aid</a>
 </div>
 </div>
 <div className="header-right">
@@ -102,9 +120,10 @@ return (
         <li><a href="/my-courses">My Courses</a></li>
         <li><a href="/earnings">Earnings</a></li>
         <li><a href="/notifications">Notifications</a></li>
+        <li><a href="/applications">Financial Aid</a></li>
         <li><a href="/settings">Account Settings</a></li>
         <div className="menu-divider"></div>
-        <li><a href="#" onClick={handleLogout}>Logout</a></li>
+        <li><a onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</a></li>
       </ul>
     </div>
   )}
@@ -118,9 +137,14 @@ return (
 <section className="welcome-section">
 <h2>Welcome back, {firstName}!</h2>
 <p>Create engaging courses and share your knowledge with students around the world.</p>
-<button className="create-course-btn" onClick={handleCreateCourse}>
-  <i className="plus-icon">+</i> Create New Course
-</button>
+<div style={{ display: 'flex', gap: '15px' }}>
+  <button className="create-course-btn" onClick={handleCreateCourse}>
+    <i className="plus-icon">+</i> Create New Course
+  </button>
+  <button className="create-course-btn" onClick={navigateToFinancialAid} style={{ backgroundColor: '#f5f5f5', color: '#d4a800' }}>
+    <i className="aid-icon">$</i> Manage Financial Aid
+  </button>
+</div>
 </section>
 
 {/* Stats Section */}

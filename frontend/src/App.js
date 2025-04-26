@@ -70,7 +70,6 @@ function App() {
           <Route path="/financial-aid" element={<ProtectedRoute element={<FinancialAid />} />} />
           <Route path="/transaction" element={<ProtectedRoute element={<TransactionPage />} />} />
           <Route path="/degrees" element={<ProtectedRoute element={<DegreesPage />} />} />
-          <Route path="/applications" element={<ProtectedRoute element={<InstructorApplicationsPage />} />} />
           
           {/* Instructor specific routes */}
           <Route 
@@ -84,6 +83,10 @@ function App() {
           <Route 
             path="/course/:courseId/add-section" 
             element={<RoleProtectedRoute element={<AddSection />} allowedRole="instructor" />} 
+          />
+          <Route 
+            path="/applications" 
+            element={<RoleProtectedRoute element={<InstructorApplicationsPage />} allowedRole="instructor" />} 
           />
           
           {/* Default routes */}
