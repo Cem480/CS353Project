@@ -10,6 +10,8 @@ const InstructorApplicationsPage = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
   const [applications, setApplications] = useState([]);
+  const [currentFilter, setCurrentFilter] = useState('pending');
+
 
   // Get current user data
   const userData = getCurrentUser();
@@ -60,7 +62,6 @@ const InstructorApplicationsPage = () => {
       if (instructorId) {
         const response = await axios.post(
           `http://localhost:5001/api/instructor/${instructorId}/financial_aid_applications`,
-          { status: "pending" },
           { headers: { "Content-Type": "application/json" } }
         );
         setApplications(response.data);
@@ -70,10 +71,12 @@ const InstructorApplicationsPage = () => {
     }
   };
 
+  const filteredApplications = applications.filter(app => app.status === currentFilter);
+
   // Group applications by course
   const applicationsByCourse = {};
 
-  applications.forEach(app => {
+  filteredApplications.forEach(app => {
     if (!applicationsByCourse[app.courseId]) {
       applicationsByCourse[app.courseId] = {
         courseTitle: app.courseTitle,
@@ -94,6 +97,8 @@ const InstructorApplicationsPage = () => {
     navigate('/home');
   };
 
+  
+
   const handleApplicationAction = async (courseId, studentId, action) => {
       try {
         const instructorId = localStorage.getItem("user_id"); // Get current logged in instructor
@@ -112,8 +117,8 @@ const InstructorApplicationsPage = () => {
     
         if (response.data.success) {
           console.log(`Application ${studentId} for course ${courseId} successfully ${isAccepted ? "approved" : "rejected"}.`);
-          fetchApplications(); // 🔥 Re-fetch applications to refresh the screen!
-          fetchStats();         // 🔥 Re-fetch stats (pending, approved, rejected counts)!
+          fetchApplications(); 
+          fetchStats();
         } else {
           console.error("Evaluation failed:", response.data.message);
         }
@@ -178,17 +183,17 @@ const InstructorApplicationsPage = () => {
       <main className="instructor-main">
         <section className="welcome-section">
           <h1>Financial Aid Requests</h1>
-          <p>Review and anage student financial aid applications for your courses!</p>
+          <p>Review and manage student financial aid applications for your courses!</p>
           <div className="financial-aid-summary">
-            <div className="summary-item">
+            <div className="summary-item" onClick={() => setCurrentFilter('pending')}>
               <span className="count">{stats.pending}</span>
               <span className="label">Pending</span>
             </div>
-            <div className="summary-item">
+            <div className="summary-item" onClick={() => setCurrentFilter('approved')}>
               <span className="count">{stats.approved}</span>
               <span className="label">Approved</span>
             </div>
-            <div className="summary-item">
+            <div className="summary-item" onClick={() => setCurrentFilter('rejected')}>
               <span className="count">{stats.rejected}</span>
               <span className="label">Rejected</span>
             </div>
