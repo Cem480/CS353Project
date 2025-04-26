@@ -49,6 +49,130 @@ def get_profile():
             "role": user["role"],
         }
 
+        if user["role"] == "admin":
+            cursor.execute(
+                """
+                SELECT report_count
+                FROM admin
+                WHERE id = %s
+                """,
+                (user_id,),
+            )
+            admin = cursor.fetchone()
+
+            if not admin:
+                return (
+                    jsonify({"success": False, "message": "Admin record not found"}),
+                    404,
+                )
+
+            cursor.execute(
+                """
+                SELECT course_id, title, description, category, price, creation_date, difficulty_level
+                FROM course
+                WHERE approver_id = %s AND status = 'accepted'
+                """,
+                (user_id,),
+            )
+            approved_courses = [
+                {
+                    "course_id": row["course_id"],
+                    "title": row["title"],
+                    "description": row["description"],
+                    "category": row["category"],
+                    "price": row["price"],
+                    "creation_date": row["creation_date"],
+                    "difficulty_level": row["difficulty_level"],
+                }
+                for row in cursor.fetchall()
+            ]
+
+            cursor.execute(
+                """
+                SELECT course_id, title, description, category, price, creation_date, difficulty_level
+                FROM course
+                WHERE approver_id = %s AND status = 'rejected'
+                """,
+                (user_id,),
+            )
+            rejected_courses = [
+                {
+                    "course_id": row["course_id"],
+                    "title": row["title"],
+                    "description": row["description"],
+                    "category": row["category"],
+                    "price": row["price"],
+                    "creation_date": row["creation_date"],
+                    "difficulty_level": row["difficulty_level"],
+                }
+                for row in cursor.fetchall()
+            ]
+
+            profile_data["admin_info"] = {
+                "report_count": admin["report_count"],
+                "approved_courses": approved_courses,
+                "rejected_courses": rejected_courses,
+            }
+
+        if user["role"] == "instructor":
+            cursor.execute(
+                """
+                SELECT i.i_rating, i.course_count, iwe.experience_year
+                FROM instructor i
+                JOIN instructor_with_experience_year iwe ON i.id = iwe.id
+                WHERE i.id = %s
+                """,
+                (user_id,),
+            )
+            instructor = cursor.fetchone()
+
+            cursor.execute(
+                """
+                SELECT course_id, title, category, price, creation_date, difficulty_level
+                FROM course
+                WHERE creator_id = %s
+                """,
+                (user_id,),
+            )
+            instructor_courses = [
+                {
+                    "course_id": row["course_id"],
+                    "title": row["title"],
+                    "category": row["category"],
+                    "price": row["price"],
+                    "creation_date": row["creation_date"],
+                    "difficulty_level": row["difficulty_level"],
+                }
+                for row in cursor.fetchall()
+            ]
+
+            cursor.execute(
+                """
+                SELECT f.rating, f.comment, f.feedback_date, c.title AS course_title
+                FROM feedback f
+                JOIN course c ON f.course_id = c.course_id
+                WHERE c.creator_id = %s
+                """,
+                (user_id,),
+            )
+            instructor_feedbacks = [
+                {
+                    "rating": row["rating"],
+                    "comment": row["comment"],
+                    "feedback_date": row["feedback_date"],
+                    "course_title": row["course_title"],
+                }
+                for row in cursor.fetchall()
+            ]
+
+            profile_data["instructor_info"] = {
+                "i_rating": instructor["i_rating"],
+                "course_count": instructor["course_count"],
+                "experience_year": instructor["experience_year"],
+                "courses": instructor_courses,
+                "feedbacks": instructor_feedbacks,
+            }
+
         if user["role"] == "student":
             cursor.execute(
                 """
