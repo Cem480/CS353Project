@@ -15,7 +15,8 @@ const AuthPage = () => {
     password: '',
     confirmPassword: '',
     birth_date: '',
-    role: 'student' // Default role
+    role: 'student', // Default role
+    major: '' // Added major field for students
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -70,6 +71,12 @@ const AuthPage = () => {
         setError('Birth date is required');
         return false;
       }
+      
+      // Validate major when role is student
+      if (formData.role === 'student' && !formData.major) {
+        setError('Major is required for students');
+        return false;
+      }
     }
     
     return true;
@@ -93,11 +100,6 @@ const AuthPage = () => {
         console.log('Login successful:', result);
         
         if (result.success) {
-
-          // Store session data
-          localStorage.setItem("user_id", result.user_id);
-          localStorage.setItem("role", result.role);
-
           // Navigate based on role
           if (result.role === 'instructor') {
             navigate('/instructor/dashboard'); // Use the instructor dashboard
@@ -120,6 +122,11 @@ const AuthPage = () => {
           birth_date: formData.birth_date,
           role: formData.role
         };
+        
+        // Add major if role is student
+        if (formData.role === 'student') {
+          registrationData.major = formData.major;
+        }
 
         console.log('Submitting registration with:', registrationData);
         const result = await registerUser(registrationData);
@@ -160,7 +167,8 @@ const AuthPage = () => {
       password: '',
       confirmPassword: '',
       birth_date: '',
-      role: 'student'
+      role: 'student',
+      major: ''
     });
   };
 
@@ -355,6 +363,25 @@ const AuthPage = () => {
                     <option value="student">Student</option>
                     <option value="instructor">Instructor</option>
                   </select>
+                </div>
+              )}
+              
+              {/* Show Major field only when role is student */}
+              {!isLogin && formData.role === 'student' && (
+                <div className="form-group">
+                  <label htmlFor="major" className="form-label">
+                    Major
+                  </label>
+                  <input
+                    type="text"
+                    id="major"
+                    name="major"
+                    value={formData.major}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder="Enter your major"
+                    required={formData.role === 'student'}
+                  />
                 </div>
               )}
 
