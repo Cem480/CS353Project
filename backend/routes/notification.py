@@ -9,10 +9,8 @@ notification_bp = Blueprint("notification", __name__)
 # Get user's notifications
 @notification_bp.route("/api/notifications/<user_id>", methods=["GET"])
 def get_user_notifications(user_id):
-    """
-    Get all notifications for a specific user with optional filtering by status
-    """
-    status = request.args.get("status", None)  # Optional query parameter for filtering by status
+
+    status = request.args.get("status", None)  # Statuse göre filter
     allowed_statuses = {"unread", "read", "archived"}
     
     if status and status not in allowed_statuses:
@@ -75,9 +73,7 @@ def get_user_notifications(user_id):
 # Mark notification as read
 @notification_bp.route("/api/notifications/<notification_id>/read/<user_id>", methods=["PUT"])
 def mark_notification_read(notification_id, user_id):
-    """
-    Mark a notification as read for a specific user
-    """
+
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
@@ -121,9 +117,7 @@ def mark_notification_read(notification_id, user_id):
 # Mark all notifications as read
 @notification_bp.route("/api/notifications/read-all/<user_id>", methods=["PUT"])
 def mark_all_notifications_read(user_id):
-    """
-    Mark all notifications as read for a specific user
-    """
+
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
@@ -178,9 +172,7 @@ def mark_all_notifications_read(user_id):
 # Mark notification as archived
 @notification_bp.route("/api/notifications/<notification_id>/archive/<user_id>", methods=["PUT"])
 def archive_notification(notification_id, user_id):
-    """
-    Archive a notification for a specific user
-    """
+
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
@@ -217,9 +209,7 @@ def archive_notification(notification_id, user_id):
 # Get notifications dashboard stats
 @notification_bp.route("/api/notifications/stats/<user_id>", methods=["GET"])
 def get_notification_stats(user_id):
-    """
-    Get notification statistics for a user
-    """
+ 
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
@@ -292,18 +282,15 @@ def get_notification_stats(user_id):
         cursor.close()
         conn.close()
 
-# Create a custom notification (for manual notifications)
+# Create a custom notification (for creating manual notifications eksik kalan functionalitylerde buradan esinlenilebiliriz)
 @notification_bp.route("/api/notifications/create", methods=["POST"])
-@notification_bp.route("/api/notification/create", methods=["POST"])  # Adding alternative route
 def create_notification():
-    """
-    Create a custom notification and send it to one or more users
-    """
+
     data = request.json
     required_fields = ["type", "message", "user_ids"]
     
     if not all(field in data for field in required_fields):
-        return jsonify({"success": False, "message": f"Missing required fields: {required_fields}"}), 400
+        return jsonify({"success": False, "message": "Missing required fields"}), 400
     
     if not data["user_ids"] or not isinstance(data["user_ids"], list):
         return jsonify({"success": False, "message": "user_ids must be a non-empty list"}), 400
@@ -313,9 +300,8 @@ def create_notification():
     
     try:
         # Verify all users exist
-        user_ids = data["user_ids"]
-        placeholders = ', '.join(['%s'] * len(user_ids))
-        cursor.execute(f'SELECT id FROM "user" WHERE id IN ({placeholders})', user_ids)
+        user_ids_str = ",".join([f"'{uid}'" for uid in data["user_ids"]])
+        cursor.execute(f'SELECT id FROM "user" WHERE id IN ({user_ids_str})')
         found_users = [row["id"] for row in cursor.fetchall()]
         
         if len(found_users) != len(data["user_ids"]):
