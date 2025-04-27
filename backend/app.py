@@ -73,12 +73,14 @@ from routes.create_course import course_bp
 from routes.user_course import user_course_bp
 from routes.financial_aid import financial_aid_bp
 from routes.profile import profile_bp
+from routes.notification import notification_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(course_bp)
 app.register_blueprint(user_course_bp)
 app.register_blueprint(financial_aid_bp)
 app.register_blueprint(profile_bp)
+app.register_blueprint(notification_bp)
 
 RESET_DB = os.getenv("RESET_DB", "false").lower() == "true"
 print(f"RESET_DB = {RESET_DB}")
