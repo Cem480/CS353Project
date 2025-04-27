@@ -819,6 +819,26 @@ INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, pas
     'instructor'
 );
 
+-- Insert an admin user to receive course pending notifications
+INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
+        VALUES 
+(
+    'U0000004',
+    'Admin',
+    NULL,
+    'User',
+    '555-1000',
+    'admin@example.com',
+    'adminpass', 
+    CURRENT_DATE,
+    '1985-03-10',
+    'admin'
+);
+
+-- Create admin record
+INSERT INTO admin (id, report_count)
+VALUES ('U0000004', 0);
+
 INSERT INTO instructor (id, i_rating, course_count)
 VALUES ('U0000002', 0.0, 0);
 
@@ -832,18 +852,35 @@ INSERT INTO student (major, ID, account_status, certificate_count)
         VALUES (
     'Computer Science', 'U0000003', 'active', 0
 );
+
+INSERT INTO student (major, ID, account_status, certificate_count) 
+        VALUES (
+    'Mathematics', 'U0000001', 'active', 0
+);
                 
-        -- INSERT SAMPLE COURSE
+-- INSERT SAMPLE COURSE
 INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status,
                     enrollment_count, qna_link, difficulty_level, creator_id)
 VALUES
 ('C0000001', 'Intro to Python', 'Learn Python from scratch.', 'Programming', 99, CURRENT_DATE, CURRENT_DATE,
  'accepted', 0, 'https://forum.learnhub.com/python', 2, 'U0000002');
+
+-- INSERT SECOND COURSE WITH DRAFT STATUS (to trigger notification later)
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status,
+                    enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES
+('C0000002', 'Advanced Java Programming', 'Master Java programming with advanced concepts.', 'Programming', 149, CURRENT_DATE, CURRENT_DATE,
+ 'draft', 0, 'https://forum.learnhub.com/java', 4, 'U0000002');
     
-    -- INSERT SECTION
+-- INSERT SECTION
 INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time)
     VALUES
 ('C0000001', 'S000001', 'Getting Started', 'Basics of Python', 1, 30);
+
+-- Insert another section for the first course
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time)
+    VALUES
+('C0000001', 'S000002', 'Functions and Methods', 'Learn about Python functions', 2, 45);
 
 -- INSERT CONTENT - TASK
 INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
@@ -857,6 +894,20 @@ INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_t
 INSERT INTO assessment (course_id, sec_id, content_id, question_count)
 VALUES
 ('C0000001', 'S000001', 'CT000001', 5);
+
+-- Add an assignment to trigger grade notifications
+INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
+    VALUES
+('C0000001', 'S000002', 'CT000004', 'Python Assignment', 60, 'task');
+
+INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage)
+    VALUES
+('C0000001', 'S000002', 'CT000004', 60, 120, 'assignment', 100);
+
+INSERT INTO assignment (course_id, sec_id, content_id, start_date, end_date, upload_material, body)
+    VALUES
+('C0000001', 'S000002', 'CT000004', CURRENT_DATE, CURRENT_DATE + INTERVAL '7 days', 'zip', 
+'Create a simple Python application that demonstrates the use of functions.');
 
 -- INSERT CONTENT - DOCUMENT
 INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
@@ -875,3 +926,44 @@ INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, conte
 INSERT INTO visual_material (course_id, sec_id, content_id, duration, body)
     VALUES
 ('C0000001', 'S000001', 'CT000003', 120, 'intro_video.mp4');
+
+-- NOTIFICATION TRIGGER TEST DATA
+
+-- 1. Student enrollment to trigger enrollment notifications
+INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate)
+VALUES ('C0000001', 'U0000001', CURRENT_DATE, 0);
+
+-- 2. Financial aid application to trigger financial_aid notification
+INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status)
+VALUES ('C0000001', 'U0000003', 25000.00, 'I need financial assistance to take this course.', 'pending');
+
+-- 3. Submit feedback to trigger feedback notification
+INSERT INTO feedback (course_id, student_id, rating, comment, feedback_date)
+VALUES ('C0000001', 'U0000001', 5, 'Excellent course with great content!', CURRENT_DATE);
+
+-- 4. Update course status to trigger course_status_notification
+UPDATE course SET status = 'pending' WHERE course_id = 'C0000002';
+
+-- 5. Grade an assignment to trigger grade notification
+INSERT INTO submit (course_id, sec_id, content_id, student_id, grade, submission_date, answers)
+VALUES ('C0000001', 'S000001', 'CT000001', 'U0000001', 75, CURRENT_DATE, 'A;B;C;D;A');
+
+-- 6. Mark content as completed to increment progress
+INSERT INTO complete (course_id, sec_id, content_id, student_id, is_completed)
+VALUES ('C0000001', 'S000001', 'CT000001', 'U0000001', TRUE);
+
+INSERT INTO complete (course_id, sec_id, content_id, student_id, is_completed)
+VALUES ('C0000001', 'S000001', 'CT000002', 'U0000001', TRUE);
+
+INSERT INTO complete (course_id, sec_id, content_id, student_id, is_completed)
+VALUES ('C0000001', 'S000001', 'CT000003', 'U0000001', TRUE);
+
+INSERT INTO complete (course_id, sec_id, content_id, student_id, is_completed)
+VALUES ('C0000001', 'S000002', 'CT000004', 'U0000001', TRUE);
+
+-- Update progress_rate to 100 to trigger completion notification
+UPDATE enroll SET progress_rate = 100 WHERE course_id = 'C0000001' AND student_id = 'U0000001';
+
+-- 7. Approve financial aid application to trigger notification
+UPDATE apply_financial_aid SET status = 'approved', evaluator_id = 'U0000002' 
+WHERE course_id = 'C0000001' AND student_id = 'U0000003';
