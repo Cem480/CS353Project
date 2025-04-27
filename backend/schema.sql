@@ -14,6 +14,27 @@ CREATE TABLE "user" (
     CHECK (registration_date <= CURRENT_DATE)
 );
 
+-- NOTIFICATION TABLES
+CREATE TABLE notification(
+    notification_id VARCHAR(8),
+    type VARCHAR(30) NOT NULL,
+    entity_type VARCHAR(8),
+    entity_id VARCHAR(8),
+    message TEXT NOT NULL,
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'unread' CHECK (status IN ('unread', 'read', 'archived')),
+    PRIMARY KEY (notification_id)
+);
+
+CREATE TABLE receive(
+    notification_id VARCHAR(8),
+    id VARCHAR(8),
+    read_at TIMESTAMP,
+    PRIMARY KEY (notification_id, id),
+    FOREIGN KEY (notification_id) REFERENCES notification(notification_id) ON DELETE CASCADE,
+    FOREIGN KEY (id) REFERENCES "user"(id)
+);
+
 CREATE TABLE student (
     id VARCHAR(8),
     major VARCHAR(50),
@@ -442,10 +463,334 @@ AFTER INSERT ON course
 FOR EACH ROW
 EXECUTE FUNCTION update_instructor_course_count();
 
+-- NOTIFICATION TRIGGERS
 
+-- Generate notifications when a course status changes
+CREATE OR REPLACE FUNCTION generate_course_status_notification()
+RETURNS TRIGGER AS $$
+DECLARE
+    notify_id VARCHAR(8);
+BEGIN
+    -- Only trigger if status has changed
+    IF OLD.status = NEW.status THEN
+        RETURN NEW;
+    END IF;
+    
+    -- Generate a unique notification ID
+    notify_id := 'N' || SUBSTRING(MD5(RANDOM()::TEXT), 1, 7);
+    
+    -- Create notification based on status change
+    IF NEW.status = 'accepted' THEN
+        INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+        VALUES (notify_id, 'course_approved', 'course', NEW.course_id, 
+                'Your course "' || NEW.title || '" has been approved and is now accessible.');
+                
+        -- Send notification to the course creator
+        INSERT INTO receive (notification_id, id)
+        VALUES (notify_id, NEW.creator_id);
+        
+    ELSIF NEW.status = 'rejected' THEN
+        INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+        VALUES (notify_id, 'course_rejected', 'course', NEW.course_id, 
+                'Your course "' || NEW.title || '" has been rejected. Please review.');
+                
+        -- Send notification to the course creator
+        INSERT INTO receive (notification_id, id)
+        VALUES (notify_id, NEW.creator_id);
+        
+    ELSIF NEW.status = 'pending' AND OLD.status = 'draft' THEN
+        -- Create notification for admin users about a new course needing review
+        INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+        VALUES (notify_id, 'course_pending_review', 'course', NEW.course_id, 
+                'A new course "' || NEW.title || '" needs your review.');
+                
+        -- Send notification to all admin users
+        INSERT INTO receive (notification_id, id)
+        SELECT notify_id, u.id
+        FROM "user" u
+        JOIN admin a ON u.id = a.id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_course_status_notification
+AFTER UPDATE OF status ON course
+FOR EACH ROW
+EXECUTE FUNCTION generate_course_status_notification();
+
+-- Generate notifications for financial aid application status changes
+CREATE OR REPLACE FUNCTION generate_financial_aid_notification()
+RETURNS TRIGGER AS $$
+DECLARE
+    notify_id VARCHAR(8);
+    course_title VARCHAR(150);
+    student_name VARCHAR(150);
+BEGIN
+    -- Only trigger if status has changed
+    IF OLD.status = NEW.status THEN
+        RETURN NEW;
+    END IF;
+    
+    -- Get course title
+    SELECT title INTO course_title 
+    FROM course
+    WHERE course_id = NEW.course_id;
+    
+    -- Get student name
+    SELECT first_name || ' ' || last_name INTO student_name
+    FROM "user"
+    WHERE id = NEW.student_id;
+    
+    -- Generate a unique notification ID
+    notify_id := 'N' || SUBSTRING(MD5(RANDOM()::TEXT), 1, 7);
+    
+    -- Create notification based on status change
+    IF NEW.status = 'approved' THEN
+        -- Notification for student
+        INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+        VALUES (notify_id, 'financial_aid_approved', 'course', NEW.course_id, 
+                'Your financial aid application for "' || course_title || '" has been approved!');
+                
+        -- Send notification to the student
+        INSERT INTO receive (notification_id, id)
+        VALUES (notify_id, NEW.student_id);
+        
+    ELSIF NEW.status = 'rejected' THEN
+        -- Notification for student
+        INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+        VALUES (notify_id, 'financial_aid_rejected', 'course', NEW.course_id, 
+                'Your financial aid application for "' || course_title || '" has been rejected.');
+                
+        -- Send notification to the student
+        INSERT INTO receive (notification_id, id)
+        VALUES (notify_id, NEW.student_id);
+        
+    ELSIF NEW.status = 'pending' THEN
+        -- Create a new notification for instructors
+        notify_id := 'N' || SUBSTRING(MD5(RANDOM()::TEXT), 1, 7);
+        INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+        VALUES (notify_id, 'financial_aid_pending', 'course', NEW.course_id, 
+                student_name || ' has applied for financial aid for your course "' || course_title || '".');
+                
+        -- Send notification to the course instructor
+        INSERT INTO receive (notification_id, id)
+        SELECT notify_id, c.creator_id
+        FROM course c
+        WHERE c.course_id = NEW.course_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_financial_aid_notification
+AFTER INSERT OR UPDATE OF status ON apply_financial_aid
+FOR EACH ROW
+EXECUTE FUNCTION generate_financial_aid_notification();
+
+-- Generate notifications when a student enrolls in a course
+CREATE OR REPLACE FUNCTION generate_enrollment_notification()
+RETURNS TRIGGER AS $$
+DECLARE
+    notify_id VARCHAR(8);
+    course_title VARCHAR(150);
+    student_name VARCHAR(150);
+    instructor_id VARCHAR(8);
+BEGIN
+    -- Get course title and instructor
+    SELECT title, creator_id INTO course_title, instructor_id
+    FROM course
+    WHERE course_id = NEW.course_id;
+    
+    -- Get student name
+    SELECT first_name || ' ' || last_name INTO student_name
+    FROM "user"
+    WHERE id = NEW.student_id;
+    
+    -- Generate a unique notification ID for student
+    notify_id := 'N' || SUBSTRING(MD5(RANDOM()::TEXT), 1, 7);
+    
+    -- Create notification for student
+    INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+    VALUES (notify_id, 'enrollment_success', 'course', NEW.course_id, 
+            'You have successfully enrolled in "' || course_title || '". You can start learning now!');
+            
+    -- Send notification to the student
+    INSERT INTO receive (notification_id, id)
+    VALUES (notify_id, NEW.student_id);
+    
+    -- Generate a unique notification ID for instructor
+    notify_id := 'N' || SUBSTRING(MD5(RANDOM()::TEXT), 1, 7);
+    
+    -- Create notification for instructor
+    INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+    VALUES (notify_id, 'new_student', 'course', NEW.course_id, 
+            student_name || ' has enrolled in your course "' || course_title || '".');
+            
+    -- Send notification to the instructor
+    INSERT INTO receive (notification_id, id)
+    VALUES (notify_id, instructor_id);
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_enrollment_notification
+AFTER INSERT ON enroll
+FOR EACH ROW
+EXECUTE FUNCTION generate_enrollment_notification();
+
+-- Generate notifications when a student completes a course (progress_rate = 100)
+CREATE OR REPLACE FUNCTION generate_course_completion_notification()
+RETURNS TRIGGER AS $$
+DECLARE
+    notify_id VARCHAR(8);
+    course_title VARCHAR(150);
+    student_name VARCHAR(150);
+    instructor_id VARCHAR(8);
+BEGIN
+    -- Only trigger if progress_rate updated to 100
+    IF OLD.progress_rate = 100 OR NEW.progress_rate < 100 THEN
+        RETURN NEW;
+    END IF;
+    
+    -- Get course title and instructor
+    SELECT title, creator_id INTO course_title, instructor_id
+    FROM course
+    WHERE course_id = NEW.course_id;
+    
+    -- Get student name
+    SELECT first_name || ' ' || last_name INTO student_name
+    FROM "user"
+    WHERE id = NEW.student_id;
+    
+    -- Generate a unique notification ID for student
+    notify_id := 'N' || SUBSTRING(MD5(RANDOM()::TEXT), 1, 7);
+    
+    -- Create notification for student
+    INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+    VALUES (notify_id, 'course_completed', 'course', NEW.course_id, 
+            'Congratulations! You have completed "' || course_title || '". Please share your feedback!');
+            
+    -- Send notification to the student
+    INSERT INTO receive (notification_id, id)
+    VALUES (notify_id, NEW.student_id);
+    
+    -- Generate a unique notification ID for instructor
+    notify_id := 'N' || SUBSTRING(MD5(RANDOM()::TEXT), 1, 7);
+    
+    -- Create notification for instructor
+    INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+    VALUES (notify_id, 'student_completed_course', 'course', NEW.course_id, 
+            student_name || ' has completed your course "' || course_title || '".');
+            
+    -- Send notification to the instructor
+    INSERT INTO receive (notification_id, id)
+    VALUES (notify_id, instructor_id);
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_course_completion_notification
+AFTER UPDATE OF progress_rate ON enroll
+FOR EACH ROW
+WHEN (NEW.progress_rate = 100)
+EXECUTE FUNCTION generate_course_completion_notification();
+
+-- Generate notifications when feedback is submitted
+CREATE OR REPLACE FUNCTION generate_feedback_notification()
+RETURNS TRIGGER AS $$
+DECLARE
+    notify_id VARCHAR(8);
+    course_title VARCHAR(150);
+    student_name VARCHAR(150);
+    instructor_id VARCHAR(8);
+BEGIN
+    -- Get course title and instructor
+    SELECT title, creator_id INTO course_title, instructor_id
+    FROM course
+    WHERE course_id = NEW.course_id;
+    
+    -- Get student name
+    SELECT first_name || ' ' || last_name INTO student_name
+    FROM "user"
+    WHERE id = NEW.student_id;
+    
+    -- Generate a unique notification ID for instructor
+    notify_id := 'N' || SUBSTRING(MD5(RANDOM()::TEXT), 1, 7);
+    
+    -- Create notification for instructor
+    INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+    VALUES (notify_id, 'new_feedback', 'course', NEW.course_id, 
+            student_name || ' has left a ' || NEW.rating || '-star feedback for your course "' || course_title || '".');
+            
+    -- Send notification to the instructor
+    INSERT INTO receive (notification_id, id)
+    VALUES (notify_id, instructor_id);
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_feedback_notification
+AFTER INSERT ON feedback
+FOR EACH ROW
+EXECUTE FUNCTION generate_feedback_notification();
+
+-- Generate notifications when an assignment is graded
+CREATE OR REPLACE FUNCTION generate_grade_notification()
+RETURNS TRIGGER AS $$
+DECLARE
+    notify_id VARCHAR(8);
+    content_title VARCHAR(150);
+    course_title VARCHAR(150);
+    passing_grade INTEGER;
+BEGIN
+    -- Only trigger if grade is being added/updated (not NULL)
+    IF NEW.grade IS NULL THEN
+        RETURN NEW;
+    END IF;
+    
+    -- Get content and course title
+    SELECT c.title, course.title, t.passing_grade 
+    INTO content_title, course_title, passing_grade
+    FROM content c
+    JOIN course ON c.course_id = course.course_id
+    JOIN task t ON c.content_id = t.content_id AND c.course_id = t.course_id AND c.sec_id = t.sec_id
+    WHERE c.content_id = NEW.content_id AND c.course_id = NEW.course_id AND c.sec_id = NEW.sec_id;
+    
+    -- Generate a unique notification ID
+    notify_id := 'N' || SUBSTRING(MD5(RANDOM()::TEXT), 1, 7);
+    
+    -- Create notification based on grade
+    IF NEW.grade >= passing_grade THEN
+        INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+        VALUES (notify_id, 'assignment_passed', 'content', NEW.content_id, 
+                'You passed "' || content_title || '" in the course "' || course_title || '" with a grade of ' || NEW.grade || '.');
+    ELSE
+        INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
+        VALUES (notify_id, 'assignment_failed', 'content', NEW.content_id, 
+                'You did not pass "' || content_title || '" in the course "' || course_title || '". Your grade: ' || NEW.grade || '.');
+    END IF;
+    
+    -- Send notification to student
+    INSERT INTO receive (notification_id, id)
+    VALUES (notify_id, NEW.student_id);
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_grade_notification
+AFTER INSERT OR UPDATE OF grade ON submit
+FOR EACH ROW
+EXECUTE FUNCTION generate_grade_notification();
 -- INSERTIONS
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
-VALUES 
+        VALUES 
 (
     'U0000001',
     'John',
@@ -460,12 +805,12 @@ VALUES
 );
 
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
-VALUES 
+        VALUES 
 (
     'U0000002',
     'Alice',
-    'M.',
-    'Smith',
+    'M.', 
+                'Smith',
     '555-5678',
     'alice.smith@example.com',
     'password456', -- use hashed password in production
@@ -478,35 +823,35 @@ INSERT INTO instructor (id, i_rating, course_count)
 VALUES ('U0000002', 0.0, 0);
 
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role) 
-VALUES (
-    'U0000003', 'Jane', NULL, 'Doe', '555-9999',
-    'jane.doe@example.com', 'hashedpassword', CURRENT_DATE, '2000-01-01', 'student'
+        VALUES (
+    'U0000003', 'Jane', NULL, 'Doe', '555-9999', 
+                'jane.doe@example.com', 'hashedpassword', CURRENT_DATE, '2000-01-01', 'student'
 );
 
 INSERT INTO student (major, ID, account_status, certificate_count) 
-VALUES (
+        VALUES (
     'Computer Science', 'U0000003', 'active', 0
 );
-
--- INSERT SAMPLE COURSE
+                
+        -- INSERT SAMPLE COURSE
 INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status,
                     enrollment_count, qna_link, difficulty_level, creator_id)
 VALUES
 ('C0000001', 'Intro to Python', 'Learn Python from scratch.', 'Programming', 99, CURRENT_DATE, CURRENT_DATE,
  'accepted', 0, 'https://forum.learnhub.com/python', 2, 'U0000002');
-
--- INSERT SECTION
+    
+    -- INSERT SECTION
 INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time)
-VALUES
+    VALUES
 ('C0000001', 'S000001', 'Getting Started', 'Basics of Python', 1, 30);
 
 -- INSERT CONTENT - TASK
 INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
-VALUES
+    VALUES
 ('C0000001', 'S000001', 'CT000001', 'Python Quiz 1', 15, 'task');
 
 INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage)
-VALUES
+    VALUES
 ('C0000001', 'S000001', 'CT000001', 50, 30, 'assessment', 100);
 
 INSERT INTO assessment (course_id, sec_id, content_id, question_count)
@@ -515,7 +860,7 @@ VALUES
 
 -- INSERT CONTENT - DOCUMENT
 INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
-VALUES
+    VALUES
 ('C0000001', 'S000001', 'CT000002', 'Python Basics Document', 10, 'document');
 
 INSERT INTO document (course_id, sec_id, content_id, body)
@@ -524,9 +869,9 @@ VALUES
 
 -- INSERT CONTENT - VISUAL MATERIAL
 INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
-VALUES
+        VALUES
 ('C0000001', 'S000001', 'CT000003', 'Intro Video', 20, 'visual_material');
 
 INSERT INTO visual_material (course_id, sec_id, content_id, duration, body)
-VALUES
+    VALUES
 ('C0000001', 'S000001', 'CT000003', 120, 'intro_video.mp4');
