@@ -1,0 +1,581 @@
+/* =======================================================
+   (optional) get color vars / reset from CoursePage
+   delete this line if you don’t need it
+======================================================= */
+@import url('../CoursePage/CoursePage.css');
+
+/* =======================================================
+   GLOBAL TYPE SCALE  (25 % larger than default)
+======================================================= */
+.profile-page,
+.profile-page * {
+    font-size: 1.25rem;
+    line-height: 1.55;
+}
+
+/* Headings (scaled) */
+.info-card h2 {
+    font-size: 1.65rem;
+    line-height: 1.3;
+    margin: 0 0 18px;
+}
+
+.role-card h3 {
+    font-size: 1.5rem;
+    margin: 0 0 18px;
+}
+
+.role-card h4 {
+    font-size: 1.35rem;
+    margin: 28px 0 12px;
+}
+
+/* =======================================================
+   PAGE LAYOUT
+======================================================= */
+.profile-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--bg-color);
+}
+
+/* header (unchanged aside from font bump) */
+.profile-header {
+    display: flex;
+    align-items: center;
+    height: 64px;
+    padding: 0 24px;
+    background: #fff;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .05);
+}
+
+.logo-text {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.header-right {
+    margin-left: auto;
+    display: flex;
+    gap: 18px;
+}
+
+.notification-btn {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    cursor: pointer;
+}
+
+.profile-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* main wrapper */
+.profile-main {
+    flex: 1;
+    padding: 40px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* place cards side-by-side and stretch them */
+.profile-main.flex-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    justify-content: center;
+}
+
+/* =======================================================
+   CARD BASE
+======================================================= */
+.info-card,
+.role-card {
+    flex: 1 1 48%;
+    /* take up ~48 % of row, shrink if needed */
+    min-width: 420px;
+    /* don’t get narrower than this */
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .07);
+}
+
+/* green variant */
+.info-card--green {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+}
+
+.info-card--green h2,
+.info-card--green strong {
+    color: #fff;
+}
+
+.info-card--green p {
+    opacity: .92;
+}
+
+/* =======================================================
+   TABLES & LISTS
+======================================================= */
+.course-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.1rem;
+}
+
+.course-table th,
+.course-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.course-table th {
+    background: #f7f7f7;
+    font-weight: 600;
+}
+
+.bullet-list {
+    padding-left: 24px;
+}
+
+.bullet-list li {
+    margin: 6px 0;
+}
+
+.feedback-list li {
+    margin: 10px 0 16px;
+    line-height: 1.45;
+}
+
+/* misc */
+.muted {
+    color: var(--text-light);
+}
+
+.error {
+    color: var(--overdue-color);
+    text-align: center;
+    margin-top: 48px;
+}
+
+/* =======================================================
+   MOBILE STACK (≤ 900 px)
+======================================================= */
+@media (max-width:900px) {
+    .profile-main.flex-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .info-card,
+    .role-card {
+        flex: none;
+        width: 92%;
+    }
+}
+
+/* === FORCE TWO-UP LAYOUT (desktop) ===================== */
+@media (min-width: 901px) {
+
+    /* wrapper stays flex-row */
+    .profile-main.flex-row {
+        flex-wrap: nowrap;
+        gap: 32px;
+    }
+
+    /* each card = 50 % minus the gap so they always fit */
+    .profile-main.flex-row>.info-card,
+    .profile-main.flex-row>.role-card {
+        flex: 0 0 calc(50% - 16px);
+        /* two columns, no wrapping   */
+        max-width: calc(50% - 16px);
+    }
+}
+
+/* === FULL-WIDTH ROW OVERRIDE =================================== */
+
+/* wrapper should fill the viewport, no internal max-width / margin */
+.profile-main {
+    max-width: none;
+    margin: 0;
+    /* override the earlier auto-centering */
+    padding: 40px 32px;
+    /* keep some side breathing room */
+}
+
+/* desktop: force two cards, flush left/right */
+@media (min-width: 900px) {
+
+    .profile-main.flex-row {
+        flex-wrap: nowrap;
+        gap: 32px;
+        /* space BETWEEN the cards   */
+        justify-content: space-between;
+        /* push cards to edges        */
+    }
+
+    .profile-main.flex-row>.info-card,
+    .profile-main.flex-row>.role-card {
+        flex: 0 0 calc(50% - 16px);
+        /* half width minus half gap */
+        max-width: calc(50% - 16px);
+    }
+}
+
+/* =======================================================
+   COURSE & FEEDBACK CARD GRIDS
+======================================================= */
+
+/* grid wrapper */
+.course-grid,
+.feedback-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 24px;
+}
+
+/* course cards — green style */
+.course-card {
+    flex: 1 1 260px;
+    background: var(--primary-color);
+    color: #fff;
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
+}
+
+.course-title {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+    line-height: 1.3;
+}
+
+.course-meta {
+    margin: 0;
+    font-size: .95rem;
+    opacity: .92;
+}
+
+/* feedback cards — white style */
+.feedback-card {
+    flex: 1 1 260px;
+    background: #fff;
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .06);
+}
+
+.feedback-title {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.feedback-text {
+    margin: 0 0 8px;
+    font-size: 1rem;
+}
+
+.feedback-date {
+    margin: 0;
+    font-size: .85rem;
+}
+
+/* responsive: full width on phones */
+@media (max-width: 600px) {
+
+    .course-card,
+    .feedback-card {
+        flex: 1 1 100%;
+    }
+}
+
+/* role text next to the name */
+.name-role {
+    font-size: 0.95em;
+    /* slightly smaller than the name, yet larger */
+    font-weight: 400;
+    /* normal weight                               */
+    color: #ffffff;
+    /* pure white so it matches the green card     */
+}
+
+/* =======================================================
+   COURSE CARD REFINEMENTS
+======================================================= */
+.course-card {
+    display: flex;
+    align-items: center;
+    /* vertical centering              */
+    gap: 24px;
+    /* space between title & meta      */
+    padding: 24px 32px;
+    /* bigger breathing room           */
+}
+
+/* bigger bold title, no underline */
+.course-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+    text-decoration: none;
+    /* remove any link underline       */
+}
+
+/* meta text in one line, slightly dim */
+.course-meta {
+    font-size: 1.05rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* keep entire card clickable if you later add an onClick */
+.course-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+}
+
+/* =======================================================
+   COURSE CARD — final polish
+   • title bold & white
+   • meta pushed to far-right
+   • no stray line / underline
+======================================================= */
+.course-card {
+    display: flex;
+    justify-content: space-between;
+    /* title left – meta right  */
+    align-items: center;
+    /* vertical centering       */
+    padding: 24px 32px;
+    background: var(--primary-color);
+    border-radius: 14px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
+}
+
+.course-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #fff;
+    /* white title              */
+    text-decoration: none;
+    /* remove default <a> line  */
+    border: 0;
+    /* ensure no underline      */
+}
+
+.course-meta {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #ffffffcc;
+    /* white with slight translucency */
+    white-space: nowrap;
+    /* keep meta on one line    */
+}
+
+/* =======================================================
+   FEEDBACK CARD POLISH + HOVER
+======================================================= */
+.feedback-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 22px 26px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .06);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.feedback-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+}
+
+/* header row */
+.feedback-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.feedback-title {
+    font-weight: 600;
+    flex: 1 1 auto;
+}
+
+/* grows */
+.feedback-rating {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.yellow-star {
+    color: #f7c948;
+    margin-left: 2px;
+}
+
+/* yellow ★ */
+.feedback-date {
+    white-space: nowrap;
+    font-size: .95rem;
+    color: var(--text-light);
+}
+
+.feedback-text {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.45;
+}
+
+/* =======================================================
+   TWO-COLUMN LAYOUT
+======================================================= */
+.profile-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: space-between;
+    padding: 40px 32px;
+}
+
+/* each column = 48 % width on desktop */
+.profile-col {
+    flex: 0 0 calc(50% - 16px);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    /* space between stacked cards */
+}
+
+/* make cards auto-height (already true) and full width */
+.profile-col>* {
+    width: 100%;
+}
+
+/* feedback wrapper card (white, same style as role card) */
+.feedback-wrapper {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 28px 32px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .07);
+}
+
+/* mobile: stack columns */
+@media (max-width: 900px) {
+    .profile-col {
+        flex: 0 0 100%;
+    }
+}
+
+/* =======================================================
+   ROOMIER TYPOGRAPHY & PADDING
+======================================================= */
+
+/* bump global font again (was 1.25rem) → 1.38rem ≈ 22px base */
+.profile-page,
+.profile-page * {
+    font-size: 1.38rem;
+    line-height: 1.6;
+}
+
+/* Top-level cards: add padding */
+.info-card,
+.role-card,
+.feedback-wrapper {
+    padding: 36px 36px;
+    /* was 28–32px */
+}
+
+/* paragraphs inside cards: add spacing */
+.info-card p,
+.role-card p,
+.feedback-card p {
+    margin: 10px 0;
+}
+
+/* grid cards (course / feedback) more vertical room */
+.course-card,
+.feedback-card {
+    padding: 26px 32px;
+    /* +2-4px */
+}
+
+/* titles in grids a hair bigger */
+.course-title {
+    font-size: 1.45rem;
+}
+
+.feedback-title {
+    font-size: 1.3rem;
+}
+
+/* keep small text (dates / meta) from inflating too much */
+.course-meta,
+.feedback-date {
+    font-size: 1.05rem;
+}
+
+/* extra space under “Feedback” heading inside its wrapper */
+.feedback-heading {
+    margin-bottom: 18px;
+    /* adjust up/down as you like */
+}
+
+/* =======================================================
+   PROGRESS BAR INSIDE STUDENT COURSE CARD
+======================================================= */
+.progress-outer {
+    width: 50%;
+    height: 12px;
+    background: rgba(255, 255, 255, .25);
+    /* translucent track */
+    border-radius: 6px;
+    margin: 12px 0 8px auto;
+    overflow: hidden;
+}
+
+.progress-inner {
+    height: 100%;
+    background: #f7c948;
+    /* yellow fill */
+    border-radius: 6px 0 0 6px;
+    transition: width .3s ease;
+}
+
+/* slightly tighter meta under the bar */
+.course-meta {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #ffffffcc;
+}
+
+/* extra gap between name line and the details */
+.info-card h2 {
+    margin-bottom: 40px;
+    /* adjust to taste */
+}

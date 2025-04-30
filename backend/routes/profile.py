@@ -184,38 +184,62 @@ def get_profile():
             )
             student = cursor.fetchone()
 
-            cursor.execute(
-                """
-                SELECT c.title
-                FROM earn_certificate ec
-                JOIN certificate c ON ec.certificate_id = c.certificate_id
-                WHERE ec.student_id = %s
-            """,
-                (user_id,),
-            )
-            certificates = [row["title"] for row in cursor.fetchall()]
+            # ----- certificates temporarily disabled -----
+            # cursor.execute(
+            #     """
+            #     SELECT c.title
+            #     FROM earn_certificate ec
+            #     JOIN certificate c ON ec.certificate_id = c.certificate_id
+            #     WHERE ec.student_id = %s
+            #     """,
+            #     (user_id,),
+            # )
+            # certificates = [row["title"] for row in cursor.fetchall()]
 
+            certificates = []  # ← placeholder so later code still works
+
+            # --- Enrolled courses with progress ---------------------------------
             cursor.execute(
                 """
-                SELECT co.title
+                SELECT co.course_id,
+                    co.title,
+                    e.progress_rate
                 FROM enroll e
                 JOIN course co ON e.course_id = co.course_id
                 WHERE e.student_id = %s
-            """,
+                """,
                 (user_id,),
             )
-            enrolled_courses = [row["title"] for row in cursor.fetchall()]
+            enrolled_courses = [
+                {
+                    "course_id": row["course_id"],
+                    "title": row["title"],
+                    "progress_rate": row["progress_rate"],  # 0-100
+                }
+                for row in cursor.fetchall()
+            ]
 
+            # --- Completed courses (== 100 %) -----------------------------------
             cursor.execute(
                 """
-                SELECT co.title
+                SELECT co.course_id,
+                    co.title,
+                    e.progress_rate            -- will always be 100
                 FROM enroll e
                 JOIN course co ON e.course_id = co.course_id
-                WHERE e.student_id = %s AND e.progress_rate = 100
-            """,
+                WHERE e.student_id = %s
+                AND e.progress_rate = 100
+                """,
                 (user_id,),
             )
-            completed_courses = [row["title"] for row in cursor.fetchall()]
+            completed_courses = [
+                {
+                    "course_id": row["course_id"],
+                    "title": row["title"],
+                    "progress_rate": row["progress_rate"],
+                }
+                for row in cursor.fetchall()
+            ]
 
             profile_data["student_info"] = {
                 "major": student["major"],

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import AuthPage from './pages/AuthPage/AuthPage';
 import MainPage from './pages/MainPage/MainPage';
 import DegreesPage from './pages/DegreesPage/DegreesPage';
@@ -13,87 +14,72 @@ import InstructorApplicationsPage from './pages/Applications/InstructorApplicati
 import InstructorMainPage from './pages/InstructorsMainPage/InstructorsMainPage';
 import CreateCourse from './pages/CreateCourse/CreateCourse';
 import AddSection from './pages/AddSection/AddSection';
+import ProfilePage from './pages/ProfilePage/ProfilePage';      // ⬅️ NEW
+
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
 function App() {
-  // Simple Protected Route component
-  const ProtectedRoute = ({ element }) => {
-    return isLoggedIn() ? element : <Navigate to="/login" />;
-  };
-  
-  // Role-based Protected Route component
+  /* ─────────────────────────  helpers  ───────────────────────── */
+
+  // Generic protected route
+  const ProtectedRoute = ({ element }) =>
+    isLoggedIn() ? element : <Navigate to="/login" replace />;
+
+  // Role-based protected route
   const RoleProtectedRoute = ({ element, allowedRole }) => {
-    if (!isLoggedIn()) {
-      return <Navigate to="/login" />;
-    }
-    
+    if (!isLoggedIn()) return <Navigate to="/login" replace />;
     const userData = getCurrentUser();
-    if (userData && userData.role === allowedRole) {
-      return element;
-    }
-    
-    return <Navigate to="/home" />;
+    return userData?.role === allowedRole
+      ? element
+      : <Navigate to="/home" replace />;
   };
-  
-  // HomeRoute that changes based on user role
+
+  // Dynamic home (redirects by role)
   const HomeRoute = () => {
-    if (!isLoggedIn()) {
-      return <Navigate to="/login" />;
-    }
-    
+    if (!isLoggedIn()) return <Navigate to="/login" replace />;
     const userData = getCurrentUser();
-    if (userData && userData.role === 'instructor') {
-      return <InstructorMainPage />;
-    }
-    
-    return <MainPage />;
+    return userData?.role === 'instructor'
+      ? <InstructorMainPage />
+      : <MainPage />;
   };
+
+  /* ─────────────────────────  routes  ───────────────────────── */
 
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          {/* Public routes */}
-          <Route 
-            path="/login" 
-            element={<AuthPage />} 
-          />
-          
-          {/* Home route - redirects based on role */}
-          <Route path="/home" element={<HomeRoute />} />
-          
-          {/* Protected routes */}
-          <Route path="/my-learning" element={<ProtectedRoute element={<MyLearningPage />} />} />
-          <Route path="/course" element={<ProtectedRoute element={<CoursePage />} />} />
-          <Route path="/notifications" element={<ProtectedRoute element={<NotificationPage />} />} />
-          <Route path="/course-details" element={<ProtectedRoute element={<CourseDetails />} />} />
-          <Route path="/financial-aid" element={<ProtectedRoute element={<FinancialAid />} />} />
-          <Route path="/transaction" element={<ProtectedRoute element={<TransactionPage />} />} />
-          <Route path="/degrees" element={<ProtectedRoute element={<DegreesPage />} />} />
-          
-          {/* Instructor specific routes */}
-          <Route 
-            path="/instructor/dashboard" 
-            element={<RoleProtectedRoute element={<InstructorMainPage />} allowedRole="instructor" />} 
-          />
-          <Route 
-            path="/create-course" 
-            element={<RoleProtectedRoute element={<CreateCourse />} allowedRole="instructor" />} 
-          />
-          <Route 
-            path="/course/:courseId/add-section" 
-            element={<RoleProtectedRoute element={<AddSection />} allowedRole="instructor" />} 
-          />
-          <Route 
-            path="/applications" 
-            element={<RoleProtectedRoute element={<InstructorApplicationsPage />} allowedRole="instructor" />} 
-          />
-          
-          {/* Default routes */}
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
-      </div>
+      <Routes>
+        {/* Public */}
+        <Route path="/login" element={<AuthPage />} />
+
+        {/* Role-aware Home */}
+        <Route path="/home" element={<HomeRoute />} />
+
+        {/* Auth-protected pages */}
+        <Route path="/my-learning" element={<ProtectedRoute element={<MyLearningPage />} />} />
+        <Route path="/course" element={<ProtectedRoute element={<CoursePage />} />} />
+        <Route path="/notifications" element={<ProtectedRoute element={<NotificationPage />} />} />
+        <Route path="/course-details" element={<ProtectedRoute element={<CourseDetails />} />} />
+        <Route path="/financial-aid" element={<ProtectedRoute element={<FinancialAid />} />} />
+        <Route path="/transaction" element={<ProtectedRoute element={<TransactionPage />} />} />
+        <Route path="/degrees" element={<ProtectedRoute element={<DegreesPage />} />} />
+
+        {/* NEW — profile page (all logged-in users) */}
+        <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
+
+        {/* Instructor-only */}
+        <Route path="/instructor/dashboard"
+          element={<RoleProtectedRoute element={<InstructorMainPage />} allowedRole="instructor" />} />
+        <Route path="/create-course"
+          element={<RoleProtectedRoute element={<CreateCourse />} allowedRole="instructor" />} />
+        <Route path="/course/:courseId/add-section"
+          element={<RoleProtectedRoute element={<AddSection />} allowedRole="instructor" />} />
+        <Route path="/applications"
+          element={<RoleProtectedRoute element={<InstructorApplicationsPage />} allowedRole="instructor" />} />
+
+        {/* Fallbacks */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     </Router>
   );
 }
