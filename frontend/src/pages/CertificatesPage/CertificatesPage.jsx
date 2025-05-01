@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './CertificatesPage.css';
+import html2pdf from 'html2pdf.js';
 
 const CertificatesPage = () => {
   const [certificates, setCertificates] = useState([]);
@@ -13,6 +14,55 @@ const CertificatesPage = () => {
       .then((data) => setCertificates(data.certificates || []))
       .catch((err) => console.error('Failed to fetch certificates', err));
   }, []);
+
+  const generateCertificateHTML = (cert) => `
+    <div style="
+        width: 100%;
+        height: 100%;
+        padding: 60px;
+        border: 20px solid #2e7d32;
+        box-sizing: border-box;
+        font-family: 'Garamond', 'Times New Roman', serif;
+        text-align: center;
+    ">
+        <div style="font-size: 60px; color: #2e7d32; margin-bottom: 10px;">🎓</div>
+        <h1 style="color: #2e7d32; font-size: 28pt; margin-bottom: 10px;">Certificate of Completion</h1>
+        <p style="font-size: 13pt;">This is to certify that</p>
+        <h2 style="font-size: 18pt; font-weight: bold; margin: 10px 0;">${cert.student_name}</h2>
+        <p style="font-size: 13pt;">has successfully completed the course</p>
+        <h3 style="font-size: 16pt; font-weight: bold; margin: 10px 0;">"${cert.course_title}"</h3>
+        <p style="font-size: 13pt;">on <strong>${cert.certification_date}</strong></p>
+        <p style="margin-top: 60px; font-size: 11pt; color: #555;">LearnHub • www.learnhub.edu</p>
+    </div>
+  `;
+
+  const downloadPDF = (cert) => {
+    const html = generateCertificateHTML(cert);
+
+    // Create container with fixed size matching PDF config
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    container.style.width = '796.8px';   // A5 landscape dimensions
+    container.style.height = '556px';
+    container.style.overflow = 'hidden';
+    container.style.padding = '0';
+    container.style.margin = '0';
+    container.style.boxSizing = 'border-box';
+  
+    document.body.appendChild(container);
+  
+    html2pdf()
+      .from(container)
+      .set({
+        margin: 0,
+        filename: `${cert.student_name}_${cert.course_title}_certificate.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: [5.8, 8.3], orientation: 'landscape' }
+      })
+      .save()
+      .then(() => document.body.removeChild(container));
+  };
 
   return (
     <div className="my-learning-page">
@@ -55,12 +105,14 @@ const CertificatesPage = () => {
                     Certificate of Completion: <strong>{cert.course_title}</strong>
                     </h3>
                     <p>
-                    This is to certify that <strong>{cert.studentName}</strong> has successfully completed the online course
+                    This is to certify that <strong>{cert.student_name}</strong> has successfully completed the online course
                     <strong> "{cert.course_title}"</strong> on <strong>{cert.certification_date}</strong>.
                     Congratulations on your achievement!
                     </p>
                     <div className="cert-footer">
-                    <button className="outline-button">Download</button>
+                        <button className="outline-button" onClick={() => downloadPDF(cert)}>
+                            Download
+                        </button>                    
                     </div>
                 </div>
                 ))}
