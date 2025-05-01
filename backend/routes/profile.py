@@ -184,19 +184,16 @@ def get_profile():
             )
             student = cursor.fetchone()
 
-            # ----- certificates temporarily disabled -----
-            # cursor.execute(
-            #     """
-            #     SELECT c.title
-            #     FROM earn_certificate ec
-            #     JOIN certificate c ON ec.certificate_id = c.certificate_id
-            #     WHERE ec.student_id = %s
-            #     """,
-            #     (user_id,),
-            # )
-            # certificates = [row["title"] for row in cursor.fetchall()]
-
-            certificates = []  # ← placeholder so later code still works
+            cursor.execute(
+                """
+                SELECT c.title
+                FROM earn_certificate ec
+                JOIN certificate c ON ec.certificate_id = c.certificate_id
+                WHERE ec.student_id = %s
+                """,
+                (user_id,),
+            )
+            certificates = [row["title"] for row in cursor.fetchall()]
 
             # --- Enrolled courses with progress (<100%) ---------------------------------
             cursor.execute(
