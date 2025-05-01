@@ -745,3 +745,67 @@
     flex-direction: column;
     gap: 24px;
 }
+
+/* ─── certificate cards (one-per-row, yellow) ───────────────────────────────── */
+.certificate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+}
+
+.certificate-card {
+    background: #f7c948;
+    /* same yellow as your progress bar */
+    padding: 20px 24px;
+    border-radius: 14px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.certificate-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+}
+
+.certificate-title {
+    margin: 0;
+    font-size: 1.35rem;
+    /* match your course-title size */
+    font-weight: 700;
+    color: #000;
+    /* bold black text */
+}
+
+/* ─── Certificates: full-width yellow cards ───────────────── */
+
+.certificate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+}
+
+.certificate-card {
+    width: 100%;
+    background: #f3d070;
+    padding: 24px 32px;
+    border-radius: 14px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
+    display: flex;
+    align-items: center;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.certificate-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+}
+
+.certificate-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #000;
+    text-align: left;
+}

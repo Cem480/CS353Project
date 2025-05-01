@@ -101,8 +101,7 @@ const ProfilePage = () => {
                             <h4 className="feedback-heading">
                                 Certificates ({profile.student_info?.certificate_count ?? 0})
                             </h4>
-
-                            <BulletList
+                            <CertificateCardList
                                 list={profile.student_info?.certificates ?? []}
                                 empty="No certificates earned yet."
                             />
@@ -261,12 +260,27 @@ const FeedbackCardList = ({ list }) => {
 };
 
 
-
-
 /* keep simple bullet list for certificates / enrollments */
 const BulletList = ({ list, empty }) =>
     list?.length ? <ul className="bullet-list">{list.map((t, i) => <li key={i}>{t}</li>)}</ul>
         : <p className="muted">{empty}</p>;
 
+
+
+
+// at the bottom of ProfilePage.jsx, after BulletList:
+const CertificateCardList = ({ list, empty }) => {
+    if (!list?.length) return <p className="muted">{empty}</p>;
+
+    return (
+        <div className="certificate-list">
+            {list.map((cert, i) => (
+                <div key={i} className="certificate-card">
+                    <p className="certificate-title">{cert}</p>
+                </div>
+            ))}
+        </div>
+    );
+};
 
 export default ProfilePage;
