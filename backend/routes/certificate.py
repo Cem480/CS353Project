@@ -1,7 +1,6 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from db import connect_project_db
 import psycopg2.extras
-from uuid import uuid4
 from datetime import datetime 
 
 certificate_bp = Blueprint("certificate", __name__)
@@ -90,6 +89,62 @@ def generate_certificate(course_id, student_id):
     except Exception as e:
         conn.rollback()
         return jsonify({"success": False, "message": f"Internal server error: {str(e)}"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+@certificate_bp.route("/api/certificate/list", methods=["GET"])
+def list_certificates():
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Not authenticated"}), 401
+
+    user_id = session["user_id"]
+    user_role = session.get("role")
+
+    if user_role != "student":
+        return jsonify({"success": False, "message": "Only students can have certificates"}), 403
+
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute("""
+            SELECT 
+                ec.certificate_id, 
+                c.title, 
+                c.body, 
+                ec.certification_date, 
+                crs.title AS course_title,
+                u.first_name, 
+                u.middle_name, 
+                u.last_name
+            FROM earn_certificate ec
+            JOIN certificate c ON ec.certificate_id = c.certificate_id
+            JOIN course crs ON ec.course_id = crs.course_id
+            JOIN "user" u ON ec.student_id = u.id
+            WHERE ec.student_id = %s
+            ORDER BY ec.certification_date DESC
+        """, (user_id,))
+
+        rows = cursor.fetchall()
+
+        certificates = [
+            {
+                "certificate_id": row["certificate_id"],
+                "title": row["title"],
+                "body": row["body"],
+                "certification_date": row["certification_date"].strftime("%Y-%m-%d"),
+                "course_title": row["course_title"],
+                "student_name": " ".join(filter(None, [row["first_name"], row["middle_name"], row["last_name"]]))
+            }
+            for row in rows
+        ]
+
+        return jsonify({"success": True, "certificates": certificates, "count": len(certificates)})
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
     finally:
         cursor.close()
