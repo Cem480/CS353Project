@@ -807,6 +807,25 @@ CREATE TRIGGER trg_grade_notification
 AFTER INSERT OR UPDATE OF grade ON submit
 FOR EACH ROW
 EXECUTE FUNCTION generate_grade_notification();
+
+-- Increment certificate_count of student when a new one is issued
+CREATE OR REPLACE FUNCTION increment_certificate_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE student
+    SET certificate_count = certificate_count + 1
+    WHERE ID = NEW.student_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_certificate_count
+AFTER INSERT ON earn_certificate
+FOR EACH ROW
+EXECUTE FUNCTION increment_certificate_count();
+
+
+
 -- INSERTIONS
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
         VALUES 
@@ -817,7 +836,7 @@ INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, pas
     'Doe',
     '555-1234',
     'john.doe@example.com',
-    'password123', -- (later we will hash passwords) -- passwords are now being hashed in the register function
+    'password123',
     CURRENT_DATE,
     '1995-06-15',
     'student'
@@ -832,7 +851,7 @@ INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, pas
                 'Smith',
     '555-5678',
     'alice.smith@example.com',
-    'password456', -- use hashed password in production
+    'password456',
     CURRENT_DATE,
     '1988-04-22',
     'instructor'

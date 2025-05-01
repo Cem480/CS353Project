@@ -57,7 +57,7 @@ def generate_certificate(course_id, student_id):
         certificate_count = cursor.fetchone()[0]
 
         # Generate new certificate ID
-        certificate_id = f"C{certificate_count + 1:07d}"
+        cert_id = f"C{certificate_count + 1:07d}"
         full_name = " ".join(filter(None, [student["first_name"], student["middle_name"], student["last_name"]]))
         course_title = course["title"]
         date_str = datetime.today().strftime("%B %d, %Y")  # e.g., April 30, 2025
