@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './MyLearningPage.css';
 import CourseReviewPopup from './ReviewPopUp';
+import { Link } from 'react-router-dom';
+
 const MyLearningPage = () => {
   // Mockup enrolled courses with completion percentages
   const [enrolledCourses] = useState([
@@ -89,9 +91,10 @@ const MyLearningPage = () => {
             <h1>LearnHub</h1>
           </div>
           <div className="nav-links">
-            <a href="#">Home</a>
-            <a href="#">Online Degrees</a>
-            <a href="#" className="active">My Learning</a>
+            <Link to="/home">Home</Link>
+            <Link to="/degrees">Online Degrees</Link>
+            <Link to="/my-learning" className="active">My Learning</Link>
+            <Link to="/my-certificates">My Certificates</Link>
           </div>
         </div>
         <div className="header-right">

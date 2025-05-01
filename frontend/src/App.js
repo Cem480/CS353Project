@@ -15,6 +15,7 @@ import InstructorMainPage from './pages/InstructorsMainPage/InstructorsMainPage'
 import CreateCourse from './pages/CreateCourse/CreateCourse';
 import AddSection from './pages/AddSection/AddSection';
 import ProfilePage from './pages/ProfilePage/ProfilePage';      // ⬅️ NEW
+import CertificatesPage from './pages/CertificatesPage/CertificatesPage'; // ⬅️ NEW
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -65,6 +66,10 @@ function App() {
 
         {/* NEW — profile page (all logged-in users) */}
         <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
+
+        {/* NEW — certificates page */}
+        <Route path="/my-certificates" element={<ProtectedRoute element={<CertificatesPage />} />} />
+
 
         {/* Instructor-only */}
         <Route path="/instructor/dashboard"

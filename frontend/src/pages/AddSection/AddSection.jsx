@@ -72,7 +72,7 @@ const AddSection = () => {
       // Try to load from API first
       try {
         console.log('Fetching course data for:', courseId);
-        const response = await fetch(`http://localhost:5000/api/course/${courseId}`, {
+        const response = await fetch(`http://localhost:5001/api/course/${courseId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -147,7 +147,7 @@ const AddSection = () => {
   const fetchSections = async () => {
     try {
       console.log('Fetching sections for course:', courseId);
-      const response = await fetch(`http://localhost:5000/api/course/${courseId}/sections`, {
+      const response = await fetch(`http://localhost:5001/api/course/${courseId}/sections`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ const AddSection = () => {
     
     try {
       console.log(`Fetching content for section: ${sectionId}`);
-      const response = await fetch(`http://localhost:5000/api/course/${courseId}/section/${sectionId}/content`, {
+      const response = await fetch(`http://localhost:5001/api/course/${courseId}/section/${sectionId}/content`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -316,10 +316,10 @@ const AddSection = () => {
       };
       
       console.log('Sending section data:', requestData);
-      console.log('To URL:', `http://localhost:5000/api/add/course/${courseId}/section`);
+      console.log('To URL:', `http://localhost:5001/api/add/course/${courseId}/section`);
       
       // Make API call to add section
-      const response = await fetch(`http://localhost:5000/api/add/course/${courseId}/section`, {
+      const response = await fetch(`http://localhost:5001/api/add/course/${courseId}/section`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -447,7 +447,7 @@ const AddSection = () => {
         formData.append('body', uploadedFile);
       }
       
-      console.log('Sending content to:', `http://localhost:5000/api/add/course/${courseId}/section/${selectedSectionId}/content`);
+      console.log('Sending content to:', `http://localhost:5001/api/add/course/${courseId}/section/${selectedSectionId}/content`);
       console.log('Content type:', selectedContentType);
       console.log('Content title:', contentForm.title);
       
@@ -457,7 +457,7 @@ const AddSection = () => {
       }
       
       // Make API call to add content
-      const response = await fetch(`http://localhost:5000/api/add/course/${courseId}/section/${selectedSectionId}/content`, {
+      const response = await fetch(`http://localhost:5001/api/add/course/${courseId}/section/${selectedSectionId}/content`, {
         method: 'POST',
         body: formData,
         credentials: 'include',

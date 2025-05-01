@@ -47,6 +47,7 @@ const MainPage = () => {
             <a href="/home" className="active">Home</a>
             <a href="/degrees">Online Degrees</a>
             <a href="/my-learning">My Learning</a>
+            <a href="/my-certificates">My Certificates</a>
           </div>
         </div>
         <div className="header-right">

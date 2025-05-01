@@ -130,7 +130,7 @@ const CreateCourse = () => {
       
       try {
         // Try to call the real API first
-        const response = await fetch('http://localhost:5000/api/add/course', {
+        const response = await fetch('http://localhost:5001/api/add/course', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
