@@ -198,7 +198,7 @@ def get_profile():
 
             certificates = []  # ← placeholder so later code still works
 
-            # --- Enrolled courses with progress ---------------------------------
+            # --- Enrolled courses with progress (<100%) ---------------------------------
             cursor.execute(
                 """
                 SELECT co.course_id,
@@ -207,6 +207,7 @@ def get_profile():
                 FROM enroll e
                 JOIN course co ON e.course_id = co.course_id
                 WHERE e.student_id = %s
+                AND e.progress_rate < 100
                 """,
                 (user_id,),
             )
@@ -214,17 +215,17 @@ def get_profile():
                 {
                     "course_id": row["course_id"],
                     "title": row["title"],
-                    "progress_rate": row["progress_rate"],  # 0-100
+                    "progress_rate": row["progress_rate"],
                 }
                 for row in cursor.fetchall()
             ]
 
-            # --- Completed courses (== 100 %) -----------------------------------
+            # --- Completed courses (== 100%) -------------------------------------------
             cursor.execute(
                 """
                 SELECT co.course_id,
                     co.title,
-                    e.progress_rate            -- will always be 100
+                    e.progress_rate
                 FROM enroll e
                 JOIN course co ON e.course_id = co.course_id
                 WHERE e.student_id = %s
@@ -232,6 +233,7 @@ def get_profile():
                 """,
                 (user_id,),
             )
+
             completed_courses = [
                 {
                     "course_id": row["course_id"],

@@ -127,7 +127,7 @@ const ProfilePage = () => {
 /* ───── helper sub-components ───── */
 
 const AdminPanel = ({ report_count, approved_courses, rejected_courses }) => (
-    <section className="role-card">
+    <section className="role-card admin-panel">
         <h3>Admin Overview</h3>
         <p><strong>Reports generated:</strong> {report_count}</p>
 
@@ -139,20 +139,29 @@ const AdminPanel = ({ report_count, approved_courses, rejected_courses }) => (
     </section>
 );
 
-const InstructorPanel = ({ i_rating, course_count, experience_year, courses, feedbacks }) => (
-    <section className="role-card">
-        <h3>Instructor Overview</h3>
-        <p><strong>Rating:</strong> {i_rating.toFixed(2)} <span className="yellow-star">★</span></p>
-        <p><strong>Experience:</strong> {experience_year} years</p>
+const InstructorPanel = ({ i_rating, course_count, experience_year, courses, feedbacks }) => {
+    const fullStars = Math.round(i_rating);
+    return (
+        <section className="role-card instructor-panel">
+            <h3>Instructor Overview</h3>
+            <p>
+                <strong>Rating:</strong> {i_rating.toFixed(2)}{' '}
+                {Array.from({ length: fullStars }, (_, idx) => (
+                    <span key={idx} className="yellow-star">★</span>
+                ))}
+            </p>
+            <p><strong>Experience:</strong> {experience_year} years</p>
 
-        <h4>Your Courses ({course_count})</h4>
-        <CourseCardGrid
-            list={courses}
-            empty="You haven’t published any courses yet."
-        />
+            <h4>Your Courses ({course_count})</h4>
+            <CourseCardGrid
+                list={courses}
+                empty="You haven’t published any courses yet."
+            />
+        </section>
+    );
+};
 
-    </section>
-);
+
 
 const StudentPanel = ({ major, certificate_count, certificates,
     enrolled_courses, completed_courses }) => (
@@ -160,7 +169,7 @@ const StudentPanel = ({ major, certificate_count, certificates,
         <h3>Student Overview</h3>
         <p><strong>Major:</strong> {major}</p>
 
-        <h4>Enrolled Courses</h4>
+        <h4>Continuing Courses</h4>
         <StudentCourseGrid
             list={enrolled_courses}
             empty="Not enrolled in any courses."
@@ -194,65 +203,64 @@ const CourseCardGrid = ({ list, empty }) => {
     );
 };
 
-/* ---------- green cards for student courses w/ progress ---------- */
+/* ---------- full-width green bars for student courses ---------- */
 const StudentCourseGrid = ({ list, empty }) => {
     if (!list?.length) return <p className="muted">{empty}</p>;
 
     return (
-        <div className="course-grid">
+        <div className="student-course-list">
             {list.map(c => (
-                <div key={c.course_id} className="course-card">
-                    <h5 className="course-title">{c.title}</h5>
-
-                    {/* progress bar */}
+                <div key={c.course_id} className="student-course-card">
+                    <div className="student-course-info">
+                        <h5 className="course-title">{c.title}</h5>
+                        <p className="course-meta">{c.progress_rate}% complete</p>
+                    </div>
                     <div className="progress-outer">
                         <div
                             className="progress-inner"
                             style={{ width: `${c.progress_rate}%` }}
                         />
                     </div>
-
-                    <p className="course-meta">
-                        {c.progress_rate}% complete
-                    </p>
                 </div>
             ))}
         </div>
     );
 };
+
 
 /* remove literal escape sequences like \u0020 or \U0001f44d */
 const clean = txt => txt.replace(/\\[uU][0-9a-fA-F]{4,6}/g, '');
 
-/* ---------- visual card for feedback ---------- */
+/* ---------- visual card for feedback (one-per-row) ---------- */
 const FeedbackCardList = ({ list }) => {
     if (!list?.length) return <p className="muted">No feedback yet.</p>;
 
-    /* helper to strip literal \uXXXX artifacts */
-    const clean = txt => txt.replace(/\\u[0-9a-fA-F]{4}/g, '');
+    // strip literal \uXXXX artifacts
+    const cleanText = txt => txt.replace(/\\u[0-9a-fA-F]{4}/g, '');
 
     return (
-        <div className="feedback-grid">
+        <div className="feedback-grid feedback-list">
             {list.map((f, i) => (
                 <div key={i} className="feedback-card">
-                    {/* top row: title + rating + date */}
                     <div className="feedback-header">
                         <span className="feedback-title">
-                            {f.course_title} — {f.rating}
-                            <span className="yellow-star">★</span>
+                            {f.course_title} —
+                            {Array.from({ length: f.rating }, (_, idx) => (
+                                <span key={idx} className="yellow-star">★</span>
+                            ))}
                         </span>
-
-                        <span className="feedback-date">{prettyDate(f.feedback_date)}</span>
+                        <span className="feedback-date">
+                            {prettyDate(f.feedback_date)}
+                        </span>
                     </div>
-
-
-                    {/* comment */}
-                    <p className="feedback-text">{clean(f.comment)}</p>
+                    <p className="feedback-text">{cleanText(f.comment)}</p>
                 </div>
             ))}
         </div>
     );
 };
+
+
 
 
 /* keep simple bullet list for certificates / enrollments */

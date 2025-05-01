@@ -579,3 +579,169 @@
     margin-bottom: 40px;
     /* adjust to taste */
 }
+
+/* ─── one-per-row list wrapper ───────────────────────────────── */
+.student-course-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+}
+
+/* ─── full-width green bar card ─────────────────────────────── */
+.student-course-card {
+    display: flex;
+    flex-direction: column;
+    /* stack title/meta above bar */
+    width: 100%;
+    background: var(--primary-color);
+    color: #fff;
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
+}
+
+/* title & percent on one line */
+.student-course-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+/* make the bar fill most of the width */
+.student-course-card .progress-outer {
+    width: 100%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.student-course-card .progress-inner {
+    height: 100%;
+    background: #f7c948;
+    border-radius: 6px 0 0 6px;
+    transition: width .3s ease;
+}
+
+/* adjust meta text */
+.student-course-card .course-meta {
+    font-size: 1rem;
+    opacity: .9;
+    margin: 0;
+}
+
+.info-card--green {
+    flex: none;
+}
+
+/* admin panel: force one‐course-per-row */
+.admin-panel .course-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* make each card full-width inside the admin panel */
+.admin-panel .course-card {
+    flex: none;
+    width: 100%;
+}
+
+/* add hover lift to student‐course cards */
+.student-course-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.student-course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+}
+
+/* force one-per-row in the instructor panel */
+.instructor-panel .course-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.instructor-panel .course-card {
+    flex: none;
+    width: 100%;
+}
+
+/* one-per-row feedback in instructor panel */
+.instructor-panel .feedback-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    /* match student gap */
+}
+
+.instructor-panel .feedback-card {
+    flex: none;
+    width: 100%;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.instructor-panel .feedback-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+}
+
+.feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.feedback-list .feedback-card {
+    width: 100%;
+}
+
+.feedback-grid,
+.instructor-panel .feedback-grid,
+.admin-panel .feedback-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    /* same vertical gap as student-course-list */
+}
+
+.feedback-grid .feedback-card,
+.instructor-panel .feedback-card,
+.admin-panel .feedback-card {
+    padding: 24px 32px;
+    /* match .course-card’s 24px top/bottom and 32px left/right */
+    /* border-radius, box-shadow, colors etc. will stay as they are */
+}
+
+/* force feedback‐cards to match course‐card height */
+.feedback-grid .feedback-card {
+    /* match the vertical padding of your course cards */
+    padding: 24px 32px;
+    /* clamp the total height – adjust 80px until it lines up exactly */
+    max-height: 150px;
+    overflow: hidden;
+    /* hide any extra */
+}
+
+/* trim any extra margin in the comment */
+.feedback-card .feedback-text {
+    margin: 4px 0 0;
+}
+
+/* 1. Feedback cards auto-size to their content and match course-card padding */
+.feedback-grid .feedback-card {
+    padding: 24px 32px;
+    /* no max-height, no overflow rules */
+}
+
+/* 2. Use the same gap as student cards for instructor/admin feedback lists */
+.instructor-panel .feedback-grid,
+.admin-panel .feedback-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}

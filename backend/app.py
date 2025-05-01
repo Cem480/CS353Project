@@ -75,6 +75,7 @@ from routes.financial_aid import financial_aid_bp
 from routes.profile import profile_bp
 from routes.notification import notification_bp
 from routes.certificate import certificate_bp
+from routes.generate_report import report_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(course_bp)
@@ -83,6 +84,7 @@ app.register_blueprint(financial_aid_bp)
 app.register_blueprint(profile_bp)
 app.register_blueprint(notification_bp)
 app.register_blueprint(certificate_bp)
+app.register_blueprint(report_bp)
 
 RESET_DB = os.getenv("RESET_DB", "false").lower() == "true"
 print(f"RESET_DB = {RESET_DB}")
@@ -91,4 +93,4 @@ if __name__ == "__main__":
     if RESET_DB:
         reset_database()
         initialize_tables()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)

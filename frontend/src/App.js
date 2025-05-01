@@ -14,8 +14,8 @@ import InstructorApplicationsPage from './pages/Applications/InstructorApplicati
 import InstructorMainPage from './pages/InstructorsMainPage/InstructorsMainPage';
 import CreateCourse from './pages/CreateCourse/CreateCourse';
 import AddSection from './pages/AddSection/AddSection';
-import ProfilePage from './pages/ProfilePage/ProfilePage';      // ⬅️ NEW
-import CertificatesPage from './pages/CertificatesPage/CertificatesPage'; // ⬅️ NEW
+import ProfilePage from './pages/ProfilePage/ProfilePage';
+import CertificatesPage from './pages/CertificatesPage/CertificatesPage';      // ⬅️ NEW
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
