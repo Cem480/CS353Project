@@ -264,6 +264,25 @@ CREATE TABLE apply_financial_aid (
     FOREIGN KEY (evaluator_id) REFERENCES instructor(id)
 );
 
+CREATE TABLE certificate(
+    certificate_id VARCHAR(8),
+    title VARCHAR(150),
+    body VARCHAR(10000),
+    PRIMARY KEY (certificate_id)
+);
+
+CREATE TABLE earn_certificate(
+    student_id VARCHAR(8),
+    course_id VARCHAR(8),
+    certificate_id VARCHAR(8),
+    certification_date DATE,
+    PRIMARY KEY (student_id, course_id, certificate_id),
+    FOREIGN KEY (student_id, course_id)
+        REFERENCES enroll(student_id, course_id),
+    FOREIGN KEY (certificate_id)
+        REFERENCES certificate(certificate_id)
+);
+
 -- VIEWS
 -- User with computed age
 CREATE VIEW user_with_age AS

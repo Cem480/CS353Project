@@ -224,8 +224,3 @@ def add_comment(course_id, sec_id, content_id, user_id):
     finally:
         cursor.close()
         conn.close()
-
-
-# Certificate will be added
-
-""
