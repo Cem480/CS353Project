@@ -569,20 +569,39 @@ def student_general_report():
 @report_bp.route("/api/report/student/ranged", methods=["GET"])
 def student_ranged_report():
     start = request.args.get("start")
-    end = request.args.get("end")
-    if not start or not end or start.strip() == end.strip():
-        return jsonify({"success": False, "message": "Invalid range"}), 400
+    end = request.args.get("end") or start
+    if not start:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "Invalid range: missing `start` parameter",
+                }
+            ),
+            400,
+        )
 
     sdt, edt = parse_month(start), parse_month(end)
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
     try:
-        # 1) month-by-month stats
-        cur.execute(STUDENT_RANGE_SQL, (sdt, edt, sdt, edt, sdt, edt, sdt, edt))
+        # month‐by‐month stats (will return exactly one month if start == end)
+        cur.execute(
+            STUDENT_RANGE_SQL,
+            (
+                sdt,
+                edt,  # months CTE
+                sdt,
+                edt,  # stats CTE
+                sdt,
+                edt,  # enrolls subquery
+                sdt,
+                edt,  # cumulative CTE
+            ),
+        )
         monthly = cur.fetchall()
 
-        # 2) top-3 achievers in that range
+        # top‐3 achievers in that range
         cur.execute(STUDENT_RANGE_TOP_SQL, (sdt, edt))
         top3 = cur.fetchall()
 
@@ -651,51 +670,107 @@ def course_general_report():
         conn.close()
 
 
-@report_bp.route("/api/report/course/ranged", methods=["GET"])
-def course_ranged_report():
+@report_bp.route("/api/report/instructor/ranged", methods=["GET"])
+def instructor_ranged_report():
     start = request.args.get("start")
-    end = request.args.get("end")
-    if not start or not end or start.strip() == end.strip():
-        return jsonify({"success": False, "message": "Invalid range"}), 400
+    end = request.args.get("end") or start
+    if not start:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "Invalid range: missing `start` parameter",
+                }
+            ),
+            400,
+        )
 
     sdt, edt = parse_month(start), parse_month(end)
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
-        # 5 CTEs each with BETWEEN → total 5*2 = 10 placeholders
+        # month-by-month regs + most_popular + most_active (will return one month if start == end)
+        cur.execute(INSTRUCTOR_RANGE_SQL, (sdt, edt, sdt, edt, sdt, edt, sdt, edt))
+        monthly = cur.fetchall()
+
+        # static top-3 instructors by rating
+        cur.execute(TOP_INSTR_SQL)
+        top3 = cur.fetchall()
+
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "report_type": "instructor_ranged",
+                    "data": {"monthly_registrations": monthly, "top_instructors": top3},
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        conn.rollback()
+        print(f"[INSTRUCTOR RANGED ERROR] {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+@report_bp.route("/api/report/course/ranged", methods=["GET"])
+def course_ranged_report():
+    start = request.args.get("start")
+    end = request.args.get("end") or start
+    if not start:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "Invalid range: missing `start` parameter",
+                }
+            ),
+            400,
+        )
+
+    sdt, edt = parse_month(start), parse_month(end)
+    conn = connect_project_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        # 5 CTEs → monthly course metrics (single month if start == end)
         params = (sdt, edt) * 5
         cur.execute(COURSE_RANGE_SQL, params)
         monthly = cur.fetchall()
 
-        # category breakdown per month
+        # category-by-month breakdown
         cat_sql = """
-        SELECT
-          TO_CHAR(date_trunc('month', e.enroll_date),'YYYY-MM') AS month,
-          c.category,
-          COUNT(*) AS enroll_count
-        FROM enroll e
-        JOIN course c ON c.course_id = e.course_id
-        WHERE e.enroll_date BETWEEN %s
-              AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
-        GROUP BY month, c.category
-        ORDER BY month;
+            SELECT
+               TO_CHAR(date_trunc('month', e.enroll_date),'YYYY-MM') AS month,
+               c.category,
+               COUNT(*) AS enroll_count
+            FROM enroll e
+            JOIN course c ON c.course_id = e.course_id
+            WHERE e.enroll_date BETWEEN %s
+                  AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
+            GROUP BY month, c.category
+            ORDER BY month;
         """
         cur.execute(cat_sql, (sdt, edt))
         category_stats = cur.fetchall()
 
-        # difficulty breakdown per month
+        # difficulty-by-month breakdown
         diff_sql = """
-        SELECT
-          TO_CHAR(date_trunc('month', e.enroll_date),'YYYY-MM') AS month,
-          c.difficulty_level,
-          COUNT(*) AS enroll_count,
-          ROUND(AVG(e.progress_rate)::numeric,2) AS avg_completion_rate
-        FROM enroll e
-        JOIN course c ON c.course_id = e.course_id
-        WHERE e.enroll_date BETWEEN %s
-              AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
-        GROUP BY month, c.difficulty_level
-        ORDER BY month;
+            SELECT
+              TO_CHAR(date_trunc('month', e.enroll_date),'YYYY-MM') AS month,
+              c.difficulty_level,
+              COUNT(*) AS enroll_count,
+              ROUND(AVG(e.progress_rate)::numeric,2) AS avg_completion_rate
+            FROM enroll e
+            JOIN course c ON c.course_id = e.course_id
+            WHERE e.enroll_date BETWEEN %s
+                  AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
+            GROUP BY month, c.difficulty_level
+            ORDER BY month;
         """
         cur.execute(diff_sql, (sdt, edt))
         difficulty_stats = cur.fetchall()
@@ -757,52 +832,6 @@ def instructor_general_report():
         conn.rollback()
         print(f"[INSTRUCTOR GENERAL ERROR] {e}")
         return jsonify({"success": False, "message": str(e)}), 500
-    finally:
-        cur.close()
-        conn.close()
-
-
-@report_bp.route("/api/report/instructor/ranged", methods=["GET"])
-def instructor_ranged_report():
-    start = request.args.get("start")
-    end = request.args.get("end")
-    if not start or not end or start.strip() == end.strip():
-        return jsonify({"success": False, "message": "Invalid range"}), 400
-
-    sdt, edt = parse_month(start), parse_month(end)
-    conn = connect_project_db()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    try:
-        # We need 4 BETWEEN clauses → 8 params
-        params = (sdt, edt, sdt, edt, sdt, edt, sdt, edt)
-        cur.execute(INSTRUCTOR_RANGE_SQL, params)
-        monthly = cur.fetchall()
-
-        # Top 3 instructors by rating (static)
-        cur.execute(TOP_INSTR_SQL)
-        top3 = cur.fetchall()
-
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "report_type": "instructor_ranged",
-                    "data": {
-                        "monthly_registrations": monthly,
-                        "most_popular": monthly[0].get("most_popular_instructor"),
-                        "most_active": monthly[0].get("most_active_instructor"),
-                        "top_instructors": top3,
-                    },
-                }
-            ),
-            200,
-        )
-
-    except Exception as e:
-        conn.rollback()
-        print(f"[INSTRUCTOR RANGED ERROR] {e}")
-        return jsonify({"success": False, "message": str(e)}), 500
-
     finally:
         cur.close()
         conn.close()
