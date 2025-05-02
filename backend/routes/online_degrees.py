@@ -88,6 +88,19 @@ def get_online_degrees():
             filters.append("c.difficulty_level = %s")
             values.append(level)
 
+        # General search term (searches title, category, description, instructor name)
+        search_term = request.args.get("search", "")
+        if search_term:
+            filters.append("""
+                (
+                    c.title ILIKE %s OR
+                    c.category ILIKE %s OR
+                    c.description ILIKE %s OR
+                    CONCAT_WS(' ', u.first_name, u.middle_name, u.last_name) ILIKE %s
+                )
+            """)
+            values.extend([f"%{search_term}%"] * 4)
+
         # Append filters
         if filters:
             base_query += " AND " + " AND ".join(filters)
