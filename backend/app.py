@@ -77,6 +77,7 @@ from routes.notification import notification_bp
 from routes.certificate import certificate_bp
 from routes.generate_report import report_bp
 from routes.course_overview import course_overview_bp
+from routes.student_home import student_home_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(course_bp)
@@ -87,6 +88,7 @@ app.register_blueprint(notification_bp)
 app.register_blueprint(certificate_bp)
 app.register_blueprint(report_bp)
 app.register_blueprint(course_overview_bp)
+app.register_blueprint(student_home_bp)
 
 RESET_DB = os.getenv("RESET_DB", "false").lower() == "true"
 print(f"RESET_DB = {RESET_DB}")

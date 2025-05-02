@@ -335,6 +335,25 @@ LEFT JOIN complete cmp
    AND cmp.is_completed = TRUE
 GROUP BY e.student_id, c.course_id;
 
+-- Enrolled categories by student
+CREATE VIEW enrolled_course_categories AS
+SELECT e.student_id, c.category
+FROM enroll e
+JOIN course c ON e.course_id = c.course_id;
+
+-- Recommended course base
+CREATE VIEW recommended_course_base AS
+SELECT c.course_id, c.title, c.category, c.difficulty_level, c.enrollment_count
+FROM course c
+WHERE c.status = 'accepted';
+
+-- Recommended category base
+CREATE VIEW recommended_category_base AS
+SELECT category, COUNT(*) AS course_count
+FROM course
+WHERE status = 'accepted'
+GROUP BY category;
+
 
 -- TRIGGERS
 -- Update instructor rating when feedback is added
