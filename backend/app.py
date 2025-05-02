@@ -79,6 +79,7 @@ from routes.generate_report import report_bp
 from routes.course_overview import course_overview_bp
 from routes.instructor import instructor_bp
 from routes.student_home import student_home_bp
+from routes.online_degrees import online_degrees_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(course_bp)
@@ -91,6 +92,7 @@ app.register_blueprint(report_bp)
 app.register_blueprint(course_overview_bp)
 app.register_blueprint(instructor_bp)
 app.register_blueprint(student_home_bp)
+app.register_blueprint(online_degrees_bp)
 
 RESET_DB = os.getenv("RESET_DB", "false").lower() == "true"
 print(f"RESET_DB = {RESET_DB}")
