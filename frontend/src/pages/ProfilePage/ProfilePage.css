@@ -809,3 +809,8 @@
     color: #000;
     text-align: left;
 }
+
+.student-course-info .course-meta {
+    font-size: 1.2rem;
+    /* or 1.1rem, 16px, etc. */
+}

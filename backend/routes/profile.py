@@ -174,16 +174,19 @@ def get_profile():
             }
 
         if user["role"] == "student":
+
+            # basic student info
             cursor.execute(
                 """
-                SELECT major, certificate_count
-                FROM student
-                WHERE id = %s
+            SELECT major, certificate_count
+            FROM student
+            WHERE id = %s
             """,
                 (user_id,),
             )
             student = cursor.fetchone()
 
+            # certificates…
             cursor.execute(
                 """
                 SELECT c.title
@@ -193,51 +196,68 @@ def get_profile():
                 """,
                 (user_id,),
             )
-            certificates = [row["title"] for row in cursor.fetchall()]
+            certificates = [r["title"] for r in cursor.fetchall()]
 
-            # --- Enrolled courses with progress (<100%) ---------------------------------
+            # continuing courses (<100%)
             cursor.execute(
                 """
-                SELECT co.course_id,
-                    co.title,
-                    e.progress_rate
+                SELECT
+                  co.course_id,
+                  co.title,
+                  co.category,
+                  co.difficulty_level,
+                  u_inst.first_name || ' ' || u_inst.last_name AS instructor_name,
+                  e.progress_rate
                 FROM enroll e
-                JOIN course co ON e.course_id = co.course_id
+                JOIN course co       ON e.course_id = co.course_id
+                JOIN instructor i    ON co.creator_id = i.id
+                JOIN "user" u_inst   ON i.id = u_inst.id
                 WHERE e.student_id = %s
-                AND e.progress_rate < 100
+                  AND e.progress_rate < 100
                 """,
                 (user_id,),
             )
             enrolled_courses = [
                 {
-                    "course_id": row["course_id"],
-                    "title": row["title"],
-                    "progress_rate": row["progress_rate"],
+                    "course_id": r["course_id"],
+                    "title": r["title"],
+                    "category": r["category"],
+                    "difficulty_level": r["difficulty_level"],
+                    "instructor_name": r["instructor_name"],
+                    "progress_rate": r["progress_rate"],
                 }
-                for row in cursor.fetchall()
+                for r in cursor.fetchall()
             ]
 
-            # --- Completed courses (== 100%) -------------------------------------------
+            # completed courses (==100%)
             cursor.execute(
                 """
-                SELECT co.course_id,
-                    co.title,
-                    e.progress_rate
+                SELECT
+                  co.course_id,
+                  co.title,
+                  co.category,
+                  co.difficulty_level,
+                  u_inst.first_name || ' ' || u_inst.last_name AS instructor_name,
+                  e.progress_rate
                 FROM enroll e
-                JOIN course co ON e.course_id = co.course_id
+                JOIN course co       ON e.course_id = co.course_id
+                JOIN instructor i    ON co.creator_id = i.id
+                JOIN "user" u_inst   ON i.id = u_inst.id
                 WHERE e.student_id = %s
-                AND e.progress_rate = 100
+                  AND e.progress_rate = 100
                 """,
                 (user_id,),
             )
-
             completed_courses = [
                 {
-                    "course_id": row["course_id"],
-                    "title": row["title"],
-                    "progress_rate": row["progress_rate"],
+                    "course_id": r["course_id"],
+                    "title": r["title"],
+                    "category": r["category"],
+                    "difficulty_level": r["difficulty_level"],
+                    "instructor_name": r["instructor_name"],
+                    "progress_rate": r["progress_rate"],
                 }
-                for row in cursor.fetchall()
+                for r in cursor.fetchall()
             ]
 
             profile_data["student_info"] = {

@@ -212,7 +212,10 @@ const StudentCourseGrid = ({ list, empty }) => {
                 <div key={c.course_id} className="student-course-card">
                     <div className="student-course-info">
                         <h5 className="course-title">{c.title}</h5>
-                        <p className="course-meta">{c.progress_rate}% complete</p>
+                        <p className="course-meta">
+                            {c.category} · Level {c.difficulty_level} · Instructor: {c.instructor_name}
+                        </p>
+                        <p className="course-progress">{c.progress_rate}% complete</p>
                     </div>
                     <div className="progress-outer">
                         <div
@@ -225,6 +228,7 @@ const StudentCourseGrid = ({ list, empty }) => {
         </div>
     );
 };
+
 
 
 /* remove literal escape sequences like \u0020 or \U0001f44d */
