@@ -14,6 +14,11 @@ def get_course_general_info(course_id):
         if cursor.fetchone() is None:
             return jsonify({"success": False, "message": "Course not found"}), 404
 
+        # Check if course status is accepted
+        cursor.execute("SELECT 1 FROM course WHERE course_id = %s AND status = 'accepted'", (course_id,))
+        if cursor.fetchone() is None:
+            return jsonify({"success": False, "message": "Course not accepted"}), 404
+
         # Fetch general info with instructor details
         cursor.execute("""
             SELECT
@@ -66,6 +71,11 @@ def get_course_syllabus(course_id):
         cursor.execute("SELECT 1 FROM course WHERE course_id = %s", (course_id,))
         if cursor.fetchone() is None:
             return jsonify({"success": False, "message": "Course not found"}), 404
+        
+        # Check if course status is accepted
+        cursor.execute("SELECT 1 FROM course WHERE course_id = %s AND status = 'accepted'", (course_id,))
+        if cursor.fetchone() is None:
+            return jsonify({"success": False, "message": "Course not accepted"}), 404
 
         # Fetch sections and contents
         cursor.execute("""
@@ -135,9 +145,7 @@ def get_course_syllabus(course_id):
 
 
 # course_content.py
-# student_home.py
-# my_learning.py  # did ayca do this, check
-# online_degrees.py
 # feedback.py
 # comment.py
 
+# my_learning.py  # ayca will do it in profile
