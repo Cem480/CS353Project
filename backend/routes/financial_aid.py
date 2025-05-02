@@ -239,3 +239,105 @@ def get_financial_aid_applications(instructor_id):
     finally:
         cursor.close()
         conn.close()
+
+# Get financial aid applications for a specific student
+@financial_aid_bp.route("/api/student/<student_id>/financial_aid_applications", methods=["GET"])
+def get_student_financial_aid_applications(student_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    try:
+        # Check if student exists
+        cursor.execute("SELECT 1 FROM student WHERE id = %s", (student_id,))
+        if cursor.fetchone() is None:
+            return jsonify({"success": False, "message": "Student not found!"}), 404
+
+        cursor.execute("""
+            SELECT 
+                afa.course_id,
+                c.title AS course_title,
+                afa.statement,
+                afa.income,
+                afa.application_date,
+                afa.status,
+                afa.evaluator_id,
+                evaluator.first_name || ' ' || evaluator.last_name AS evaluator_name
+            FROM apply_financial_aid afa
+            JOIN course c ON afa.course_id = c.course_id
+            LEFT JOIN "user" evaluator ON afa.evaluator_id = evaluator.id
+            WHERE afa.student_id = %s
+            ORDER BY afa.application_date DESC
+        """, (student_id,))
+
+        rows = cursor.fetchall()
+        applications = []
+        for row in rows:
+            applications.append({
+                "courseId": row["course_id"],
+                "courseTitle": row["course_title"],
+                "statement": row["statement"],
+                "income": float(row["income"]),
+                "applicationDate": row["application_date"].strftime("%Y-%m-%d"),
+                "status": row["status"],
+                "evaluatorId": row["evaluator_id"],
+                "evaluatorName": row["evaluator_name"]
+            })
+
+        return jsonify(applications), 200
+
+    except Exception as e:
+        print(f"Error fetching student financial aid applications: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+# Get financial aid applications for a specific course
+@financial_aid_bp.route("/api/course/<course_id>/financial_aid_applications", methods=["GET"])
+def get_course_financial_aid_applications(course_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    try:
+        # Check if course exists
+        cursor.execute("SELECT 1 FROM course WHERE course_id = %s", (course_id,))
+        if cursor.fetchone() is None:
+            return jsonify({"success": False, "message": "Course not found!"}), 404
+
+        cursor.execute("""
+            SELECT 
+                afa.student_id,
+                u.first_name || ' ' || u.last_name AS student_name,
+                afa.statement,
+                afa.income,
+                afa.application_date,
+                afa.status,
+                afa.evaluator_id,
+                evaluator.first_name || ' ' || evaluator.last_name AS evaluator_name
+            FROM apply_financial_aid afa
+            JOIN "user" u ON afa.student_id = u.id
+            LEFT JOIN "user" evaluator ON afa.evaluator_id = evaluator.id
+            WHERE afa.course_id = %s
+            ORDER BY afa.application_date DESC
+        """, (course_id,))
+
+        rows = cursor.fetchall()
+        applications = []
+        for row in rows:
+            applications.append({
+                "studentId": row["student_id"],
+                "studentName": row["student_name"],
+                "statement": row["statement"],
+                "income": float(row["income"]),
+                "applicationDate": row["application_date"].strftime("%Y-%m-%d"),
+                "status": row["status"],
+                "evaluatorId": row["evaluator_id"],
+                "evaluatorName": row["evaluator_name"]
+            })
+
+        return jsonify(applications), 200
+
+    except Exception as e:
+        print(f"Error fetching course financial aid applications: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
