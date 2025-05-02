@@ -9,7 +9,7 @@ Available endpoints:
 
 Install with:
 ```python
-from generate_report import report_bp
+from routes/generate_report import report_bp
 app.register_blueprint(report_bp)
 ```
 """
@@ -75,7 +75,9 @@ JOIN student s ON s.id = u.id
 GROUP BY month
 ORDER BY month;
 """
-
+# ────────────────────────────────────────────────────────────────────────────────
+# SQL: Top-3 students overall (with name & major)
+# ────────────────────────────────────────────────────────────────────────────────
 STUDENT_TOP_SQL = """
 WITH stats AS (
     SELECT s.id,
@@ -88,15 +90,24 @@ WITH stats AS (
 ),
 scores AS (
     SELECT id,
-           certificate_count,
-           enroll_cnt,
-           COALESCE(ROUND(avg_progress::numeric,2),0) AS avg_progress,
            ROUND(certificate_count*2 + enroll_cnt*0.5 + COALESCE(avg_progress,0)*0.1,2) AS achievement_score
-    FROM stats
+    FROM (
+      SELECT id,
+             certificate_count,
+             enroll_cnt,
+             COALESCE(ROUND(avg_progress::numeric,2),0) AS avg_progress
+      FROM stats
+    ) t
 )
-SELECT id, achievement_score
-FROM scores
-ORDER BY achievement_score DESC
+SELECT
+  sc.id,
+  u.first_name || ' ' || u.last_name AS full_name,
+  s.major,
+  sc.achievement_score
+FROM scores sc
+JOIN student s ON s.id = sc.id
+JOIN "user" u    ON u.id = sc.id
+ORDER BY sc.achievement_score DESC
 LIMIT 3;
 """
 
@@ -159,6 +170,51 @@ out AS (
 )
 SELECT * FROM out ORDER BY month;
 """
+# ────────────────────────────────────────────────────────────────────────────────
+# SQL: Top-3 students for a given registration date range (with name & major)
+# ────────────────────────────────────────────────────────────────────────────────
+STUDENT_RANGE_TOP_SQL = """
+WITH stats AS (
+    SELECT
+      s.id,
+      s.certificate_count,
+      COUNT(e.course_id)   AS enroll_cnt,
+      AVG(e.progress_rate) AS avg_progress
+    FROM student s
+    JOIN "user" u ON u.id = s.id
+    LEFT JOIN enroll e ON e.student_id = s.id
+    WHERE u.registration_date
+      BETWEEN %s
+      AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
+    GROUP BY s.id, s.certificate_count
+),
+scores AS (
+    SELECT
+      id,
+      ROUND(certificate_count*2 + enroll_cnt*0.5 + COALESCE(avg_progress,0)*0.1,2)
+        AS achievement_score
+    FROM (
+      SELECT
+        id,
+        certificate_count,
+        enroll_cnt,
+        COALESCE(ROUND(avg_progress::numeric,2),0) AS avg_progress
+      FROM stats
+    ) t
+)
+SELECT
+  sc.id,
+  u.first_name || ' ' || u.last_name AS full_name,
+  s.major,
+  sc.achievement_score
+FROM scores sc
+JOIN student s ON s.id = sc.id
+JOIN "user" u    ON u.id = sc.id
+ORDER BY sc.achievement_score DESC
+LIMIT 3;
+"""
+
+
 # ────────────────────────────────────────────────────────────────────────────────
 # SQL: Course ranged metrics
 # ────────────────────────────────────────────────────────────────────────────────
@@ -244,9 +300,6 @@ LEFT JOIN (
 ORDER BY months.m;
 """
 
-# ────────────────────────────────────────────────────────────────────────────────
-# SQL: Course general metrics
-# ────────────────────────────────────────────────────────────────────────────────
 COURSE_GENERAL_SQL = """
 WITH base AS (
     SELECT course_id,
@@ -260,38 +313,67 @@ freepaid AS (
     FROM base
 ),
 popular AS (
-    SELECT course_id, enrollment_count, price
-    FROM base ORDER BY enrollment_count DESC LIMIT 1
+    SELECT c.course_id,
+           c.enrollment_count,
+           c.price,
+           c.creator_id
+    FROM course c
+    ORDER BY c.enrollment_count DESC
+    LIMIT 1
 ),
-completed AS (
-    SELECT course_id, COUNT(*) AS completion_count
-    FROM enroll WHERE progress_rate=100 GROUP BY course_id
-),
-most_done AS (
+completed_raw AS (
     SELECT b.course_id,
            COALESCE(c.completion_count,0) AS completion_count,
            b.enrollment_count,
            CASE WHEN b.enrollment_count>0
                 THEN ROUND(COALESCE(c.completion_count,0)*100.0/b.enrollment_count,2)
                 ELSE 0 END AS completion_ratio,
-           b.price
-    FROM base b LEFT JOIN completed c USING(course_id)
-    ORDER BY COALESCE(c.completion_count,0) DESC LIMIT 1
+           b.price,
+           cr.creator_id
+    FROM base b
+    LEFT JOIN (
+      SELECT course_id, COUNT(*) AS completion_count
+      FROM enroll
+      WHERE progress_rate = 100
+      GROUP BY course_id
+    ) c USING(course_id)
+    JOIN course cr USING(course_id)
+    ORDER BY COALESCE(c.completion_count,0) DESC
+    LIMIT 1
 )
 SELECT
-  (SELECT COUNT(*) FROM base) AS total_courses,
-  popular.course_id         AS most_popular_course_id,
-  popular.enrollment_count AS most_popular_enrollment_count,
-  popular.price            AS most_popular_price,
-  ROUND((SELECT AVG(enrollment_count)::numeric FROM base),2) AS avg_enroll_per_course,
-  COALESCE((SELECT SUM(price*enrollment_count) FROM base),0)  AS total_revenue,
-  freepaid.free_course_count AS free_course_count,
-  freepaid.paid_course_count AS paid_course_count,
-  most_done.course_id        AS most_completed_course_id,
-  most_done.enrollment_count AS most_completed_enrollment_count,
-  most_done.completion_ratio AS most_completed_completion_ratio,
-  most_done.price            AS most_completed_price
-;"""
+  (SELECT COUNT(*) FROM base)                                        AS total_courses,
+
+  -- most popular
+  popular.course_id                                                 AS most_popular_course_id,
+  (SELECT title FROM course WHERE course_id = popular.course_id)    AS most_popular_course_title,
+  popular.enrollment_count                                          AS most_popular_enrollment_count,
+  popular.price                                                     AS most_popular_price,
+  popular.creator_id                                                AS most_popular_instructor_id,
+  (SELECT u.first_name || ' ' || u.last_name
+   FROM "user" u WHERE u.id = popular.creator_id)                   AS most_popular_instructor_name,
+
+  ROUND((SELECT AVG(enrollment_count)::numeric FROM base),2)        AS avg_enroll_per_course,
+  COALESCE((SELECT SUM(price*enrollment_count) FROM base),0)         AS total_revenue,
+  freepaid.free_course_count                                        AS free_course_count,
+  freepaid.paid_course_count                                        AS paid_course_count,
+
+  -- most completed
+  completed_raw.course_id                                           AS most_completed_course_id,
+  (SELECT title FROM course WHERE course_id = completed_raw.course_id) 
+                                                                    AS most_completed_course_title,
+  completed_raw.enrollment_count                                    AS most_completed_enrollment_count,
+  completed_raw.completion_ratio                                    AS most_completed_completion_ratio,
+  completed_raw.price                                               AS most_completed_price,
+  completed_raw.creator_id                                          AS most_completed_instructor_id,
+  (SELECT u.first_name || ' ' || u.last_name
+   FROM "user" u WHERE u.id = completed_raw.creator_id)            AS most_completed_instructor_name
+
+FROM popular
+CROSS JOIN freepaid
+CROSS JOIN completed_raw;
+"""
+
 
 CATEGORY_ENROLL_SQL = """
 SELECT category, SUM(COALESCE(enrollment_count,0)) AS total_enrollments
@@ -389,7 +471,6 @@ WITH months AS (
     '1 month'
   ) AS m
 ),
--- registrations per month
 regs AS (
   SELECT date_trunc('month', u.registration_date) AS m,
          COUNT(*) AS registration_count
@@ -399,7 +480,6 @@ regs AS (
         AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
   GROUP BY m
 ),
--- enrollments per instructor in range (popularity)
 pop AS (
   SELECT c.creator_id AS instructor_id,
          COUNT(e.student_id) AS total_enrollments
@@ -411,7 +491,6 @@ pop AS (
   ORDER BY total_enrollments DESC
   LIMIT 1
 ),
--- courses created per instructor in range (activity)
 act AS (
   SELECT creator_id AS instructor_id,
          COUNT(*) AS course_count
@@ -425,14 +504,27 @@ act AS (
 SELECT
   TO_CHAR(months.m, 'YYYY-MM') AS month,
   COALESCE(r.registration_count, 0) AS registration_count,
-  pop.instructor_id           AS most_popular_instructor,
-  pop.total_enrollments       AS popular_enrollments,
-  act.instructor_id           AS most_active_instructor,
-  act.course_count            AS active_course_count
+
+  /* full JSON object for most popular instructor */
+  json_build_object(
+    'id', pop.instructor_id,
+    'full_name', u_pop.first_name || ' ' || u_pop.last_name,
+    'total_enrollments', pop.total_enrollments
+  ) AS most_popular_instructor,
+
+  /* full JSON object for most active instructor */
+  json_build_object(
+    'id', act.instructor_id,
+    'full_name', u_act.first_name || ' ' || u_act.last_name,
+    'course_count', act.course_count
+  ) AS most_active_instructor
+
 FROM months
 LEFT JOIN regs r ON r.m = months.m
-LEFT JOIN pop ON TRUE   -- single-row CTE
-LEFT JOIN act ON TRUE   -- single-row CTE
+LEFT JOIN pop ON TRUE
+LEFT JOIN "user" u_pop ON u_pop.id = pop.instructor_id
+LEFT JOIN act ON TRUE
+LEFT JOIN "user" u_act ON u_act.id = act.instructor_id
 ORDER BY months.m;
 """
 
@@ -442,24 +534,33 @@ def student_general_report():
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
+        # 1) summary stats
         cur.execute(STUDENT_GENERAL_SQL)
         summary = cur.fetchone() or {}
+
+        # 2) monthly registrations
         cur.execute(STUDENT_MONTHLY_SQL)
+        rows = cur.fetchall()
         summary["monthly_registrations"] = {
-            r["month"]: r["registration_count"] for r in cur.fetchall()
+            r["month"]: r["registration_count"] for r in rows
         }
+
+        # 3) top-3 students
         cur.execute(STUDENT_TOP_SQL)
         summary["top_students"] = cur.fetchall()
+
         return (
             jsonify(
                 {"success": True, "report_type": "student_general", "data": summary}
             ),
             200,
         )
+
     except Exception as e:
         conn.rollback()
         print(f"[STUDENT GENERAL ERROR] {e}")
         return jsonify({"success": False, "message": str(e)}), 500
+
     finally:
         cur.close()
         conn.close()
@@ -471,14 +572,20 @@ def student_ranged_report():
     end = request.args.get("end")
     if not start or not end or start.strip() == end.strip():
         return jsonify({"success": False, "message": "Invalid range"}), 400
+
     sdt, edt = parse_month(start), parse_month(end)
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
     try:
+        # 1) month-by-month stats
         cur.execute(STUDENT_RANGE_SQL, (sdt, edt, sdt, edt, sdt, edt, sdt, edt))
         monthly = cur.fetchall()
+
+        # 2) top-3 achievers in that range
         cur.execute(STUDENT_RANGE_TOP_SQL, (sdt, edt))
         top3 = cur.fetchall()
+
         return (
             jsonify(
                 {
@@ -489,10 +596,12 @@ def student_ranged_report():
             ),
             200,
         )
+
     except Exception as e:
         conn.rollback()
         print(f"[STUDENT RANGED ERROR] {e}")
         return jsonify({"success": False, "message": str(e)}), 500
+
     finally:
         cur.close()
         conn.close()
