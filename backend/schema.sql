@@ -246,7 +246,7 @@ CREATE TABLE comment(
     user_id VARCHAR(8),
     text VARCHAR(500) NOT NULL,
     timestamp TIMESTAMP,
-    PRIMARY KEY (course_id, sec_id, content_id, user_id),
+    PRIMARY KEY (course_id, sec_id, content_id, user_id, timestamp),
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
 );

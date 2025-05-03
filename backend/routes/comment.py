@@ -54,14 +54,6 @@ def add_comment(course_id, sec_id, content_id, user_id):
         if not allowed:
             return jsonify({"success": False, "message": "User is not authorized to comment"}), 403
         
-        # Check if comment exists
-        cursor.execute("""
-            SELECT 1 FROM comment WHERE course_id = %s AND sec_id = %s AND content_id = %s AND user_id = %s
-        """, (course_id, sec_id, content_id, user_id))
-        if cursor.fetchone():
-            return jsonify({"success": False, "message": "You have already submitted comment for this content"}), 409  # Conflict
-
-
         # Insert comment
         cursor.execute("""
             INSERT INTO comment (course_id, sec_id, content_id, user_id, text, timestamp)
