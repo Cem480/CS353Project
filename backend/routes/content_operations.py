@@ -1,15 +1,17 @@
 from flask import Blueprint, request, jsonify
 from db import connect_project_db
 import psycopg2.extras
+from werkzeug.utils import secure_filename
+import os
+
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 content_operations_bp = Blueprint("content_operations", __name__)
 
+
 @content_operations_bp.route("/api/submit/<course_id>/<sec_id>/<content_id>/<student_id>", methods=["POST"])
 def submit_task(course_id, sec_id, content_id, student_id):
-    data = request.json
-    if "answers" not in data:
-        return jsonify({"success": False, "message": "Missing fields"}), 400
-
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     try:
@@ -35,19 +37,54 @@ def submit_task(course_id, sec_id, content_id, student_id):
         if cursor.fetchone() is None:
             return jsonify({"success": False, "message": "Content not found"}), 404
         
-        # Check if user is enrolled
+        # Check enrollment
         cursor.execute("""
             SELECT 1 FROM enroll WHERE course_id = %s AND student_id = %s
         """, (course_id, student_id))
         if cursor.fetchone() is None:
             return jsonify({"success": False, "message": "User is not enrolled in the course"}), 403
-        
+
+        # Get task_type
+        cursor.execute("""
+            SELECT task_type FROM task WHERE course_id = %s AND sec_id = %s AND content_id = %s
+        """, (course_id, sec_id, content_id))
+        task = cursor.fetchone()
+        if not task:
+            return jsonify({"success": False, "message": "Task not found"}), 404
+        task_type = task["task_type"]
+
+        # Handle assignment file upload
+        if task_type == "assignment":
+            file = request.files.get("file")
+            if not file:
+                return jsonify({"success": False, "message": "Missing file for assignment submission"}), 400
+
+            filename = secure_filename(f"{student_id}_{file.filename}")
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(filepath)
+            answers = filepath
+
+        # Handle assessment JSON answer list
+        elif task_type == "assessment":
+            if not request.is_json:
+                return jsonify({"success": False, "message": "Expected JSON answers for assessment"}), 400
+            data = request.get_json()
+            if "answers" not in data or not isinstance(data["answers"], list):
+                return jsonify({"success": False, "message": "Invalid or missing answers"}), 400
+            answers = str(data["answers"])  # store as stringified JSON
+
+        else:
+            return jsonify({"success": False, "message": f"Unsupported task_type: {task_type}"}), 400
+
+        # Insert into submit table
         cursor.execute("""
             INSERT INTO submit (course_id, sec_id, content_id, student_id, grade, submission_date, answers)
             VALUES (%s, %s, %s, %s, NULL, CURRENT_DATE, %s)
-        """, (course_id, sec_id, content_id, student_id, data["answers"]))
+        """, (course_id, sec_id, content_id, student_id, answers))
+
         conn.commit()
         return jsonify({"success": True}), 201
+
     except Exception as e:
         conn.rollback()
         return jsonify({"success": False, "message": str(e)}), 500

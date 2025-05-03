@@ -951,6 +951,24 @@ INSERT INTO assessment (course_id, sec_id, content_id, question_count)
 VALUES
 ('C0000001', 'S000001', 'CT000001', 5);
 
+-- Insert questions to assessment
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time)
+VALUES 
+('C0000001', 'S000001', 'CT000001', 'Q000001', 'What is the capital of France?', 60),
+('C0000001', 'S000001', 'CT000001', 'Q000002', 'Solve 2 + 2 * 2.', 30),
+('C0000001', 'S000001', 'CT000001', 'Q000003', 'Explain the concept of gravity.', 120),
+('C0000001', 'S000001', 'CT000001', 'Q000004', 'Select the correct spelling.', 45),
+('C0000001', 'S000001', 'CT000001', 'Q000005', 'Name a prime number between 10 and 20.', 30);
+
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer)
+VALUES 
+('C0000001', 'S000001', 'CT000001', 'Q000001', 'B'),
+('C0000001', 'S000001', 'CT000001', 'Q000002', 'C'),
+('C0000001', 'S000001', 'CT000001', 'Q000004', 'D'),
+('C0000001', 'S000001', 'CT000001', 'Q000003', 'A'),
+('C0000001', 'S000001', 'CT000001', 'Q000005', 'D');
+
+
 -- Add an assignment to trigger grade notifications
 INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
     VALUES
