@@ -173,7 +173,7 @@ def get_section_contents(course_id, section_id):
                 c.allocated_time
             FROM content c
             WHERE c.course_id = %s AND c.sec_id = %s
-            ORDER BY c.content_id
+            ORDER BY c.order_number
         """, (course_id, section_id))
         rows = cursor.fetchall()
         keys = [desc[0] for desc in cursor.description]

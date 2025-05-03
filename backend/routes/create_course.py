@@ -154,7 +154,8 @@ def add_content(course_id, sec_id):
     required_fields = [
         "title",
         "allocated_time",
-        "content_type"
+        "content_type",
+        "order_number"
     ]
 
     if not all(field in data for field in required_fields):
@@ -166,6 +167,13 @@ def add_content(course_id, sec_id):
             "success": False, 
             "message": f"Invalid content_type. Must be one of: {', '.join(valid_content_types)}"
         }), 400
+
+    try:
+        order_number = int(data["order_number"])
+        if order_number < 0:
+            return jsonify({"success": False, "message": "order_number must be non-negative"}), 400
+    except ValueError:
+        return jsonify({"success": False, "message": "order_number must be an integer"}), 400
 
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -186,14 +194,15 @@ def add_content(course_id, sec_id):
             """
             INSERT INTO content (
                 course_id, sec_id, content_id, title,
-                allocated_time, content_type
-            ) VALUES (%s, %s, %s, %s, %s, %s)
+                order_number, allocated_time, content_type
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 course_id,
                 sec_id,
                 content_id,
                 data["title"],
+                int(data["allocated_time"]),
                 int(data["allocated_time"]),
                 data["content_type"]
             ),

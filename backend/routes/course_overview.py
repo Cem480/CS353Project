@@ -92,7 +92,7 @@ def get_course_syllabus(course_id):
             FROM section s
             LEFT JOIN content c ON s.course_id = c.course_id AND s.sec_id = c.sec_id
             WHERE s.course_id = %s
-            ORDER BY s.order_number, c.content_id
+            ORDER BY s.order_number, c.order_number
         """, (course_id,))
         
         rows = cursor.fetchall()

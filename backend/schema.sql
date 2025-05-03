@@ -97,6 +97,7 @@ CREATE TABLE content(
     sec_id VARCHAR(8),
     content_id VARCHAR(8),
     title VARCHAR(150) NOT NULL,
+    order_number INTEGER NOT NULL CHECK (order_number >= 0),
     allocated_time INTEGER CHECK (allocated_time >= 0),
     content_type VARCHAR(20) CHECK(content_type IN ('task', 'document', 'visual_material')),
     PRIMARY KEY (course_id, sec_id, content_id),
@@ -939,9 +940,9 @@ INSERT INTO section (course_id, sec_id, title, description, order_number, alloca
 ('C0000001', 'S000002', 'Functions and Methods', 'Learn about Python functions', 2, 45);
 
 -- INSERT CONTENT - TASK
-INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type)
     VALUES
-('C0000001', 'S000001', 'CT000001', 'Python Quiz 1', 15, 'task');
+('C0000001', 'S000001', 'CT000001', 'Python Quiz 1', 1, 15, 'task');
 
 INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage)
     VALUES
@@ -970,9 +971,9 @@ VALUES
 
 
 -- Add an assignment to trigger grade notifications
-INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type)
     VALUES
-('C0000001', 'S000002', 'CT000004', 'Python Assignment', 60, 'task');
+('C0000001', 'S000002', 'CT000004', 'Python Assignment', 4, 60, 'task');
 
 INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage)
     VALUES
@@ -984,18 +985,18 @@ INSERT INTO assignment (course_id, sec_id, content_id, start_date, end_date, upl
 'Create a simple Python application that demonstrates the use of functions.');
 
 -- INSERT CONTENT - DOCUMENT
-INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type)
     VALUES
-('C0000001', 'S000001', 'CT000002', 'Python Basics Document', 10, 'document');
+('C0000001', 'S000001', 'CT000002', 'Python Basics Document', 2, 10, 'document');
 
 INSERT INTO document (course_id, sec_id, content_id, body)
 VALUES
 ('C0000001', 'S000001', 'CT000002', 'This document explains basic Python syntax.');
 
 -- INSERT CONTENT - VISUAL MATERIAL
-INSERT INTO content (course_id, sec_id, content_id, title, allocated_time, content_type)
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type)
         VALUES
-('C0000001', 'S000001', 'CT000003', 'Intro Video', 20, 'visual_material');
+('C0000001', 'S000001', 'CT000003', 'Intro Video', 3, 20, 'visual_material');
 
 INSERT INTO visual_material (course_id, sec_id, content_id, duration, body)
     VALUES
