@@ -15,7 +15,9 @@ import InstructorMainPage from './pages/InstructorsMainPage/InstructorsMainPage'
 import CreateCourse from './pages/CreateCourse/CreateCourse';
 import AddSection from './pages/AddSection/AddSection';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
-import CertificatesPage from './pages/CertificatesPage/CertificatesPage';      // ⬅️ NEW
+import CertificatesPage from './pages/CertificatesPage/CertificatesPage';
+import AdminMainPage from './pages/AdminMainPage/AdminMainPage';
+import AdminCourseApprovals from './pages/AdminCourseApprovals/AdminCourseApprovals';
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -80,6 +82,12 @@ function App() {
           element={<RoleProtectedRoute element={<AddSection />} allowedRole="instructor" />} />
         <Route path="/applications"
           element={<RoleProtectedRoute element={<InstructorApplicationsPage />} allowedRole="instructor" />} />
+
+        {/* Admin-only */}
+        <Route path="/admin/dashboard"
+          element={<RoleProtectedRoute element={<AdminMainPage />} allowedRole="admin" />} />
+        <Route path="/admin/course-approvals"
+          element={<RoleProtectedRoute element={<AdminCourseApprovals />} allowedRole="admin" />} />
 
         {/* Fallbacks */}
         <Route path="/" element={<Navigate to="/login" replace />} />

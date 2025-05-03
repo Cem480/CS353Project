@@ -15,26 +15,25 @@ const userData = getCurrentUser();
 const [instructorCourses, setInstructorCourses] = useState([]);
 const [isLoading, setIsLoading] = useState(true);
 
-// Fetch instructor courses
 useEffect(() => {
-const fetchCourses = async () => {
-if (userData && userData.user_id) {
-try {
-setIsLoading(true);
-const response = await getInstructorCourses(userData.user_id);
-if (response.success) {
-  setInstructorCourses(response.courses);
-}
-} catch (error) {
-console.error('Error fetching instructor courses:', error);
-} finally {
-setIsLoading(false);
-}
-}
-};
+  if (!userData?.user_id) return; // wait until userData is available
 
-fetchCourses();
-}, [userData]);
+  const fetchCourses = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getInstructorCourses(userData.user_id);
+      if (response.success) {
+        setInstructorCourses(response.courses);
+      }
+    } catch (error) {
+      console.error('Error fetching instructor courses:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchCourses();
+}, [userData?.user_id]);
 
 // Instructor stats 
 const stats = [

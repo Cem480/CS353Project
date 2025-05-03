@@ -103,7 +103,11 @@ const AuthPage = () => {
           // Navigate based on role
           if (result.role === 'instructor') {
             navigate('/instructor/dashboard'); // Use the instructor dashboard
-          } else {
+          } 
+          else if (result.role === "admin"){
+            navigate('/admin/dashboard');
+          }
+          else {
             navigate('/home'); // Default for students and other roles
           }
         } else {
