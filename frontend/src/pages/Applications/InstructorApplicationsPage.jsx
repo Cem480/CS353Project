@@ -4,6 +4,8 @@ import './InstructionPage.css';
 import { useEffect } from 'react';
 import axios from 'axios';
 import { getCurrentUser, logout } from '../../services/auth';
+import { getFinancialAidStats, getFinancialAidApplications, evaluateFinancialAid } from '../../services/financial_aid';
+
 
 const InstructorApplicationsPage = () => {
   const navigate = useNavigate();
@@ -46,29 +48,20 @@ const InstructorApplicationsPage = () => {
 
   const fetchStats = async () => {
     try {
-      const instructorId = userData?.user_id;
-      if (instructorId) {
-        const res = await axios.get(`http://localhost:5001/api/instructor/${instructorId}/financial_aid_stats`);
-        setStats(res.data);
+      if (userData?.user_id) {
+        const res = await getFinancialAidStats(userData.user_id);
+        setStats(res);
       }
-    } catch (err) {
-      console.error("Failed to fetch stats:", err);
-    }
+    } catch (err) {}
   };
 
   const fetchApplications = async () => {
     try {
-      const instructorId = userData?.user_id;
-      if (instructorId) {
-        const response = await axios.post(
-          `http://localhost:5001/api/instructor/${instructorId}/financial_aid_applications`,
-          { headers: { "Content-Type": "application/json" } }
-        );
-        setApplications(response.data);
+      if (userData?.user_id) {
+        const data = await getFinancialAidApplications(userData.user_id);
+        setApplications(data);
       }
-    } catch (error) {
-      console.error("Failed to fetch applications:", error);
-    }
+    } catch (err) {}
   };
 
   const filteredApplications = applications.filter(app => app.status === currentFilter);
@@ -100,33 +93,18 @@ const InstructorApplicationsPage = () => {
   
 
   const handleApplicationAction = async (courseId, studentId, action) => {
-      try {
-        const instructorId = localStorage.getItem("user_id"); // Get current logged in instructor
-    
-        const isAccepted = action === "approve"; // if "approve", true; if "reject", false
-    
-        const response = await axios.post(
-          `http://localhost:5001/api/financial_aid/evaluate/${courseId}/${studentId}/${instructorId}`,
-          {
-            is_accepted: isAccepted
-          },
-          {
-            headers: { "Content-Type": "application/json" }
-          }
-        );
-    
-        if (response.data.success) {
-          console.log(`Application ${studentId} for course ${courseId} successfully ${isAccepted ? "approved" : "rejected"}.`);
-          fetchApplications(); 
-          fetchStats();
-        } else {
-          console.error("Evaluation failed:", response.data.message);
-        }
-    
-      } catch (error) {
-        console.error("Error during evaluation:", error);
+    try {
+      const isAccepted = action === 'approve';
+      const res = await evaluateFinancialAid(courseId, studentId, userData.user_id, isAccepted);
+
+      if (res.success) {
+        fetchApplications();
+        fetchStats();
+      } else {
+        console.error("Evaluation failed:", res.message);
       }
-    };
+    } catch (err) {}
+  };
 
   return (
     <div className="instructor-container">
