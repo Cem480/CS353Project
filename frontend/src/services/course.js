@@ -145,3 +145,51 @@ export async function getInstructorCourses(instructorId) {
     throw error;
   }
 }
+
+// Get courses based on their status
+export async function getCoursesByStatus(status) {
+  try {
+    const response = await fetch(`${BASE_URL}/api/courses?status=${status}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch courses');
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`Error fetching courses with status "${status}":`, error);
+    throw error;
+  }
+}
+
+// Approve or reject a pending course 
+export async function evaluateCourse(courseId, adminId, isAccepted) {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/api/admin/evaluate_course/${courseId}/${adminId}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ is_accepted: isAccepted })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to evaluate course');
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`Error evaluating course ${courseId}:`, error);
+    throw error;
+  }
+}

@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { getCurrentUser, logout } from '../../services/auth';
-import '../AdminMainPage/AdminMainPage.css';
+
+import { getCoursesByStatus } from '../../services/course';
+import { evaluateCourse } from '../../services/course';
+
+
+import './AdminCourseApprovals.css';
 
 const AdminCourseApprovals = () => {
   const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const userData = getCurrentUser();
+
+  const [pendingCourses, setPendingCourses] = useState([]);
 
   const toggleProfileMenu = () => setShowProfileMenu(!showProfileMenu);
 
@@ -15,7 +23,7 @@ const AdminCourseApprovals = () => {
     navigate('/login');
   };
 
-  // Auto-close dropdown on outside click
+  
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (showProfileMenu && !e.target.closest('.profile-dropdown')) {
@@ -26,17 +34,43 @@ const AdminCourseApprovals = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showProfileMenu]);
 
+  useEffect(() => {
+    const fetchPendingCourses = async () => {
+      try {
+        const response = await getCoursesByStatus('pending');
+        if (response.success) {
+          setPendingCourses(response.courses);
+        }
+      } catch (err) {
+        console.error('Failed to fetch pending courses', err);
+      }
+    };
+  
+    fetchPendingCourses();
+  }, []);
+
+  const handleEvaluation = async (courseId, isAccepted) => {
+    try {
+      const response = await evaluateCourse(courseId, userData.user_id, isAccepted);
+      if (response.success) {
+        setPendingCourses(prev => prev.filter(c => c.course_id !== courseId));
+      } else {
+        alert(response.message || 'Action failed');
+      }
+    } catch (error) {
+      console.error('Course evaluation failed:', error);
+    }
+  };
+
   return (
     <div className="instructor-main-page">
-      {/* Top Navigation Bar */}
+      {/* Header Bar */}
       <header className="main-header">
         <div className="header-left">
-          <div className="logo">
-            <h1>LearnHub</h1>
-          </div>
+          <div className="logo"><h1>LearnHub</h1></div>
           <div className="nav-links">
             <a href="/admin/dashboard">Dashboard</a>
-            <a href="/admin/approvals" className="active">Course Approvals</a>
+            <a href="/admin/course-approvals" className="active">Course Approvals</a>
           </div>
         </div>
         <div className="header-right">
@@ -51,9 +85,7 @@ const AdminCourseApprovals = () => {
             {showProfileMenu && (
               <div className="dropdown-menu active">
                 <div className="profile-info">
-                  <div className="profile-avatar-large">
-                    {userData?.user_id?.charAt(0).toUpperCase()}
-                  </div>
+                  <div className="profile-avatar-large">{userData?.user_id?.charAt(0).toUpperCase()}</div>
                   <div className="profile-details">
                     <div className="profile-name">{userData?.user_id}</div>
                     <div className="profile-role">{userData?.role}</div>
@@ -70,12 +102,36 @@ const AdminCourseApprovals = () => {
         </div>
       </header>
 
-      {/* Page Content */}
+      {/* Main Content */}
       <main className="main-content">
         <section className="welcome-section">
           <h2>Course Approvals</h2>
           <p>Review and approve submitted courses below.</p>
-          {/* You can add a table or approval list here */}
+
+          {pendingCourses.length === 0 ? (
+            <p>No pending courses found.</p>
+          ) : (
+            <div className="vertical-course-list">
+                {pendingCourses.map(course => (
+                    <div key={course.course_id} className="course-card">
+                    <h3>{course.title}</h3>
+                    <div className="course-meta">
+                        <p><strong>Instructor Name:</strong> {course.instructor_name}</p>
+                        <p><strong>Category:</strong> {course.category}</p>
+                        <p><strong>Difficulty:</strong> {course.difficulty_level}</p>
+                        <p><strong>Price:</strong> ${course.price}</p>
+                        <p><strong>Creation Date:</strong> {course.creation_date}</p>
+                    </div>
+                    <div className="course-description">{course.description}</div>
+                    <div className="approval-actions">
+                        <button className="approve-btn" onClick={() => handleEvaluation(course.course_id, true)}>Approve</button>
+                        <button className="reject-btn" onClick={() => handleEvaluation(course.course_id, false)}>Reject</button>
+                        <button className="details-btn" onClick={() => navigate(`/admin/course-approvals`)}>Details</button>
+                    </div>
+                    </div>
+                ))}
+            </div>
+          )}
         </section>
       </main>
     </div>
