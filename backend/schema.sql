@@ -501,6 +501,45 @@ AFTER INSERT ON course
 FOR EACH ROW
 EXECUTE FUNCTION update_instructor_course_count();
 
+-- Trigger for content order numbers
+CREATE OR REPLACE FUNCTION shift_order_numbers()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE content
+    SET order_number = order_number + 1
+    WHERE course_id = NEW.course_id
+      AND sec_id = NEW.sec_id
+      AND order_number >= NEW.order_number;
+      
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_shift_order_numbers
+BEFORE INSERT ON content
+FOR EACH ROW
+EXECUTE FUNCTION shift_order_numbers();
+
+-- Trigger for section order numbers
+CREATE OR REPLACE FUNCTION shift_section_order_numbers()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE section
+  SET order_number = order_number + 1
+  WHERE course_id = NEW.course_id
+    AND order_number >= NEW.order_number;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_shift_section_order
+BEFORE INSERT ON section
+FOR EACH ROW
+EXECUTE FUNCTION shift_section_order_numbers();
+
+
+
 -- NOTIFICATION TRIGGERS
 
 -- Generate notifications when a course status changes

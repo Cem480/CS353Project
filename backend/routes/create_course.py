@@ -97,16 +97,6 @@ def add_section(course_id):
 
         sec_id = f"S{uuid.uuid4().hex[:7].upper()}"
 
-        cursor.execute(
-            'SELECT * FROM "section" WHERE course_id = %s AND order_number = %s', 
-            (course_id, data["order_number"])
-        )
-        existing_section = cursor.fetchone()
-        if existing_section:
-            return jsonify({
-                "success": False, 
-                "message": f"A section with order number {data['order_number']} already exists for this course"
-            }), 400
 
         cursor.execute(
             """
@@ -202,7 +192,7 @@ def add_content(course_id, sec_id):
                 sec_id,
                 content_id,
                 data["title"],
-                int(data["allocated_time"]),
+                int(data["order_number"]),
                 int(data["allocated_time"]),
                 data["content_type"]
             ),
