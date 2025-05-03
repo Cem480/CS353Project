@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from db import connect_project_db
 import psycopg2.extras
 from werkzeug.utils import secure_filename
-import os
+import os, json
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -70,9 +70,17 @@ def submit_task(course_id, sec_id, content_id, student_id):
             if not request.is_json:
                 return jsonify({"success": False, "message": "Expected JSON answers for assessment"}), 400
             data = request.get_json()
-            if "answers" not in data or not isinstance(data["answers"], list):
+
+            if "answers" not in data or not isinstance(data["answers"], dict):
                 return jsonify({"success": False, "message": "Invalid or missing answers"}), 400
-            answers = str(data["answers"])  # store as stringified JSON
+
+            # Validate each question_id format (optional)
+            for q_id, ans in data["answers"].items():
+                if not isinstance(q_id, str) or not isinstance(ans, str):
+                    return jsonify({"success": False, "message": "Each answer must be a string keyed by question_id"}), 400
+
+            answers = json.dumps(data["answers"])
+
 
         else:
             return jsonify({"success": False, "message": f"Unsupported task_type: {task_type}"}), 400
@@ -233,6 +241,17 @@ def get_content_detail(course_id, sec_id, content_id):
             content_info["video_url"] = f"/uploads/{os.path.basename(content_info['video_path'])}"
         if content_info.get("assignment_path"):
             content_info["assignment_file_url"] = f"/uploads/{os.path.basename(content_info['assignment_path'])}"
+
+        # If assessment, retrieve questions too
+        if content_info.get("task_type") == "assessment":
+            cursor.execute("""
+                SELECT question_id, question_body, max_time
+                FROM question
+                WHERE course_id = %s AND sec_id = %s AND content_id = %s
+                ORDER BY question_id
+            """, (course_id, sec_id, content_id))
+            questions = cursor.fetchall()
+            content_info["questions"] = [dict(q) for q in questions]
 
         return jsonify({"success": True, "content": content_info}), 200
 
