@@ -229,9 +229,18 @@ def add_content(course_id, sec_id):
                 ))
 
             elif data["task_type"] == "assignment":
-                for field in ["start_date", "end_date", "upload_material", "body"]:
+                for field in ["start_date", "end_date", "upload_material"]:
                     if field not in data:
                         raise Exception(f"Missing {field} for assignment")
+
+                file = request.files.get("body")
+                if not file:
+                    raise Exception("Missing file upload for assignment")
+
+                original_name = secure_filename(file.filename)
+                unique_filename = f"{course_id}_{sec_id}_{content_id}_{original_name}"
+                filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+                file.save(filepath)
 
                 cursor.execute("""
                     INSERT INTO assignment (
@@ -241,7 +250,8 @@ def add_content(course_id, sec_id):
                 """, (
                     course_id, sec_id, content_id,
                     data["start_date"], data["end_date"],
-                    data["upload_material"], data["body"]
+                    data["upload_material"],  
+                    filepath  # this is the path to the uploaded file
                 ))
 
         elif data["content_type"] == "document":
@@ -249,8 +259,9 @@ def add_content(course_id, sec_id):
             if not file:
                 raise Exception("No document file provided")
 
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            original_name = secure_filename(file.filename)
+            unique_filename = f"{course_id}_{sec_id}_{content_id}_{original_name}"
+            filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
             file.save(filepath)
 
             cursor.execute("""
@@ -267,8 +278,9 @@ def add_content(course_id, sec_id):
             if not file:
                 raise Exception("No visual file provided")
 
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            original_name = secure_filename(file.filename)
+            unique_filename = f"{course_id}_{sec_id}_{content_id}_{original_name}"
+            filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
             file.save(filepath)
 
             cursor.execute("""

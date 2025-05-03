@@ -59,8 +59,9 @@ def submit_task(course_id, sec_id, content_id, student_id):
             if not file:
                 return jsonify({"success": False, "message": "Missing file for assignment submission"}), 400
 
-            filename = secure_filename(f"{student_id}_{file.filename}")
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            original_name = secure_filename(file.filename)
+            unique_filename = f"{course_id}_{sec_id}_{content_id}_{student_id}_{original_name}"
+            filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
             file.save(filepath)
             answers = filepath
 
