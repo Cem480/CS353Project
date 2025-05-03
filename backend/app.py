@@ -84,6 +84,7 @@ from routes.course_content import course_content_bp
 from routes.admin import admin_bp
 from routes.feedback import feedback_bp
 from routes.comment import comment_bp
+from routes.content_operations import content_operations_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(course_bp)
@@ -101,6 +102,7 @@ app.register_blueprint(course_content_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(feedback_bp)
 app.register_blueprint(comment_bp)
+app.register_blueprint(content_operations_bp)
 
 
 RESET_DB = os.getenv("RESET_DB", "false").lower() == "true"

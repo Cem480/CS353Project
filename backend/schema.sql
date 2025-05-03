@@ -447,7 +447,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_update_progress_rate
 AFTER INSERT OR UPDATE ON complete
 FOR EACH ROW
-WHEN (NEW.is_completed = TRUE)
 EXECUTE FUNCTION update_progress_rate();
 
 -- Update enroll progress_rate after new content is added
