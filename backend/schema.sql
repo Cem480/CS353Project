@@ -729,7 +729,7 @@ DECLARE
     instructor_id VARCHAR(8);
 BEGIN
     -- Only trigger if progress_rate updated to 100
-    IF OLD.progress_rate = 100 OR NEW.progress_rate < 100 THEN
+    IF OLD.progress_rate < 100 AND NEW.progress_rate = 100 THEN  -- this line changed from "IF OLD.progress_rate = 100 OR NEW.progress_rate < 100 THEN RETURN NEW;" to this due to wrong logic
         RETURN NEW;
     END IF;
     
@@ -906,7 +906,7 @@ INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, pas
     'U0000002',
     'Alice',
     'M.', 
-                'Smith',
+    'Smith',
     '555-5678',
     'alice.smith@example.com',
     'password456',
@@ -1081,3 +1081,149 @@ UPDATE enroll SET progress_rate = 100 WHERE course_id = 'C0000001' AND student_i
 -- 7. Approve financial aid application to trigger notification
 UPDATE apply_financial_aid SET status = 'approved', evaluator_id = 'U0000002' 
 WHERE course_id = 'C0000001' AND student_id = 'U0000003';
+
+
+
+----------------------------------------------------------------------------
+-- INSERTIONS FOR MOCK DATA
+
+-- Insert users
+-- password: pass01word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000010', 'Daniel', 'Garcia', 'daniel.garcia0@example.com', 'scrypt:32768:8:1$HISarEjuybOMY8K6$20619ccfc5dd7475a73030fd68fe1cedb6b27fec3181e90b7afd2bf8c48bc776b65aa42585cb01c8906ae4728c0537773dc1a6441b1df5bd1d5d59e12f8123e2', CURRENT_DATE, '1990-01-01', 'admin');
+
+INSERT INTO admin (id, report_count)
+VALUES ('U0000010', 0);
+
+-- password: pass02word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000011', 'Sarah', 'Lee', 'sarah.lee1@example.com', 'scrypt:32768:8:1$78QAjhGo5TFT2coL$e42bb28037154fd1aea08988b3bed696b453b0a9a1ae0475c3c676786cdb978d6eab49488f3d8a13c48a5077d4e26facd34f0d5652a44b29a2cf9630331b3c98', CURRENT_DATE, '1990-01-01', 'admin');
+
+INSERT INTO admin (id, report_count)
+VALUES ('U0000011', 0);
+
+-- password: pass03word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000012', 'John', 'Lee', 'john.lee2@example.com', 'scrypt:32768:8:1$TjAqGnPkhOZJf6D6$ce388ca628d806fb5ae16f4de0c4cffbf8c6ca560db8398aec34684141fa431ae53386da318ed8395b25cb040b8ec2fcec4ffba4111b6fea3e99eb02b910d4a3', CURRENT_DATE, '1990-01-01', 'admin');
+
+INSERT INTO admin (id, report_count)
+VALUES ('U0000012', 0);
+
+-- password: pass04word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000013', 'Sarah', 'Miller', 'sarah.miller3@example.com', 'scrypt:32768:8:1$DFzFcG0W45zChjX6$b13b6270106b97167c8171ecfb57e6f64b4080b22771ec81de2d3b8b0029e268bf1d07b096162c33d0a9715de6794f8d416d78f5d229ab9d55b65d735c0f0fe5', CURRENT_DATE, '1990-01-01', 'instructor');
+
+INSERT INTO instructor (id, i_rating, course_count)
+VALUES ('U0000013', 0.0, 0);
+
+-- password: pass05word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000014', 'Sophia', 'Davis', 'sophia.davis4@example.com', 'scrypt:32768:8:1$1XfOo6RzlKAFMmRj$3f2946506d87e54be5abc72735e4b5365bcb0a6adc841345cd1f05e69efdc54e376cb098eb40766a08f113d73d79467c4a8f4825b22cea35e049c3c854d8c007', CURRENT_DATE, '1990-01-01', 'instructor');
+
+INSERT INTO instructor (id, i_rating, course_count)
+VALUES ('U0000014', 0.0, 0);
+
+-- password: pass06word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000015', 'Daniel', 'Davis', 'daniel.davis5@example.com', 'scrypt:32768:8:1$aHMBTWDaYJkNwvrX$43f5b1d7a3f71da63fe6d49b300a6c76862582a19513cf556d07ee21fad1559f3f84ebf2a20607b69381e1d8264299a330f4f33323167d0bfd89a5f09937725b', CURRENT_DATE, '1990-01-01', 'instructor');
+
+INSERT INTO instructor (id, i_rating, course_count)
+VALUES ('U0000015', 0.0, 0);
+
+-- password: pass07word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000016', 'Emma', 'Lee', 'emma.lee6@example.com', 'scrypt:32768:8:1$P8nCqboAxOucjEeh$300017264f81a469bfe12f5c53952ba21f493fb3e138f14827e0867aa0cf27e4e6c82c28ae9e261fdaa026280d1859b369aab05634969a61f462aa064a83de7b', CURRENT_DATE, '1990-01-01', 'instructor');
+
+INSERT INTO instructor (id, i_rating, course_count)
+VALUES ('U0000016', 0.0, 0);
+
+-- password: pass08word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000017', 'Alice', 'Williams', 'alice.williams7@example.com', 'scrypt:32768:8:1$RCxvRfNTIJgN2kpB$230f8daa3f8e736ef0f5b0fe527e01c92d4f3bb701bdba2702e7eddb2bf7b58b1b7250a74dd56a905e9b360d25f2f35daf4a35405513dc4f0f2603bbe9628d63', CURRENT_DATE, '1990-01-01', 'instructor');
+
+INSERT INTO instructor (id, i_rating, course_count)
+VALUES ('U0000017', 0.0, 0);
+
+-- password: pass09word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000018', 'Alice', 'Brown', 'alice.brown8@example.com', 'scrypt:32768:8:1$zKPgQmpW9HdFU7af$3462081f7fb46704490cbeb63edc58b34d0457d17e53873effec4feea35fca6bfaffac618cf741184ba929ecfca72cec7a521d88e4b0f8ebc37216f2e19e3166', CURRENT_DATE, '1990-01-01', 'instructor');
+
+INSERT INTO instructor (id, i_rating, course_count)
+VALUES ('U0000018', 0.0, 0);
+
+-- password: pass10word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000019', 'Sarah', 'Miller', 'sarah.miller9@example.com', 'scrypt:32768:8:1$WPZVZVn5AmSF4iCy$5996fcc478c50e4f233457733a46915584eaa749310579bcb7487de4d507c79e7d3f6bf0c3372aa050c1fc8b2ccb69f8c37bcbd112c32a2bdff4afaf43cd9978', CURRENT_DATE, '1990-01-01', 'instructor');
+
+INSERT INTO instructor (id, i_rating, course_count)
+VALUES ('U0000019', 0.0, 0);
+
+-- password: pass11word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000020', 'Michael', 'Garcia', 'michael.garcia10@example.com', 'scrypt:32768:8:1$UfshWTqNRatv5Ysd$70257dcd19a6ed866081553128923c92d71f809fe63523a1b5a4c962b253c65c4e45643906da9454b31e279051b4dd558a922b976b783b7477f19c6ae82dc2a3', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000020', 'CS', 'active', 0);
+
+-- password: pass12word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000021', 'Daniel', 'Miller', 'daniel.miller11@example.com', 'scrypt:32768:8:1$viItZBygL1YHklTH$60c5c5e45e98173cf7c4e422446c168f4fcf8bc873c1f74c32bb942f56a50566903c39a72de422ad8c5217f4273dba210b0f31a34e3034ba5d7b4101e19deb8f', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000021', 'Math', 'active', 0);
+
+-- password: pass13word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000022', 'Daniel', 'Garcia', 'daniel.garcia12@example.com', 'scrypt:32768:8:1$Ktwnh0AHVcxys0er$fb2c1742c0d8fd23b72ae9cb8d144604f83887f418b8b3dfc1c09b7014a4bf0d0ef98e7aafb70319223fae7ca7b57033b857a5f99c5c331c6343456187f21668', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000022', 'Chemistry', 'active', 0);
+
+-- password: pass14word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000023', 'Chris', 'Jones', 'chris.jones13@example.com', 'scrypt:32768:8:1$3KuqqUjiKYJEPvSl$b06ef9f5cdc613fecb78716545af07ae16cef879ca9409c929baadf9d12fb7122d094b1594a903573ef4d7fa0b6a44a0f38f53e1e57efa07d77f2701cbd5e0c6', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000023', 'Biology', 'active', 0);
+
+-- password: pass15word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000024', 'Daniel', 'Lee', 'daniel.lee14@example.com', 'scrypt:32768:8:1$g24ubu2Vg5qiAeqC$7cef9b588df214a85168015922bb947b1d6ca628c9ee41a6fe6d8ab1af43416520feb15d0897e7f48162e30ae476b16499144f119fd25b4fef64ee9995fdae21', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000024', 'Math', 'active', 0);
+
+-- password: pass16word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000025', 'Sarah', 'Brown', 'sarah.brown15@example.com', 'scrypt:32768:8:1$6bt5KHjotoq48F1m$4aace3d7e625ba92d1b1587cfe19c9c104632ece951d26bf069c2981582d94674db14766f7dfb4f8aa1ddfc11ea6efc117b48dbf52e68dea18cfb91bd76e32f6', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000025', 'Physics', 'active', 0);
+
+-- password: pass17word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000026', 'David', 'Lee', 'david.lee16@example.com', 'scrypt:32768:8:1$AMvHBV2HKxcsuVnX$17ab62d420dcfe0da3a13aa9320ba1753af0dee1fc64eb5ffeb2763cc232d173dbd66d4484d29f0a9e06731c584eb1e9fc893f4c01fe22baad27da9c1a455d95', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000026', 'Chemistry', 'active', 0);
+
+-- password: pass18word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000027', 'Olivia', 'Brown', 'olivia.brown17@example.com', 'scrypt:32768:8:1$BhSq7pLQB6l8kOxT$28e61d9e97b23ddf353b3ba938a5e8274cce118547e5fdd7ed49f25c46c143ee3e8a83554b5ce14eeba4d3872864b10d8b5cd5798be582fc396dbf9bc74aaa8e', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000027', 'Physics', 'active', 0);
+
+-- password: pass19word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000028', 'David', 'Miller', 'david.miller18@example.com', 'scrypt:32768:8:1$xBbuPKxwqnfbnlCm$dea920d97a31bd75ebfcd0cba5e4b738af933ecb49b3f15e8c9303dbfbb8018ba160ee0290eef8370c2abed18d81301c12fc1f5818f12059cdaee3f3cd5d8e0a', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000028', 'Math', 'active', 0);
+
+-- password: pass20word
+INSERT INTO "user" (id, first_name, last_name, email, password, registration_date, birth_date, role)
+VALUES ('U0000029', 'David', 'Davis', 'david.davis19@example.com', 'scrypt:32768:8:1$zo0RWXpVlRyRaeq6$07b160262da8186c0ad7811fb3ed756dca711571326f19e88caac2d2df2aa98259c87881ad0f1118a57e07734269657d40f7ecae177d8fa60a480cd2b98ebc7a', CURRENT_DATE, '1990-01-01', 'student');
+
+INSERT INTO student (id, major, account_status, certificate_count)
+VALUES ('U0000029', 'Biology', 'active', 0);
