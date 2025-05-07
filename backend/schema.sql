@@ -1227,3 +1227,146 @@ VALUES ('U0000029', 'David', 'Davis', 'david.davis19@example.com', 'scrypt:32768
 
 INSERT INTO student (id, major, account_status, certificate_count)
 VALUES ('U0000029', 'Biology', 'active', 0);
+
+
+-- Insert accepted courses and sections
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id) VALUES
+('C0000110', 'Crash Course in Data Science', 'Explore modern techniques with real-world case studies and hands-on projects.', 'Data Science', 199, '2024-07-01', '2024-08-22', 'accepted', 0, 'https://forum.learnhub.com/data_science', 5, 'U0000014'),
+('C0000111', 'Foundations of Philosophy', 'An engaging journey into the core principles and advanced methods.', 'Philosophy', 49, '2024-02-15', '2024-05-10', 'accepted', 0, 'https://forum.learnhub.com/philosophy', 2, 'U0000013'),
+('C0000112', 'Mastering Cybersecurity', 'A blend of theory, practice, and creative challenges.', 'Cybersecurity', 29, '2024-06-05', '2024-09-02', 'accepted', 0, 'https://forum.learnhub.com/cybersecurity', 4, 'U0000016'),
+('C0000113', 'Applied AI & Robotics', 'Comprehensive and updated with the latest trends.', 'AI & Robotics', 0, '2024-01-20', '2024-04-05', 'accepted', 0, 'https://forum.learnhub.com/ai_&_robotics', 3, 'U0000017'),
+('C0000114', 'Introduction to Music Theory', 'Explore modern techniques with real-world case studies and hands-on projects.', 'Music Theory', 99, '2024-03-09', '2024-06-17', 'accepted', 0, 'https://forum.learnhub.com/music_theory', 1, 'U0000013'),
+('C0000115', 'Crash Course in Economics', 'From beginner to advanced, designed to empower learners.', 'Economics', 0, '2024-05-03', '2024-06-13', 'accepted', 0, 'https://forum.learnhub.com/economics', 2, 'U0000015'),
+('C0000116', 'Applied Creative Writing', 'A blend of theory, practice, and creative challenges.', 'Creative Writing', 199, '2024-04-12', '2024-06-25', 'accepted', 0, 'https://forum.learnhub.com/creative_writing', 5, 'U0000013'),
+('C0000117', 'Mastering UX Design', 'Comprehensive and updated with the latest trends.', 'UX Design', 49, '2024-06-01', '2024-07-15', 'accepted', 0, 'https://forum.learnhub.com/ux_design', 4, 'U0000016'),
+('C0000118', 'Foundations of Blockchain', 'An engaging journey into the core principles and advanced methods.', 'Blockchain', 0, '2024-02-20', '2024-04-25', 'accepted', 0, 'https://forum.learnhub.com/blockchain', 3, 'U0000014'),
+('C0000119', 'Crash Course in Cognitive Science', 'From beginner to advanced, designed to empower learners.', 'Cognitive Science', 99, '2024-01-31', '2024-03-10', 'accepted', 0, 'https://forum.learnhub.com/cognitive_science', 2, 'U0000015');
+
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES
+('C0000110', 'S011506', 'Unit 1: Foundations', 'This section focuses on key ideas.', 1, 0),
+('C0000110', 'S012987', 'Unit 2: Essentials', 'This section focuses on hands-on tasks.', 2, 0),
+('C0000110', 'S013451', 'Unit 3: Theory', 'This section focuses on interactive activities.', 3, 0),
+('C0000110', 'S014719', 'Unit 4: Theory', 'This section focuses on conceptual frameworks.', 4, 0),
+
+('C0000111', 'S021589', 'Unit 1: Essentials', 'This section focuses on key ideas.', 1, 0),
+('C0000111', 'S022846', 'Unit 2: Lab Work', 'This section focuses on key ideas.', 2, 0),
+('C0000111', 'S023210', 'Unit 3: Theory', 'This section focuses on conceptual frameworks.', 3, 0),
+
+('C0000112', 'S031127', 'Unit 1: Theory', 'This section focuses on important theories.', 1, 0),
+('C0000112', 'S032940', 'Unit 2: Foundations', 'This section focuses on conceptual frameworks.', 2, 0),
+('C0000112', 'S033661', 'Unit 3: Practice', 'This section focuses on key ideas.', 3, 0),
+
+('C0000113', 'S041391', 'Unit 1: Essentials', 'This section focuses on interactive activities.', 1, 0),
+('C0000113', 'S042418', 'Unit 2: Lab Work', 'This section focuses on conceptual frameworks.', 2, 0),
+('C0000113', 'S043511', 'Unit 3: Practice', 'This section focuses on hands-on tasks.', 3, 0),
+
+('C0000114', 'S051157', 'Unit 1: Lab Work', 'This section focuses on conceptual frameworks.', 1, 0),
+('C0000114', 'S052349', 'Unit 2: Essentials', 'This section focuses on hands-on tasks.', 2, 0),
+('C0000114', 'S053102', 'Unit 3: Theory', 'This section focuses on conceptual frameworks.', 3, 0),
+('C0000114', 'S054327', 'Unit 4: Practice', 'This section focuses on interactive activities.', 4, 0),
+
+('C0000115', 'S061058', 'Unit 1: Theory', 'This section focuses on interactive activities.', 1, 0),
+('C0000115', 'S062419', 'Unit 2: Foundations', 'This section focuses on important theories.', 2, 0),
+('C0000115', 'S063203', 'Unit 3: Lab Work', 'This section focuses on hands-on tasks.', 3, 0),
+
+('C0000116', 'S071336', 'Unit 1: Practice', 'This section focuses on interactive activities.', 1, 0),
+('C0000116', 'S072178', 'Unit 2: Lab Work', 'This section focuses on conceptual frameworks.', 2, 0),
+('C0000116', 'S073917', 'Unit 3: Theory', 'This section focuses on important theories.', 3, 0),
+('C0000116', 'S074632', 'Unit 4: Practice', 'This section focuses on hands-on tasks.', 4, 0),
+('C0000116', 'S075822', 'Unit 5: Essentials', 'This section focuses on conceptual frameworks.', 5, 0),
+
+('C0000117', 'S081443', 'Unit 1: Theory', 'This section focuses on interactive activities.', 1, 0),
+('C0000117', 'S082658', 'Unit 2: Practice', 'This section focuses on conceptual frameworks.', 2, 0),
+('C0000117', 'S083197', 'Unit 3: Lab Work', 'This section focuses on conceptual frameworks.', 3, 0),
+
+('C0000118', 'S091271', 'Unit 1: Practice', 'This section focuses on conceptual frameworks.', 1, 0),
+('C0000118', 'S092378', 'Unit 2: Theory', 'This section focuses on hands-on tasks.', 2, 0),
+('C0000118', 'S093810', 'Unit 3: Foundations', 'This section focuses on conceptual frameworks.', 3, 0),
+('C0000118', 'S094211', 'Unit 4: Practice', 'This section focuses on interactive activities.', 4, 0),
+
+('C0000119', 'S101267', 'Unit 1: Lab Work', 'This section focuses on conceptual frameworks.', 1, 0),
+('C0000119', 'S102643', 'Unit 2: Theory', 'This section focuses on hands-on tasks.', 2, 0),
+('C0000119', 'S103790', 'Unit 3: Practice', 'This section focuses on important theories.', 3, 0),
+('C0000119', 'S104134', 'Unit 4: Practice', 'This section focuses on conceptual frameworks.', 4, 0);
+
+-- Pending Courses
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id) VALUES
+('C0000120', 'Modern Ethics in Technology', 'Explore ethical frameworks in the age of AI.', 'Ethics', 79, '2024-07-01', '2024-08-15', 'pending', 0, 'https://forum.learnhub.com/ethics_tech', 3, 'U0000014'),
+('C0000121', 'Environmental Economics', 'A comprehensive look at sustainability and market dynamics.', 'Environmental Studies', 59, '2024-06-10', '2024-08-01', 'pending', 0, 'https://forum.learnhub.com/env_econ', 4, 'U0000015');
+
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES
+('C0000120', 'S120001', 'Unit 1: Tech Dilemmas', 'Ethical decisions in tech applications.', 1, 0),
+('C0000120', 'S120002', 'Unit 2: Case Studies', 'Real-world examples of AI ethics.', 2, 0),
+('C0000120', 'S120003', 'Unit 3: Frameworks', 'Theoretical models of modern ethics.', 3, 0),
+
+('C0000121', 'S121001', 'Unit 1: Green Markets', 'Understanding eco-friendly market strategies.', 1, 0),
+('C0000121', 'S121002', 'Unit 2: Policy Tools', 'Explore policy approaches to sustainability.', 2, 0),
+('C0000121', 'S121003', 'Unit 3: Global Trends', 'International collaboration and issues.', 3, 0),
+('C0000121', 'S121004', 'Unit 4: Impact Metrics', 'How to measure sustainability effects.', 4, 0);
+
+-- Draft Courses
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id) VALUES
+('C0000122', 'Creative Coding with Processing', 'A hands-on intro to visual programming.', 'Digital Art', 39, '2024-05-05', '2024-07-09', 'draft', 0, 'https://forum.learnhub.com/creative_coding', 2, 'U0000016'),
+('C0000123', 'History of Modern Architecture', 'Tracing the evolution of design from 1900 onwards.', 'Architecture', 89, '2024-06-01', '2024-07-12', 'draft', 0, 'https://forum.learnhub.com/modern_architecture', 3, 'U0000013');
+
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES
+('C0000122', 'S122001', 'Unit 1: Processing Basics', 'Intro to the Processing environment.', 1, 0),
+('C0000122', 'S122002', 'Unit 2: Drawing Shapes', 'Use code to create visual elements.', 2, 0),
+('C0000122', 'S122003', 'Unit 3: Animation', 'Add motion to visual components.', 3, 0),
+('C0000122', 'S122004', 'Unit 4: Interaction', 'Make programs respond to user input.', 4, 0),
+
+('C0000123', 'S123001', 'Unit 1: Bauhaus Origins', 'Explore the start of the Bauhaus school.', 1, 0),
+('C0000123', 'S123002', 'Unit 2: Postmodernism', 'Understand stylistic revolutions.', 2, 0),
+('C0000123', 'S123003', 'Unit 3: Global Influences', 'Non-Western influence in modern design.', 3, 0);
+
+-- Rejected Courses
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id) VALUES
+('C0000124', 'Quantum Mechanics for Beginners', 'A light introduction to mind-bending concepts.', 'Physics', 119, '2024-03-20', '2024-04-10', 'rejected', 0, 'https://forum.learnhub.com/quantum_intro', 5, 'U0000017'),
+('C0000125', 'Cultural Anthropology Insights', 'Discover human societies and their patterns.', 'Anthropology', 69, '2024-04-05', '2024-06-02', 'rejected', 0, 'https://forum.learnhub.com/cultural_anthropology', 2, 'U0000015');
+
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES
+('C0000124', 'S124001', 'Unit 1: Wave Functions', 'Understand basics of quantum behavior.', 1, 0),
+('C0000124', 'S124002', 'Unit 2: Particles vs Waves', 'The duality paradox explained.', 2, 0),
+('C0000124', 'S124003', 'Unit 3: Superposition', 'Explore Schrödingers thought experiment.', 3, 0),
+
+('C0000125', 'S125001', 'Unit 1: Kinship Structures', 'Study family and social roles.', 1, 0),
+('C0000125', 'S125002', 'Unit 2: Ritual & Belief', 'Explore meaning-making across cultures.', 2, 0),
+('C0000125', 'S125003', 'Unit 3: Modern Fieldwork', 'Approaches and challenges today.', 3, 0),
+('C0000125', 'S125004', 'Unit 4: Case Studies', 'Ethnographic insights from around the world.', 4, 0);
+
+
+
+-- Insert content for section 'S011506' of course 'C0000110'
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES
+('C0000110', 'S011506', 'CT000001', 'Introduction to Data Science', 1, 45, 'document'),
+('C0000110', 'S011506', 'CT000002', 'Data Science Overview Video', 2, 30, 'visual_material'),
+('C0000110', 'S011506', 'CT000003', 'Foundations Quiz', 3, 20, 'task');
+
+-- Insert corresponding entries into document, visual_material, and task tables
+INSERT INTO document (course_id, sec_id, content_id, body) VALUES
+('C0000110', 'S011506', 'CT000001', 'Content of Introduction to Data Science');
+
+INSERT INTO visual_material (course_id, sec_id, content_id, duration, body) VALUES
+('C0000110', 'S011506', 'CT000002', 30, 'Video content for Data Science Overview');
+
+INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage) VALUES
+('C0000110', 'S011506', 'CT000003', 70, 20, 'assessment', 100);
+
+-- Insert corresponding entry into assessment table
+INSERT INTO assessment (course_id, sec_id, content_id, question_count) VALUES
+('C0000110', 'S011506', 'CT000003', 10);
+
+-- Insert questions for the assessment
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES
+('C0000110', 'S011506', 'CT000003', 'Q0000001', 'What is Data Science?', 2),
+('C0000110', 'S011506', 'CT000003', 'Q0000002', 'Name a key component of Data Science.', 2);
+
+-- Insert multiple choice answers for the questions
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES
+('C0000110', 'S011506', 'CT000003', 'Q0000001', 'A'),
+('C0000110', 'S011506', 'CT000003', 'Q0000002', 'B');
+
+-- Repeat similar inserts for other sections and courses as needed
+-- Ensure that each content_id is unique and follows the 8-character format
+-- Allocate appropriate allocated_time values greater than 0
+-- Assign creative titles and ensure proper linkage between tables
