@@ -50,11 +50,12 @@ def reset_database():
     conn.close()
 
 
-def initialize_tables():
+def initialize_tables() -> None:
     conn = connect_project_db()
+    conn.set_client_encoding("UTF8")
     cursor = conn.cursor()
     schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
-    with open(schema_path, "r") as f:
+    with open(schema_path, "r", encoding="utf-8") as f:
         schema_sql = f.read()
         cursor.execute(schema_sql)
     conn.commit()

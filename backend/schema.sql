@@ -284,6 +284,145 @@ CREATE TABLE earn_certificate(
         REFERENCES certificate(certificate_id)
 );
 
+CREATE TABLE report (
+    report_id           VARCHAR(8)  PRIMARY KEY,
+    admin_id            VARCHAR(8)  NOT NULL,
+    report_type         VARCHAR(20) NOT NULL CHECK (
+                            report_type IN (
+                              'student_general','student_ranged',
+                              'instructor_general','instructor_ranged',
+                              'course_general'   ,'course_ranged'
+                            )
+                         ),
+    description         TEXT,
+    creation_date       TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    time_range_start    DATE        NOT NULL,
+    time_range_end      DATE        NOT NULL,
+    parent_report_id    VARCHAR(8)  NULL,
+    summary             JSONB,
+
+    CHECK (time_range_start <= time_range_end),
+    CHECK (
+        parent_report_id IS NULL
+        OR ( date_trunc('month', time_range_start) = time_range_start
+             AND time_range_end = (time_range_start
+                                   + INTERVAL '1 month' - INTERVAL '1 day') )
+    ),
+    FOREIGN KEY (admin_id)         REFERENCES admin(id),
+    FOREIGN KEY (parent_report_id) REFERENCES report(report_id)
+);
+
+CREATE INDEX idx_report_parent      ON report(parent_report_id);
+CREATE INDEX idx_report_type_range  ON report(report_type,
+                                              time_range_start,
+                                              time_range_end);
+
+ALTER TABLE report
+ADD CONSTRAINT uq_type_month UNIQUE (report_type,
+                                     time_range_start,
+                                     time_range_end);
+
+CREATE TABLE student_report (
+    report_id  VARCHAR(8) PRIMARY KEY
+                          REFERENCES report(report_id)
+                          ON DELETE CASCADE,
+
+    total_students                 INTEGER      CHECK (total_students            >= 0),
+    avg_certificate_per_student    NUMERIC(6,2) CHECK (avg_certificate_per_student>= 0),
+    avg_enrollments_per_student    NUMERIC(6,2) CHECK (avg_enrollments_per_student>= 0),
+    avg_completion_rate            NUMERIC(5,2) CHECK (avg_completion_rate BETWEEN 0 AND 100),
+
+    active_student_count           INTEGER      CHECK (active_student_count      >= 0),
+    most_common_major              VARCHAR(50),
+    most_common_major_count        INTEGER      CHECK (most_common_major_count    >= 0),
+
+    avg_age                        NUMERIC(5,2) CHECK (avg_age                   >= 0),
+    youngest_age                   INTEGER      CHECK (youngest_age              >= 0),
+    oldest_age                     INTEGER      CHECK (oldest_age                >= 0),
+
+    monthly_reg_count              INTEGER      CHECK (monthly_reg_count         >= 0),
+
+    top1_id  VARCHAR(8),
+    top2_id  VARCHAR(8),
+    top3_id  VARCHAR(8),
+
+    FOREIGN KEY (top1_id) REFERENCES student(id),
+    FOREIGN KEY (top2_id) REFERENCES student(id),
+    FOREIGN KEY (top3_id) REFERENCES student(id)
+);
+
+CREATE INDEX idx_student_report_top
+    ON student_report(top1_id, top2_id, top3_id);
+
+CREATE TABLE instructor_report (
+        report_id VARCHAR(8),
+        total_instructors INTEGER,
+        instructors_with_paid_course INTEGER,
+        instructors_with_free_course INTEGER,
+avg_courses_per_instructor NUMERIC(6,2),
+        most_popular_instructor_id VARCHAR(8),
+        most_active_instructor_id VARCHAR(8),
+avg_age FLOAT,
+	youngest_age INTEGER,
+oldest_age INTEGER,
+registration_count INTEGER CHECK (registration_count >= 0),
+top1_id VARCHAR(8),
+top2_id VARCHAR(8),
+top3_id VARCHAR(8),
+
+        PRIMARY KEY (report_id),
+FOREIGN KEY (report_id) REFERENCES report(report_id) ON DELETE CASCADE,
+        FOREIGN KEY (most_popular_instructor_id) REFERENCES instructor(id),
+        FOREIGN KEY (most_active_instructor_id) REFERENCES instructor(id),
+FOREIGN KEY (top1_id) REFERENCES instructor(ID),
+FOREIGN KEY (top2_id) REFERENCES instructor(ID),
+FOREIGN KEY (top3_id) REFERENCES instructor(ID),
+  CHECK (total_instructors >= 0),
+  CHECK (instructors_with_paid_course  >= 0),
+  CHECK (instructors_with_free_course >= 0),
+	  CHECK (avg_courses_per_instructor >= 0)
+    	);
+
+CREATE INDEX idx_instructor_report_highlights
+    ON instructor_report (most_popular_instructor_id,
+                          most_active_instructor_id,
+                          top1_id, top2_id, top3_id);
+
+
+CREATE TABLE course_report (
+    report_id           char(10) PRIMARY KEY
+        REFERENCES report(report_id) ON DELETE CASCADE,
+
+    -- fixed numeric columns we always want
+    total_courses               integer,
+    free_course_count           integer,
+    paid_course_count           integer,
+    avg_enroll_per_course       numeric(10,2),
+    total_revenue               numeric(14,2),
+    avg_completion_rate         numeric(6,2),
+
+    -- the four “promoted” fields
+    free_enroll_count           integer,
+    paid_enroll_count           integer,
+    most_completed_course_id    varchar(10),
+    most_completed_count        integer,
+    most_popular_course_id      varchar(10),
+    most_popular_enrollment_count integer,
+    popular_payment_type        text,
+
+    -- catch-all JSON for everything else
+    ext_stats                   jsonb DEFAULT '{}'::jsonb
+);
+
+-- handy composite index for the two highlight columns
+CREATE INDEX idx_course_report_highlights
+    ON course_report (most_popular_course_id, most_completed_course_id);
+
+-- GIN index if you plan to query inside JSONB frequently
+CREATE INDEX idx_course_report_extstats
+    ON course_report USING gin (ext_stats);
+
 -- VIEWS
 -- User with computed age
 CREATE VIEW user_with_age AS
