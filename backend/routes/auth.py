@@ -14,9 +14,26 @@ auth_bp = Blueprint("auth", __name__)
 # THERE IS NO PASSWORD REQUIREMENTS ADDED YET FOR SIMPLICITY
 
 
+def generate_unique_user_id(cursor):
+    """
+    Lock must already be held. Returns the next unused Uxxxxxxx ID.
+    """
+    cursor.execute(
+        """
+        SELECT COALESCE(
+          MAX(CAST(SUBSTRING(id FROM 2) AS INTEGER))
+        , 0)
+        FROM "user"
+        """
+    )
+    max_num = cursor.fetchone()[0]
+    next_num = max_num + 1
+    return f"U{next_num:07d}"
+
+
 @auth_bp.route("/api/register", methods=["POST"])
 def register():
-    data = request.json
+    data = request.json or {}
     required_fields = [
         "first_name",
         "last_name",
@@ -25,11 +42,10 @@ def register():
         "birth_date",
         "role",
     ]
-
-    if not all(field in data and data[field] for field in required_fields):
+    # 1) Validate request payload
+    if not all(data.get(f) for f in required_fields):
         return jsonify({"success": False, "message": "Missing required fields"}), 400
-
-    if data["role"] == "student" and "major" not in data:
+    if data["role"] == "student" and not data.get("major"):
         return (
             jsonify({"success": False, "message": "Major is required for students"}),
             400,
@@ -39,27 +55,36 @@ def register():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     try:
-        cursor.execute('SELECT * FROM "user" WHERE email = %s', (data["email"],))
-        existing = cursor.fetchone()
-        if existing:
+        # 2) Check for duplicate email
+        cursor.execute('SELECT 1 FROM "user" WHERE email = %s;', (data["email"],))
+        if cursor.fetchone():
             return (
                 jsonify({"success": False, "message": "Email already registered"}),
                 409,
             )
 
-        cursor.execute('SELECT COUNT(*) FROM "user"')
-        user_count = cursor.fetchone()[0]
-        user_id = f"U{user_count + 1:07d}"
+        # 3) Lock table to serialize ID generation
+        cursor.execute('LOCK TABLE "user" IN EXCLUSIVE MODE;')
+
+        # 4) Generate a unique user ID
+        user_id = generate_unique_user_id(cursor)
+
+        # 5) Hash the password
         hashed_pw = generate_password_hash(data["password"])
 
+        # 6) Insert into "user"
         cursor.execute(
             """
             INSERT INTO "user" (
                 id, first_name, middle_name, last_name,
-                phone_no, email, password, registration_date,
-                birth_date, role
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_DATE, %s, %s)
-        """,
+                phone_no, email, password,
+                registration_date, birth_date, role
+            ) VALUES (
+                %s, %s, %s, %s,
+                %s, %s, %s,
+                CURRENT_DATE, %s, %s
+            );
+            """,
             (
                 user_id,
                 data["first_name"],
@@ -73,36 +98,44 @@ def register():
             ),
         )
 
+        # 7) Insert into role-specific table
         if data["role"] == "student":
             cursor.execute(
                 """
-                INSERT INTO student (id, major, account_status, certificate_count)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO student (
+                  id, major, account_status, certificate_count
+                ) VALUES (
+                  %s, %s, %s, %s
+                );
                 """,
                 (user_id, data["major"], "active", 0),
             )
         elif data["role"] == "instructor":
             cursor.execute(
                 """
-                INSERT INTO instructor (id, i_rating, course_count)
-                VALUES (%s, %s, %s)
+                INSERT INTO instructor (
+                  id, i_rating, course_count
+                ) VALUES (
+                  %s, %s, %s
+                );
                 """,
-                (
-                    user_id,
-                    0.0,
-                    0,
-                ),  # should we put no rating or something like that on rating
+                (user_id, 0.0, 0),
             )
         elif data["role"] == "admin":
             cursor.execute(
                 """
-                INSERT INTO admin (id, report_count)
-                VALUES (%s, %s)
+                INSERT INTO admin (
+                  id, report_count
+                ) VALUES (
+                  %s, %s
+                );
                 """,
                 (user_id, 0),
             )
 
+        # 8) Commit transaction
         conn.commit()
+
         return (
             jsonify(
                 {
