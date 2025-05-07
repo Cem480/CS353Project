@@ -707,16 +707,18 @@ LIMIT 1;
 
 @report_bp.route("/api/report/student/general", methods=["GET"])
 def student_general_report():
-    # ── 0) validate caller ─────────────────────────────────────────────
-    admin_id = request.args.get("admin_id")
+    # 0) validate caller
+    admin_id = (request.args.get("admin_id") or "").strip()
     if not admin_id:
         return jsonify({"success": False, "message": "missing admin_id"}), 400
+    if len(admin_id) > 8:
+        return jsonify({"success": False, "message": "admin_id too long"}), 400
 
     conn = connect_project_db()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur = conn.cursor(cursor_factory=psql.RealDictCursor)
 
     try:
-        # ── 1) snapshot metrics  ───────────────────────────────────────
+        # 1) snapshot metrics
         cur.execute(STUDENT_GENERAL_SQL)
         summary = cur.fetchone() or {}
 
@@ -729,27 +731,26 @@ def student_general_report():
         cur.execute(STUDENT_TOP_SQL)
         summary["top_students"] = cur.fetchall()
 
-        # ── 2) determine report range  (earliest data → last full month)
+        # 2) determine & sort report range (earliest data → last full month)
         cur.execute(
             """SELECT MIN(date_trunc('month', registration_date)) AS min_month
-                       FROM "user";"""
+               FROM "user";"""
         )
         earliest_row = cur.fetchone()
-        start_month = (
+        raw_start = (
             earliest_row["min_month"].date()
             if earliest_row and earliest_row["min_month"]
             else dt.date.today().replace(day=1)
         )
-        end_month = last_completed_month()  # helper
+        raw_end = last_completed_month()
+        start_month, end_month = sorted((raw_start, raw_end))
 
         summary["range"] = {
-            "start": month_label(start_month),  # e.g. 02‑2024
-            "end": month_label(end_month),  # e.g. 04‑2025
+            "start": month_label(start_month),
+            "end": month_label(end_month),
         }
 
-        # ────────────────────────────────────────────────────────────────
-        # 3) get‑or‑create header, then metrics — FK‑safe & idempotent
-        # ────────────────────────────────────────────────────────────────
+        # 3) upsert header & metrics
         upsert_sql = """
         WITH ins AS (
             INSERT INTO report (
@@ -799,7 +800,7 @@ def student_general_report():
         cur.execute(
             upsert_sql,
             {
-                "rid": new_report_id("SG"),  # only used if row is new
+                "rid": new_report_id("SG"),
                 "admin": admin_id,
                 "start": start_month,
                 "end": end_month,
@@ -835,6 +836,7 @@ def student_general_report():
         conn.rollback()
         print(f"[STUDENT GENERAL ERROR] {e}")
         return jsonify({"success": False, "message": str(e)}), 500
+
     finally:
         cur.close()
         conn.close()
@@ -1626,36 +1628,38 @@ def instructor_ranged_report():
 
 @report_bp.route("/api/report/instructor/general", methods=["GET"])
 def instructor_general_report():
-    # ── 0) validate caller ------------------------------------------------
+    # 0) validate admin_id
     admin_id = (request.args.get("admin_id") or "").strip()
     if not admin_id:
         return jsonify({"success": False, "message": "missing admin_id"}), 400
     if len(admin_id) > 8:
-        return (
-            jsonify({"success": False, "message": "admin_id longer than 8 characters"}),
-            400,
-        )
+        return jsonify({"success": False, "message": "admin_id too long"}), 400
 
     conn = connect_project_db()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
+    cur = conn.cursor(cursor_factory=psql.RealDictCursor)
     try:
-        # ── 1) determine date‑range: earliest → last completed month -----
+        # 1) figure out date‐range: earliest instructor reg → last full month
         cur.execute(
             """
             SELECT MIN(date_trunc('month', u.registration_date)) AS min_month
-            FROM   "user" u
-            JOIN   instructor i ON i.id = u.id;
+            FROM "user" u
+            JOIN instructor i ON i.id = u.id
         """
         )
         row = cur.fetchone()
-        min_month = row["min_month"].date() if row and row["min_month"] else None
-        end_month = last_completed_month()  # helper
-        start_month = min_month or end_month  # fallback
+        raw_start = (
+            row["min_month"].date()
+            if row and row["min_month"]
+            else dt.date.today().replace(day=1)
+        )
+        raw_end = last_completed_month()
+        # ensure start <= end
+        start_month, end_month = sorted((raw_start, raw_end))
 
-        # ── 2) snapshot metrics ----------------------------------------
+        # 2) collect all the snapshot metrics
+        summary = {}
         cur.execute(TOTAL_INSTR_SQL)
-        summary = cur.fetchone() or {}
+        summary.update(cur.fetchone() or {})
 
         cur.execute(PAID_FREE_INSTR_SQL)
         summary.update(cur.fetchone() or {})
@@ -1663,6 +1667,7 @@ def instructor_general_report():
         cur.execute(AVG_COURSES_SQL)
         summary.update(cur.fetchone() or {})
 
+        # top/popular instructors
         cur.execute(MOST_POP_INSTR_SQL)
         mp = cur.fetchone() or {}
         summary["most_popular_instructor"] = mp
@@ -1673,78 +1678,81 @@ def instructor_general_report():
         summary["most_active_instructor"] = ma
         summary["most_active_instructor_id"] = ma.get("id")
 
+        # age stats
         cur.execute(INSTR_AGE_SQL)
         summary.update(cur.fetchone() or {})
 
+        # monthly registrations
         cur.execute(INSTR_MONTHLY_SQL, (start_month, end_month))
         rows = cur.fetchall()
         summary["monthly_registrations"] = {
             r["month"]: r["registration_count"] for r in rows
         }
 
+        # top-3 overall
         cur.execute(TOP_INSTR_SQL)
         summary["top_instructors"] = cur.fetchall()
 
+        # bring the date‐range into the payload
         summary["range"] = {
             "start": month_label(start_month),
             "end": month_label(end_month),
         }
 
-        # ── 3) atomic upsert (header + metrics) ------------------------
+        # 3) upsert into report & instructor_report
         upsert_sql = """
         WITH ins AS (
-            INSERT INTO report (
-                report_id, admin_id, report_type,
-                time_range_start, time_range_end, description
-            )
-            VALUES (%(rid)s, %(admin)s, 'instructor_general',
-                    %(start)s, %(end)s,
-                    'site - wide instructor snapshot')
-            ON CONFLICT (report_type, time_range_start, time_range_end)
+          INSERT INTO report (
+            report_id, admin_id, report_type,
+            time_range_start, time_range_end, description
+          ) VALUES (
+            %(rid)s, %(admin)s, 'instructor_general',
+            %(start)s, %(end)s, 'site - wide instructor snapshot'
+          )
+          ON CONFLICT (report_type, time_range_start, time_range_end)
             DO NOTHING
-            RETURNING report_id
-        ),
-        chosen AS (
-            SELECT report_id FROM ins
-            UNION ALL
-            SELECT report_id
-            FROM   report
-            WHERE  report_type      = 'instructor_general'
-              AND  time_range_start = %(start)s
-              AND  time_range_end   = %(end)s
-            LIMIT 1
+          RETURNING report_id
+        ), chosen AS (
+          SELECT report_id FROM ins
+          UNION ALL
+          SELECT report_id
+          FROM report
+          WHERE report_type='instructor_general'
+            AND time_range_start=%(start)s
+            AND time_range_end  =%(end)s
+          LIMIT 1
         )
         INSERT INTO instructor_report (
-            report_id,
-            total_instructors,
-            instructors_with_paid_course,
-            instructors_with_free_course,
-            avg_courses_per_instructor,
-            most_popular_instructor_id,
-            most_active_instructor_id,
-            avg_age, youngest_age, oldest_age,
-            registration_count,
-            top1_id, top2_id, top3_id
+          report_id,
+          total_instructors,
+          instructors_with_paid_course,
+          instructors_with_free_course,
+          avg_courses_per_instructor,
+          most_popular_instructor_id,
+          most_active_instructor_id,
+          avg_age, youngest_age, oldest_age,
+          registration_count,
+          top1_id, top2_id, top3_id
         )
         SELECT
-            chosen.report_id,
-            %(total_instructors)s,
-            %(instructors_with_paid_course)s,
-            %(instructors_with_free_course)s,
-            %(avg_courses_per_instructor)s,
-            %(most_popular_instructor_id)s,
-            %(most_active_instructor_id)s,
-            %(avg_age)s, %(youngest_age)s, %(oldest_age)s,
-            %(reg_cnt)s,
-            %(top1)s, %(top2)s, %(top3)s
-        FROM chosen
+          c.report_id,
+          %(total_instructors)s,
+          %(instructors_with_paid_course)s,
+          %(instructors_with_free_course)s,
+          %(avg_courses_per_instructor)s,
+          %(most_popular_instructor_id)s,
+          %(most_active_instructor_id)s,
+          %(avg_age)s, %(youngest_age)s, %(oldest_age)s,
+          %(reg_cnt)s,
+          %(top1)s, %(top2)s, %(top3)s
+        FROM chosen c
         ON CONFLICT DO NOTHING;
         """
 
         cur.execute(
             upsert_sql,
             {
-                "rid": new_report_id("IG"),  # only used if row is new
+                "rid": new_report_id("IG"),
                 "admin": admin_id,
                 "start": start_month,
                 "end": end_month,
@@ -1780,6 +1788,7 @@ def instructor_general_report():
         conn.rollback()
         print(f"[INSTRUCTOR GENERAL ERROR] {e}")
         return jsonify({"success": False, "message": str(e)}), 500
+
     finally:
         cur.close()
         conn.close()
