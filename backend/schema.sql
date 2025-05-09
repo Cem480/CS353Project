@@ -1022,6 +1022,26 @@ AFTER INSERT ON earn_certificate
 FOR EACH ROW
 EXECUTE FUNCTION increment_certificate_count();
 
+-- Decrement certificate_count of student when an existing one is deleted
+CREATE OR REPLACE FUNCTION decrement_certificate_count_on_certificate_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE student
+    SET certificate_count = certificate_count - 1
+    WHERE ID IN (
+        SELECT student_id
+        FROM earn_certificate
+        WHERE certificate_id = OLD.certificate_id
+    );
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER handle_certificate_delete
+BEFORE DELETE ON certificate
+FOR EACH ROW
+EXECUTE FUNCTION decrement_certificate_count_on_certificate_delete();
+
 
 
 -- INSERTIONS
