@@ -85,7 +85,6 @@ const stats = [
   { value: `$${instructorStats.monthlyRevenue.toFixed(2)}`, label: 'Monthly Revenue' }
 ];
 
-// Assuming instructor's first name for display
 const firstName = userName;
 
 const handleLogout = () => {
@@ -129,7 +128,7 @@ return (
 </div>
 <div className="nav-links">
   <a href="/home" className="active">Dashboard</a>
-  <a href="/my-courses">My Courses</a>
+  <a href="/instructor/courses">My Courses</a>
   <a href="/analytics">Analytics</a>
   <a href="/applications">Financial Aid</a>
 </div>
@@ -200,7 +199,7 @@ return (
 <section className="courses-section">
 <div className="section-header">
   <h2>Your Courses</h2>
-  <a href="/my-courses" className="view-all">View all</a>
+  <a href="/instructor/courses" className="view-all">View all</a>
 </div>
 <div className="courses-grid">
   {instructorCourses.map(course => (

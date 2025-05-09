@@ -18,6 +18,7 @@ import ProfilePage from './pages/ProfilePage/ProfilePage';
 import CertificatesPage from './pages/CertificatesPage/CertificatesPage';
 import AdminMainPage from './pages/AdminMainPage/AdminMainPage';
 import AdminCourseApprovals from './pages/AdminCourseApprovals/AdminCourseApprovals';
+import InstructorCourses from './pages/InstructorCourses/InstructorCourses';
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -82,6 +83,8 @@ function App() {
           element={<RoleProtectedRoute element={<AddSection />} allowedRole="instructor" />} />
         <Route path="/applications"
           element={<RoleProtectedRoute element={<InstructorApplicationsPage />} allowedRole="instructor" />} />
+        <Route path="/instructor/courses"
+          element={<RoleProtectedRoute element={<InstructorCourses />} allowedRole="instructor" />} />
 
         {/* Admin-only */}
         <Route path="/admin/dashboard"
