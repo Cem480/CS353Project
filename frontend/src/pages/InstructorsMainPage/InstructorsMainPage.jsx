@@ -4,6 +4,7 @@ import './InstructorsMainPage.css';
 import { getCurrentUser, logout } from '../../services/auth';
 import { getInstructorCourses } from '../../services/course';
 import { getBasicProfile } from '../../services/user';
+import { getInstructorStats } from '../../services/instructor';
 
 const InstructorMainPage = () => {
 const navigate = useNavigate();
@@ -16,6 +17,14 @@ const [userName, setUserName] = useState('');
 // State for instructor courses
 const [instructorCourses, setInstructorCourses] = useState([]);
 const [isLoading, setIsLoading] = useState(true);
+
+// State for instructor stats
+const [instructorStats, setInstructorStats] = useState({
+  publishedCourses: 0,
+  totalStudents: 0,
+  averageRating: 0.0,
+  monthlyRevenue: 0.0
+});
 
 useEffect(() => {
   if (!userData?.user_id) return; // wait until userData is available
@@ -53,12 +62,27 @@ useEffect(() => {
   }
 }, [userData?.user_id]);
 
+useEffect(() => {
+  if (!userData?.user_id) return;
+
+  const fetchStats = async () => {
+    try {
+      const statsData = await getInstructorStats(userData.user_id);
+      setInstructorStats(statsData);
+    } catch (err) {
+      console.error('Failed to fetch instructor stats:', err);
+    }
+  };
+
+  fetchStats();
+}, [userData?.user_id]);
+
 // Instructor stats 
 const stats = [
-{ value: 2, label: 'Published Courses' },
-{ value: 70, label: 'Total Students' },
-{ value: 4.8, label: 'Average Rating' },
-{ value: '$1,240', label: 'Monthly Revenue' }
+  { value: instructorStats.publishedCourses, label: 'Published Courses' },
+  { value: instructorStats.totalStudents, label: 'Total Students' },
+  { value: instructorStats.averageRating.toFixed(1), label: 'Average Rating' },
+  { value: `$${instructorStats.monthlyRevenue.toFixed(2)}`, label: 'Monthly Revenue' }
 ];
 
 // Assuming instructor's first name for display
