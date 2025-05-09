@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './InstructorsMainPage.css';
 import { getCurrentUser, logout } from '../../services/auth';
 import { getInstructorCourses } from '../../services/course';
+import { getBasicProfile } from '../../services/user';
 
 const InstructorMainPage = () => {
 const navigate = useNavigate();
@@ -10,6 +11,7 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
 
 // Get current user data
 const userData = getCurrentUser();
+const [userName, setUserName] = useState('');
 
 // State for instructor courses
 const [instructorCourses, setInstructorCourses] = useState([]);
@@ -35,6 +37,22 @@ useEffect(() => {
   fetchCourses();
 }, [userData?.user_id]);
 
+useEffect(() => {
+  const fetchName = async () => {
+    try {
+      const profile = await getBasicProfile(userData.user_id);
+      setUserName(profile.full_name);
+    } catch (err) {
+      console.error('Failed to fetch profile name:', err);
+      setUserName('Instructor');
+    }
+  };
+
+  if (userData?.user_id) {
+    fetchName();
+  }
+}, [userData?.user_id]);
+
 // Instructor stats 
 const stats = [
 { value: 2, label: 'Published Courses' },
@@ -44,9 +62,7 @@ const stats = [
 ];
 
 // Assuming instructor's first name for display
-const firstName = userData ? 
-(userData.user_id.charAt(0).toUpperCase() + userData.user_id.slice(1).split('@')[0]) : 
-"Instructor";
+const firstName = userName;
 
 const handleLogout = () => {
 logout();
