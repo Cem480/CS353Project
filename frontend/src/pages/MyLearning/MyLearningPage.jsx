@@ -1,59 +1,60 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './MyLearningPage.css';
 import CourseReviewPopup from './ReviewPopUp';
 import { Link } from 'react-router-dom';
+import { getCurrentUser, logout } from '../../services/auth';
+import { getEnrolledCourses } from '../../services/course';
 
 const MyLearningPage = () => {
-  // Mockup enrolled courses with completion percentages
-  const [enrolledCourses] = useState([
-    {
-      id: 1,
-      title: "Introduction to JavaScript Programming",
-      instructor: "David Mitchell",
-      category: "Web Development",
-      completionPercentage: 100,
-      thumbnail: "javascript",
-      totalLectures: 42,
-      completedLectures: 32
-    },
-    {
-      id: 2,
-      title: "Advanced Python for Data Science",
-      instructor: "Sarah Johnson",
-      category: "Data Science",
-      completionPercentage: 35,
-      thumbnail: "python",
-      totalLectures: 56,
-      completedLectures: 20
-    },
-    {
-      id: 3,
-      title: "UX/UI Design Fundamentals",
-      instructor: "Michael Wong",
-      category: "Design",
-      completionPercentage: 100,
-      thumbnail: "design",
-      totalLectures: 38,
-      completedLectures: 38
-    },
-    {
-      id: 4,
-      title: "Machine Learning with TensorFlow",
-      instructor: "Elena Rodriguez",
-      category: "Artificial Intelligence",
-      completionPercentage: 10,
-      thumbnail: "ml",
-      totalLectures: 65,
-      completedLectures: 7
-    }
-  ]);
 
   // Filter state
-  const [activeFilter, setActiveFilter] = useState("all");
-  
+  const [activeFilter, setActiveFilter] = useState('all');
+
+  // Main data state
+  const [allCourses, setAllCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // Review popup state
   const [showReviewPopup, setShowReviewPopup] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+
+  // Fetch enrolled courses on load
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const user = getCurrentUser();
+        const courses = await getEnrolledCourses(user.user_id);
+        setAllCourses(courses);
+      } catch (err) {
+        setError('Failed to load enrolled courses.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCourses();
+  }, []);
+
+  // Filter courses based on active filter
+  const getFilteredCourses = () => {
+    if (activeFilter === 'all') return allCourses;
+    if (activeFilter === 'inProgress')
+      return allCourses.filter(course => course.progress_rate > 0 && course.progress_rate < 100);
+    if (activeFilter === 'notStarted')
+      return allCourses.filter(course => course.progress_rate === 0);
+    if (activeFilter === 'completed')
+      return allCourses.filter(course => course.progress_rate === 100);
+    return allCourses;
+  };
+
+  const filteredCourses = getFilteredCourses();
+
+  // Compute stats
+  const totalEnrolled = allCourses.length;
+  const totalCompleted = allCourses.filter(c => c.progress_rate === 100).length;
+  const averageCompletion = totalEnrolled > 0
+    ? Math.round(allCourses.reduce((sum, c) => sum + c.progress_rate, 0) / totalEnrolled)
+    : 0;
 
   // Handle review button click
   const handleReviewClick = (course) => {
@@ -62,25 +63,14 @@ const MyLearningPage = () => {
   };
 
   const handleReviewSubmit = (reviewData) => {
-    console.log("Review submitted:", reviewData);
+    console.log('Review submitted:', reviewData);
     // Here you would typically send this data to your backend
   };
-  // Handle filter click
+
+  // Handle filter button click
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
   };
-
-  // Filter courses based on active filter
-  const getFilteredCourses = () => {
-    if (activeFilter === "all") return enrolledCourses;
-    if (activeFilter === "inProgress") return enrolledCourses.filter(course => course.completionPercentage > 0 && course.completionPercentage < 100);
-    if (activeFilter === "notStarted") return enrolledCourses.filter(course => course.completionPercentage === 0);
-    if (activeFilter === "completed") return enrolledCourses.filter(course => course.completionPercentage === 100);
-    return enrolledCourses;
-  };
-
-  // Get filtered courses
-  const filteredCourses = getFilteredCourses();
 
   return (
     <div className="my-learning-page">
@@ -116,21 +106,22 @@ const MyLearningPage = () => {
         {/* Stats Section */}
         <div className="learning-stats">
           <div className="stat-card">
-            <div className="stat-number">{enrolledCourses.length}</div>
+            <div className="stat-number">{allCourses.length}</div>
             <div className="stat-label">Enrolled Courses</div>
           </div>
           <div className="stat-card">
             <div className="stat-number">
-              {enrolledCourses.filter(course => course.completionPercentage === 100).length}
+              {allCourses.filter(course => course.progress_rate === 100).length}
             </div>
             <div className="stat-label">Completed Courses</div>
           </div>
           <div className="stat-card">
             <div className="stat-number">
-              {Math.round(
-                enrolledCourses.reduce((acc, course) => acc + course.completionPercentage, 0) / 
-                enrolledCourses.length
-              )}%
+              {allCourses.length > 0
+                ? Math.round(
+                    allCourses.reduce((sum, course) => sum + course.progress_rate, 0) / allCourses.length
+                  )
+                : 0}%
             </div>
             <div className="stat-label">Average Completion</div>
           </div>
@@ -174,62 +165,72 @@ const MyLearningPage = () => {
 
         {/* Course List */}
         <div className="learning-courses">
-          {filteredCourses.length === 0 ? (
-            <div className="no-courses">
-              <p>No courses match your filter.</p>
-            </div>
-          ) : (
-            filteredCourses.map(course => (
-              <div className="course-card" key={course.id}>
-                <div className={`course-thumbnail ${course.thumbnail}`}>
-                  {course.completionPercentage === 100 && (
-                    <div className="completion-badge">
-                      <span className="material-icons">check</span>
+        {filteredCourses.length === 0 ? (
+          <div className="no-courses">
+            <p>No courses match your filter.</p>
+          </div>
+        ) : (
+          filteredCourses.map(course => (
+            <div className="course-card" key={course.course_id}>
+              <div className={`course-thumbnail ${course.thumbnail || ''}`}>
+                {course.progress_rate === 100 && (
+                  <div className="completion-badge">
+                    <span className="material-icons">check</span>
+                  </div>
+                )}
+              </div>
+              <div className="course-content">
+                <div className="course-info">
+                  <h3 className="course-title">{course.title}</h3>
+                  <p className="course-instructor">Instructor: {course.instructor}</p>
+                  <div className="course-category">{course.category}</div>
+
+                  <div className="completion-container">
+                    <div className="completion-text">
+                      <span>Progress: {course.progress_rate}%</span>
                     </div>
+                    <div className="completion-bar">
+                      <div
+                        className="completion-fill"
+                        style={{ width: `${course.progress_rate}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="course-actions">
+                  {course.progress_rate === 100 ? (
+                    <>
+                      <button
+                        className="primary-button"
+                        onClick={() => {
+                          // navigate to My Certificates page
+                          window.location.href = '/my-certificates';
+                        }}
+                      >
+                        View Certificate
+                      </button>
+                      <button className="secondary-button">
+                        Course Details
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button className="primary-button">
+                        Continue Learning
+                      </button>
+                      <button className="secondary-button">
+                        Course Details
+                      </button>
+                    </>
                   )}
                 </div>
-                <div className="course-content">
-                  <div className="course-info">
-                    <h3 className="course-title">{course.title}</h3>
-                    <p className="course-instructor">Instructor: {course.instructor}</p>
-                    <div className="course-category">{course.category}</div>
-                    
-                    <div className="completion-container">
-                      <div className="completion-text">
-                        <span>Progress: {course.completionPercentage}%</span>
-                        <span>{course.completedLectures}/{course.totalLectures} lectures</span>
-                      </div>
-                      <div className="completion-bar">
-                        <div 
-                          className="completion-fill" 
-                          style={{width: `${course.completionPercentage}%`}}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="course-actions">
-                    {course.completionPercentage === 100 ? (
-                      <>
-                        <button 
-                          className="primary-button"
-                          onClick={() => handleReviewClick(course)}
-                        >
-                          Review Course
-                        </button>
-                        <button className="secondary-button">Course Details</button>
-                      </>
-                    ) : (
-                      <>
-                        <button className="primary-button">Continue Learning</button>
-                        <button className="secondary-button">Course Details</button>
-                      </>
-                    )}
-                  </div>
-                </div>
               </div>
-            ))
-          )}
-        </div>
+            </div>
+          ))
+        )}
+      </div>
+
 
         {/* Recommendations Section */}
         <div className="recommendations-section">
