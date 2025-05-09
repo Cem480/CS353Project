@@ -1,0 +1,62 @@
+.generate-report-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.generate-report-page h2 {
+    color: var(--primary-color);
+    margin-bottom: 30px;
+}
+
+.form {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 400px;
+    display: grid;
+    gap: 20px;
+}
+
+.form label {
+    display: flex;
+    flex-direction: column;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.form select {
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid var(--gray-medium);
+    border-radius: 4px;
+}
+
+.date-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.error {
+    color: #c12f2f;
+    text-align: center;
+}
+
+.form button {
+    padding: 10px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.form button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

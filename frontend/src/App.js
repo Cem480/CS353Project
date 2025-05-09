@@ -18,6 +18,9 @@ import ProfilePage from './pages/ProfilePage/ProfilePage';
 import CertificatesPage from './pages/CertificatesPage/CertificatesPage';
 import AdminMainPage from './pages/AdminMainPage/AdminMainPage';
 import AdminCourseApprovals from './pages/AdminCourseApprovals/AdminCourseApprovals';
+import GenerateReportPage from './pages/GenerateReportPage/GenerateReportPage';
+import ReportResultsPage from './pages/ReportResultsPage/ReportResultsPage';
+
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -66,6 +69,7 @@ function App() {
         <Route path="/transaction" element={<ProtectedRoute element={<TransactionPage />} />} />
         <Route path="/degrees" element={<ProtectedRoute element={<DegreesPage />} />} />
 
+
         {/* NEW — profile page (all logged-in users) */}
         <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
 
@@ -88,6 +92,10 @@ function App() {
           element={<RoleProtectedRoute element={<AdminMainPage />} allowedRole="admin" />} />
         <Route path="/admin/course-approvals"
           element={<RoleProtectedRoute element={<AdminCourseApprovals />} allowedRole="admin" />} />
+        <Route path="/admin/generate-report"
+          element={<RoleProtectedRoute element={<GenerateReportPage />} allowedRole="admin" />} />
+        <Route path="/admin/reports/:reportType/:reportId"
+          element={<RoleProtectedRoute element={<ReportResultsPage />} allowedRole="admin" />} />
 
         {/* Fallbacks */}
         <Route path="/" element={<Navigate to="/login" replace />} />

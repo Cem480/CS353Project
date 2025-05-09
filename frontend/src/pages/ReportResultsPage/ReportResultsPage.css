@@ -1,0 +1,30 @@
+/* ReportResultsPage.css */
+.report-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.chart-section {
+    margin: 2rem 0;
+}
+
+.top-cards {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 1rem 0;
+}
+
+.data-table {
+    margin-top: 2rem;
+}
+
+/* InfoCard, ProfileCard, DataTable get their own styles or reuse your existing card classes */
