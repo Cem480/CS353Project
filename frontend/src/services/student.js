@@ -184,3 +184,12 @@ export async function enrollInCourse(courseId, studentId) {
 
   return data;
 }
+
+export async function checkEnrollment(courseId, studentId) {
+  const response = await fetch(`${BASE_URL}/api/enroll/check/${courseId}/${studentId}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!response.ok) throw new Error('Failed to check enrollment');
+  return await response.json();
+}

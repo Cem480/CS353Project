@@ -15,6 +15,31 @@
   margin-bottom: 30px;
 }
 
+.course-details-continue-button {
+  flex: 1;
+  text-align: center;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background-color: #0c6349; /* deep green */
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.course-details-continue-button:hover {
+  background-color: #0f7856; /* slightly lighter green */
+  transform: translateY(-2px);
+}
+
+.course-details-continue-button:active {
+  background-color: #084d38; /* dark pressed color */
+  transform: translateY(0);
+}
+
 .course-details-back-button {
   background: none;
   border: none;

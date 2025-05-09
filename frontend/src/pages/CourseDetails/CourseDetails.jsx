@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './CourseDetails.css';
 import { getCurrentUser } from '../../services/auth';
-import { enrollInCourse } from '../../services/student';
+import { enrollInCourse, checkEnrollment } from '../../services/student';
 
 import { 
   getCourseInfo, 
@@ -19,6 +19,7 @@ const CourseDetails = () => {
   const [courseInfo, setCourseInfo] = useState(null);
   const [sections, setSections] = useState([]);
   const [sectionContents, setSectionContents] = useState({});
+  const [isEnrolled, setIsEnrolled] = useState(false);
   
   // Extract course ID from URL query parameters
   const searchParams = new URLSearchParams(location.search);
@@ -59,6 +60,9 @@ const CourseDetails = () => {
         }
         
         setCourseInfo(courseData);
+
+        const enrollmentResult = await checkEnrollment(courseId, userData.user_id);
+        setIsEnrolled(enrollmentResult.enrolled);
         
         // Fetch course sections
         const sectionsData = await getCourseSections(courseId);
@@ -98,7 +102,7 @@ const CourseDetails = () => {
       alert('Invalid course information.');
       return;
     }
-      
+
     try {
       const result = await enrollInCourse(courseId, userData.user_id);
       if (result.success) {
@@ -313,32 +317,44 @@ const CourseDetails = () => {
             </div>
           </div>
           
-          <div className="course-details-enrollment">
-            <div className="course-details-enrollment-card">
-              <h2>{title}</h2>
-              <div className="course-details-enrollment-price">{price}</div>
-              <button className="course-details-apply-button" onClick={handleApplyNow}>Enroll Now</button>
-              <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
-                Financial Aid Available
+          <div className="course-details-enrollment-card">
+            <h2>{title}</h2>
+            <div className="course-details-enrollment-price">{price}</div>
+
+            {isEnrolled ? (
+              <button
+                className="course-details-continue-button"
+                onClick={() => navigate('/my-learning')}
+              >
+                Continue Learning
               </button>
-              
-              <div className="course-details-enrollment-details">
-                <div className="course-details-enrollment-detail">
-                  <span className="course-details-detail-icon">🗓️</span>
-                  <span>Starts: <strong>Flexible</strong></span>
-                </div>
-                <div className="course-details-enrollment-detail">
-                  <span className="course-details-detail-icon">⏱️</span>
-                  <span>Duration: <strong>Not specified</strong></span>
-                </div>
-                <div className="course-details-enrollment-detail">
-                  <span className="course-details-detail-icon">🎓</span>
-                  <span>Level: <strong>{level}</strong></span>
-                </div>
-                <div className="course-details-enrollment-detail">
-                  <span className="course-details-detail-icon">📚</span>
-                  <span>Fully Online</span>
-                </div>
+            ) : (
+              <>
+                <button className="course-details-apply-button" onClick={handleApplyNow}>
+                  Enroll Now
+                </button>
+                <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
+                  Financial Aid Available
+                </button>
+              </>
+            )}
+
+            <div className="course-details-enrollment-details">
+              <div className="course-details-enrollment-detail">
+                <span className="course-details-detail-icon">🗓️</span>
+                <span>Starts: <strong>Flexible</strong></span>
+              </div>
+              <div className="course-details-enrollment-detail">
+                <span className="course-details-detail-icon">⏱️</span>
+                <span>Duration: <strong>Not specified</strong></span>
+              </div>
+              <div className="course-details-enrollment-detail">
+                <span className="course-details-detail-icon">🎓</span>
+                <span>Level: <strong>{level}</strong></span>
+              </div>
+              <div className="course-details-enrollment-detail">
+                <span className="course-details-detail-icon">📚</span>
+                <span>Fully Online</span>
               </div>
             </div>
           </div>
