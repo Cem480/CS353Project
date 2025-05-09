@@ -3,7 +3,6 @@ from db import connect_project_db
 
 student_home_bp = Blueprint("student_home_bp", __name__)
 
-
 @student_home_bp.route("/api/student/<student_id>/info", methods=["GET"])
 def get_student_info(student_id):
     try:
@@ -267,6 +266,46 @@ def get_top5_recommended_categories(student_id):
     
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@student_home_bp.route("/api/student/<student_id>/enrolled-courses", methods=["GET"])
+def get_enrolled_courses(student_id):
+    try:
+        conn = connect_project_db()
+        cursor = conn.cursor()
+
+        # Check if the student exists
+        cursor.execute('SELECT 1 FROM student WHERE id = %s', (student_id,))
+        if cursor.fetchone() is None:
+            return jsonify({"success": False, "message": "Student not found"}), 404
+
+        # Fetch enrolled courses with progress
+        cursor.execute("""
+            SELECT
+                c.course_id,
+                c.title,
+                c.category,
+                u.first_name || ' ' || u.last_name AS instructor,
+                e.progress_rate
+            FROM enroll e
+            JOIN course c ON e.course_id = c.course_id
+            JOIN instructor i ON c.creator_id = i.id
+            JOIN "user" u ON i.id = u.id
+            WHERE e.student_id = %s;
+        """, (student_id,))
+
+        rows = cursor.fetchall()
+        keys = [desc[0] for desc in cursor.description]
+
+        course_list = [dict(zip(keys, row)) for row in rows]
+
+        return jsonify(course_list)
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
     finally:
         cursor.close()
         conn.close()

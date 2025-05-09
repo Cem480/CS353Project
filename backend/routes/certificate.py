@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, session
 from db import connect_project_db
 import psycopg2.extras
-from datetime import datetime 
+from datetime import datetime
+import uuid
 
 certificate_bp = Blueprint("certificate", __name__)
 
@@ -51,12 +52,8 @@ def generate_certificate(course_id, student_id):
         if enroll["progress_rate"] < 100:
             return jsonify({"success": False, "message": "Course is not fully completed yet (100% progress required)."}), 403
 
-        # Count existing certificates
-        cursor.execute("SELECT COUNT(*) FROM certificate")
-        certificate_count = cursor.fetchone()[0]
-
         # Generate new certificate ID
-        cert_id = f"C{certificate_count + 1:07d}"
+        cert_id = f"CF{uuid.uuid4().hex[:6].upper()}"
         full_name = " ".join(filter(None, [student["first_name"], student["middle_name"], student["last_name"]]))
         course_title = course["title"]
         date_str = datetime.today().strftime("%B %d, %Y")  # e.g., April 30, 2025
@@ -145,6 +142,37 @@ def list_certificates():
 
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+@certificate_bp.route("/api/certificate/delete/<certificate_id>", methods=["DELETE"])
+def delete_certificate(certificate_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    try:
+        # Check if the certificate exists
+        cursor.execute("""
+            SELECT 1 FROM certificate WHERE certificate_id = %s
+        """, (certificate_id,))
+        exists = cursor.fetchone()
+        
+        if not exists:
+            return jsonify({"success": False, "message": "Certificate not found."}), 404
+
+        # Delete the certificate (will cascade to earn_certificate)
+        cursor.execute("""
+            DELETE FROM certificate WHERE certificate_id = %s
+        """, (certificate_id,))
+
+        conn.commit()
+        return jsonify({"success": True, "message": "Certificate deleted successfully."}), 200
+
+    except Exception as e:
+        conn.rollback()
+        print("Error deleting certificate:", e)
+        return jsonify({"success": False, "message": f"Internal server error: {str(e)}"}), 500
 
     finally:
         cursor.close()

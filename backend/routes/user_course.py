@@ -41,6 +41,22 @@ def enroll(course_id, student_id):
         cursor.close()
         conn.close()
 
+@user_course_bp.route("/api/enroll/check/<course_id>/<student_id>", methods=["GET"])
+def check_enrollment(course_id, student_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    try:
+        cursor.execute("""
+            SELECT 1 FROM enroll WHERE course_id = %s AND student_id = %s
+        """, (course_id, student_id))
+        enrolled = cursor.fetchone() is not None
+        return jsonify({"enrolled": enrolled})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 # submit task was here
 
 # assign grade was here

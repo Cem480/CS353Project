@@ -144,3 +144,52 @@ export async function getAllCategories(studentId) {
     throw error;
   }
 }
+
+export async function getStudentCertificates() {
+  const response = await fetch(`${BASE_URL}/api/certificate/list`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  if (!response.ok) throw new Error('Failed to fetch certificates');
+  return await response.json();
+}
+
+export async function generateCertificate(courseId, studentId) {
+  try {
+    const response = await fetch(`${BASE_URL}/api/certificate/generate/${courseId}/${studentId}`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    const data = await response.json();
+    return data;  // { success: true/false, message: "...", certificate_id: "..." }
+  } catch (err) {
+    console.error('Failed to generate certificate:', err);
+    throw new Error('Failed to generate certificate.');
+  }
+}
+
+export async function enrollInCourse(courseId, studentId) {
+  const response = await fetch(`${BASE_URL}/api/enroll/${courseId}/${studentId}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to enroll');
+  }
+
+  return data;
+}
+
+export async function checkEnrollment(courseId, studentId) {
+  const response = await fetch(`${BASE_URL}/api/enroll/check/${courseId}/${studentId}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!response.ok) throw new Error('Failed to check enrollment');
+  return await response.json();
+}

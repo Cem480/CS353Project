@@ -282,6 +282,7 @@ CREATE TABLE earn_certificate(
         REFERENCES enroll(student_id, course_id),
     FOREIGN KEY (certificate_id)
         REFERENCES certificate(certificate_id)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE report (
@@ -1021,6 +1022,26 @@ AFTER INSERT ON earn_certificate
 FOR EACH ROW
 EXECUTE FUNCTION increment_certificate_count();
 
+-- Decrement certificate_count of student when an existing one is deleted
+CREATE OR REPLACE FUNCTION decrement_certificate_count_on_certificate_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE student
+    SET certificate_count = certificate_count - 1
+    WHERE ID IN (
+        SELECT student_id
+        FROM earn_certificate
+        WHERE certificate_id = OLD.certificate_id
+    );
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER handle_certificate_delete
+BEFORE DELETE ON certificate
+FOR EACH ROW
+EXECUTE FUNCTION decrement_certificate_count_on_certificate_delete();
+
 
 
 -- INSERTIONS
@@ -1480,32 +1501,79 @@ INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocat
 ('C0000110', 'S011506', 'CT000001', 'Introduction to Data Science', 1, 45, 'document'),
 ('C0000110', 'S011506', 'CT000002', 'Data Science Overview Video', 2, 30, 'visual_material'),
 ('C0000110', 'S011506', 'CT000003', 'Foundations Quiz', 3, 20, 'task');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S012987', 'CT000004', 'Unit 2: Essentials - Content 1', 1, 38, 'visual_material');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S012987', 'CT000005', 'Unit 2: Essentials - Content 2', 2, 39, 'task');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S012987', 'CT000006', 'Unit 2: Essentials - Content 3', 3, 37, 'visual_material');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S012987', 'CT000007', 'Unit 2: Essentials - Content 4', 4, 41, 'visual_material');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S013451', 'CT000008', 'Unit 3: Theory - Content 1', 1, 40, 'document');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S013451', 'CT000009', 'Unit 3: Theory - Content 2', 2, 32, 'document');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S013451', 'CT000010', 'Unit 3: Theory - Content 3', 3, 47, 'task');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S014719', 'CT000011', 'Unit 4: Theory - Content 1', 1, 31, 'visual_material');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S014719', 'CT000012', 'Unit 4: Theory - Content 2', 2, 34, 'task');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S014719', 'CT000013', 'Unit 4: Theory - Content 3', 3, 22, 'visual_material');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S014719', 'CT000014', 'Unit 4: Theory - Content 4', 4, 30, 'document');
+INSERT INTO content (course_id, sec_id, content_id, title, order_number, allocated_time, content_type) VALUES ('C0000110', 'S014719', 'CT000015', 'Unit 4: Theory - Content 5', 5, 21, 'visual_material');
+
 
 -- Insert corresponding entries into document, visual_material, and task tables
-INSERT INTO document (course_id, sec_id, content_id, body) VALUES
-('C0000110', 'S011506', 'CT000001', 'Content of Introduction to Data Science');
+INSERT INTO document (course_id, sec_id, content_id, body) VALUES ('C0000110', 'S011506', 'CT000001', 'uploads/doc_intro_data_science.pdf');
+INSERT INTO document (course_id, sec_id, content_id, body) VALUES ('C0000110', 'S013451', 'CT000008', 'uploads/doc_unit3_theory_1.pdf');
+INSERT INTO document (course_id, sec_id, content_id, body) VALUES ('C0000110', 'S013451', 'CT000009', 'uploads/doc_unit3_theory_2.pdf');
+INSERT INTO document (course_id, sec_id, content_id, body) VALUES ('C0000110', 'S014719', 'CT000014', 'uploads/doc_unit4_theory_4.pdf');
 
-INSERT INTO visual_material (course_id, sec_id, content_id, duration, body) VALUES
-('C0000110', 'S011506', 'CT000002', 30, 'Video content for Data Science Overview');
 
-INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage) VALUES
-('C0000110', 'S011506', 'CT000003', 70, 20, 'assessment', 100);
+INSERT INTO visual_material (course_id, sec_id, content_id, duration, body) VALUES ('C0000110', 'S011506', 'CT000002', 30, 'uploads/video_data_science_overview.mp4');
+INSERT INTO visual_material (course_id, sec_id, content_id, duration, body) VALUES ('C0000110', 'S012987', 'CT000004', 38, 'uploads/video_unit2_essentials_1.mp4');
+INSERT INTO visual_material (course_id, sec_id, content_id, duration, body) VALUES ('C0000110', 'S012987', 'CT000006', 37, 'uploads/video_unit2_essentials_3.mp4');
+INSERT INTO visual_material (course_id, sec_id, content_id, duration, body) VALUES ('C0000110', 'S012987', 'CT000007', 41, 'uploads/video_unit2_essentials_4.mp4');
+INSERT INTO visual_material (course_id, sec_id, content_id, duration, body) VALUES ('C0000110', 'S014719', 'CT000011', 31, 'uploads/video_unit4_theory_1.mp4');
+INSERT INTO visual_material (course_id, sec_id, content_id, duration, body) VALUES ('C0000110', 'S014719', 'CT000013', 22, 'uploads/video_unit4_theory_3.mp4');
+INSERT INTO visual_material (course_id, sec_id, content_id, duration, body) VALUES ('C0000110', 'S014719', 'CT000015', 21, 'uploads/video_unit4_theory_5.mp4');
+
+
+INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage) VALUES ('C0000110', 'S011506', 'CT000003', 70, 20, 'assessment', 100);
+INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage) VALUES ('C0000110', 'S012987', 'CT000005', 78, 39, 'assessment', 30);
+INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage) VALUES ('C0000110', 'S013451', 'CT000010', 80, 47, 'assignment', 60);
+INSERT INTO task (course_id, sec_id, content_id, passing_grade, max_time, task_type, percentage) VALUES ('C0000110', 'S014719', 'CT000012', 68, 34, 'assessment', 50);
+
 
 -- Insert corresponding entry into assessment table
-INSERT INTO assessment (course_id, sec_id, content_id, question_count) VALUES
-('C0000110', 'S011506', 'CT000003', 10);
+INSERT INTO assessment (course_id, sec_id, content_id, question_count) VALUES ('C0000110', 'S011506', 'CT000003', 10);
+INSERT INTO assessment (course_id, sec_id, content_id, question_count) VALUES ('C0000110', 'S012987', 'CT000005', 5);
+INSERT INTO assessment (course_id, sec_id, content_id, question_count) VALUES ('C0000110', 'S014719', 'CT000012', 5);
+
+-- Insert corresponding entry into assignment table
+INSERT INTO assignment (course_id, sec_id, content_id, start_date, end_date, upload_material, body) VALUES ('C0000110', 'S013451', 'CT000010', '2025-05-07', '2025-05-25', 'doc', 'uploads/assignment_unit3_theory_3.pdf');
 
 -- Insert questions for the assessment
 INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES
 ('C0000110', 'S011506', 'CT000003', 'Q0000001', 'What is Data Science?', 2),
 ('C0000110', 'S011506', 'CT000003', 'Q0000002', 'Name a key component of Data Science.', 2);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q650762', 'Question 1 for Unit 2: Essentials - Content 2', 3);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q245904', 'Question 2 for Unit 2: Essentials - Content 2', 3);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q479756', 'Question 3 for Unit 2: Essentials - Content 2', 3);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q558419', 'Question 4 for Unit 2: Essentials - Content 2', 3);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q641453', 'Question 5 for Unit 2: Essentials - Content 2', 3);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q222694', 'Question 1 for Unit 4: Theory - Content 2', 3);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q962232', 'Question 2 for Unit 4: Theory - Content 2', 3);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q357165', 'Question 3 for Unit 4: Theory - Content 2', 3);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q786756', 'Question 4 for Unit 4: Theory - Content 2', 3);
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q727235', 'Question 5 for Unit 4: Theory - Content 2', 3);
+
 
 -- Insert multiple choice answers for the questions
 INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES
 ('C0000110', 'S011506', 'CT000003', 'Q0000001', 'A'),
 ('C0000110', 'S011506', 'CT000003', 'Q0000002', 'B');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S012987', 'CT000005', 'Q650762', 'C');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S012987', 'CT000005', 'Q245904', 'C');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S012987', 'CT000005', 'Q479756', 'D');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S012987', 'CT000005', 'Q558419', 'B');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S012987', 'CT000005', 'Q641453', 'A');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S014719', 'CT000012', 'Q222694', 'B');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S014719', 'CT000012', 'Q962232', 'B');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S014719', 'CT000012', 'Q357165', 'C');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S014719', 'CT000012', 'Q786756', 'D');
+INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S014719', 'CT000012', 'Q727235', 'C');
 
--- Repeat similar inserts for other sections and courses as needed
--- Ensure that each content_id is unique and follows the 8-character format
--- Allocate appropriate allocated_time values greater than 0
--- Assign creative titles and ensure proper linkage between tables
+

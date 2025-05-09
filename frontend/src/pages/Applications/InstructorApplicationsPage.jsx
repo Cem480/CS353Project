@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './InstructionPage.css';
 import { useEffect } from 'react';
-import axios from 'axios';
 import { getCurrentUser, logout } from '../../services/auth';
 import { getFinancialAidStats, getFinancialAidApplications, evaluateFinancialAid } from '../../services/financial_aid';
 

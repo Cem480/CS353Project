@@ -126,8 +126,9 @@
   }
   
   .page-title {
-    margin-bottom: 30px;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* or center if you want center alignment */
   }
   
   .page-title h2 {
@@ -173,7 +174,7 @@
   .learning-filters {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     flex-wrap: wrap;
   }
   
@@ -214,18 +215,28 @@
   
   .course-card {
     background-color: white;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    margin-bottom: 20px;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
     display: flex;
     overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .course-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
   }
   
   .course-thumbnail {
-    width: 200px;
+    width: 220px;
     height: auto;
     position: relative;
     flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+    border-top-left-radius: 16px;
+    border-bottom-left-radius: 16px;
   }
   
   /* Thumbnail background colors for different course types */
@@ -275,7 +286,7 @@
   
   .course-content {
     flex: 1;
-    padding: 20px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -292,23 +303,24 @@
   }
   
   .course-instructor {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--gray-dark);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    font-style: italic;
   }
   
   .course-category {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 4px 12px;
     background-color: var(--gray-light);
-    border-radius: 4px;
+    border-radius: 12px;
     font-size: 0.8rem;
-    margin-bottom: 15px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
   }
   
   /* Completion Bar */
   .completion-container {
-    margin-bottom: 15px;
+    margin-top: 12px;
   }
   
   .completion-text {
@@ -328,9 +340,9 @@
   
   .completion-fill {
     height: 100%;
-    background-color: var(--primary-color);
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
     border-radius: 4px;
-    transition: width 0.5s ease;
+    transition: width 0.6s ease;
   }
   
   .course-meta {
@@ -357,18 +369,20 @@
     gap: 10px;
   }
   
-  .primary-button, .secondary-button {
-    padding: 10px 16px;
-    border-radius: 4px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s;
+  .course-actions .primary-button,
+  .course-actions .secondary-button {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
   }
   
-  .primary-button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
+  .course-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
   }
   
   .primary-button:hover {

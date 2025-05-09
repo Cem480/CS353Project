@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import './InstructorsMainPage.css';
 import { getCurrentUser, logout } from '../../services/auth';
 import { getInstructorCourses } from '../../services/course';
+import { getBasicProfile } from '../../services/user';
+import { getInstructorStats } from '../../services/instructor';
 
 const InstructorMainPage = () => {
 const navigate = useNavigate();
@@ -10,10 +12,19 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
 
 // Get current user data
 const userData = getCurrentUser();
+const [userName, setUserName] = useState('');
 
 // State for instructor courses
 const [instructorCourses, setInstructorCourses] = useState([]);
 const [isLoading, setIsLoading] = useState(true);
+
+// State for instructor stats
+const [instructorStats, setInstructorStats] = useState({
+  publishedCourses: 0,
+  totalStudents: 0,
+  averageRating: 0.0,
+  monthlyRevenue: 0.0
+});
 
 useEffect(() => {
   if (!userData?.user_id) return; // wait until userData is available
@@ -35,18 +46,46 @@ useEffect(() => {
   fetchCourses();
 }, [userData?.user_id]);
 
+useEffect(() => {
+  const fetchName = async () => {
+    try {
+      const profile = await getBasicProfile(userData.user_id);
+      setUserName(profile.full_name);
+    } catch (err) {
+      console.error('Failed to fetch profile name:', err);
+      setUserName('Instructor');
+    }
+  };
+
+  if (userData?.user_id) {
+    fetchName();
+  }
+}, [userData?.user_id]);
+
+useEffect(() => {
+  if (!userData?.user_id) return;
+
+  const fetchStats = async () => {
+    try {
+      const statsData = await getInstructorStats(userData.user_id);
+      setInstructorStats(statsData);
+    } catch (err) {
+      console.error('Failed to fetch instructor stats:', err);
+    }
+  };
+
+  fetchStats();
+}, [userData?.user_id]);
+
 // Instructor stats 
 const stats = [
-{ value: 2, label: 'Published Courses' },
-{ value: 70, label: 'Total Students' },
-{ value: 4.8, label: 'Average Rating' },
-{ value: '$1,240', label: 'Monthly Revenue' }
+  { value: instructorStats.publishedCourses, label: 'Published Courses' },
+  { value: instructorStats.totalStudents, label: 'Total Students' },
+  { value: instructorStats.averageRating.toFixed(1), label: 'Average Rating' },
+  { value: `$${instructorStats.monthlyRevenue.toFixed(2)}`, label: 'Monthly Revenue' }
 ];
 
-// Assuming instructor's first name for display
-const firstName = userData ? 
-(userData.user_id.charAt(0).toUpperCase() + userData.user_id.slice(1).split('@')[0]) : 
-"Instructor";
+const firstName = userName;
 
 const handleLogout = () => {
 logout();
@@ -89,7 +128,7 @@ return (
 </div>
 <div className="nav-links">
   <a href="/home" className="active">Dashboard</a>
-  <a href="/my-courses">My Courses</a>
+  <a href="/instructor/courses">My Courses</a>
   <a href="/analytics">Analytics</a>
   <a href="/applications">Financial Aid</a>
 </div>
@@ -160,7 +199,7 @@ return (
 <section className="courses-section">
 <div className="section-header">
   <h2>Your Courses</h2>
-  <a href="/my-courses" className="view-all">View all</a>
+  <a href="/instructor/courses" className="view-all">View all</a>
 </div>
 <div className="courses-grid">
   {instructorCourses.map(course => (

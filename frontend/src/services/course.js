@@ -193,3 +193,12 @@ export async function evaluateCourse(courseId, adminId, isAccepted) {
     throw error;
   }
 }
+
+export async function getEnrolledCourses(studentId) {
+  const response = await fetch(`${BASE_URL}/api/student/${studentId}/enrolled-courses`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  if (!response.ok) throw new Error('Failed to fetch enrolled courses');
+  return await response.json();
+}

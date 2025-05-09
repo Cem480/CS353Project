@@ -277,3 +277,51 @@ def get_profile():
     finally:
         cursor.close()
         conn.close()
+
+@profile_bp.route("/basic", methods=["POST"])
+def get_basic_profile():
+    data = request.json
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return jsonify({"success": False, "message": "User ID is required"}), 400
+
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute(
+            """
+            SELECT id, first_name, middle_name, last_name, email, role
+            FROM "user"
+            WHERE id = %s
+            """,
+            (user_id,)
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+        full_name = (
+            f"{user['first_name']} "
+            + (f"{user['middle_name']} " if user['middle_name'] else "")
+            + f"{user['last_name']}"
+        ).strip()
+
+        profile_data = {
+            "user_id": user["id"],
+            "full_name": full_name,
+            "email": user["email"],
+            "role": user["role"],
+        }
+
+        return jsonify({"success": True, "profile": profile_data}), 200
+
+    except Exception as e:
+        print("Basic profile fetch error:", e)
+        return jsonify({"success": False, "message": "Internal server error"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()

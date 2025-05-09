@@ -2,18 +2,42 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './CertificatesPage.css';
 import html2pdf from 'html2pdf.js';
+import { getStudentCertificates, deleteCertificate } from '../../services/certificates';
+
 
 const CertificatesPage = () => {
   const [certificates, setCertificates] = useState([]);
 
-  useEffect(() => {
-    fetch('http://localhost:5001/api/certificate/list', {
-      credentials: 'include'
-    })
-      .then((res) => res.json())
-      .then((data) => setCertificates(data.certificates || []))
-      .catch((err) => console.error('Failed to fetch certificates', err));
-  }, []);
+    useEffect(() => {
+      fetchCertificates();
+    }, []);
+
+  const fetchCertificates = async () => {
+    try {
+      const data = await getStudentCertificates();
+      setCertificates(data.certificates || []);
+    } catch (err) {
+      console.error('Failed to fetch certificates', err);
+    }
+  };
+
+  const handleDelete = async (certificateId) => {
+    if (!window.confirm('Are you sure you want to delete this certificate?')) {
+      return;
+    }
+
+    try {
+      const result = await deleteCertificate(certificateId);
+      if (result.success) {
+        alert('Certificate deleted successfully.');
+        fetchCertificates(); // refresh list after deletion
+      } else {
+        alert(`Failed to delete certificate: ${result.message}`);
+      }
+    } catch (err) {
+      alert(`Error deleting certificate: ${err.message}`);
+    }
+  };
 
   const generateCertificateHTML = (cert) => `
     <div style="
@@ -110,9 +134,13 @@ const CertificatesPage = () => {
                     Congratulations on your achievement!
                     </p>
                     <div className="cert-footer">
-                        <button className="outline-button" onClick={() => downloadPDF(cert)}>
-                            Download
-                        </button>                    
+                      <button className="outline-button" onClick={() => downloadPDF(cert)}>
+                        Download
+                      </button>
+                      <button className="delete-button"
+                        onClick={() => handleDelete(cert.certificate_id)}>
+                        Delete
+                      </button>
                     </div>
                 </div>
                 ))}

@@ -30,3 +30,12 @@ yarn-error.log*
 
 # VS Code settings
 .vscode/
+
+# Ignore all Python bytecode caches
+__pycache__/
+**/__pycache__/
+
+# Ignore compiled Python files
+*.pyc
+*.pyo
+*.pyd

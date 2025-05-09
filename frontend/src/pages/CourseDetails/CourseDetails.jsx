@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './CourseDetails.css';
 import { getCurrentUser } from '../../services/auth';
+import { enrollInCourse, checkEnrollment } from '../../services/student';
+
 import { 
   getCourseInfo, 
   getCourseSections, 
@@ -17,6 +19,7 @@ const CourseDetails = () => {
   const [courseInfo, setCourseInfo] = useState(null);
   const [sections, setSections] = useState([]);
   const [sectionContents, setSectionContents] = useState({});
+  const [isEnrolled, setIsEnrolled] = useState(false);
   
   // Extract course ID from URL query parameters
   const searchParams = new URLSearchParams(location.search);
@@ -50,12 +53,16 @@ const CourseDetails = () => {
 
         // Fetch course info
         const courseData = await getCourseInfo(courseId);
+        console.log('Fetched course info:', courseData);
         
         if (!courseData) {
           throw new Error('Failed to fetch course information');
         }
         
         setCourseInfo(courseData);
+
+        const enrollmentResult = await checkEnrollment(courseId, userData.user_id);
+        setIsEnrolled(enrollmentResult.enrolled);
         
         // Fetch course sections
         const sectionsData = await getCourseSections(courseId);
@@ -90,8 +97,23 @@ const CourseDetails = () => {
     fetchCourseData();
   }, [courseId, userData, navigate]);
 
-  const handleApplyNow = () => {
-    alert(`Enrollment process initiated for ${courseInfo?.title || "this course"}`);
+  const handleEnrollNow = async () => {
+    if (!courseId) {
+      alert('Invalid course information.');
+      return;
+    }
+
+    try {
+      const result = await enrollInCourse(courseId, userData.user_id);
+      if (result.success) {
+        alert(`You have successfully enrolled in ${courseInfo.title}!`);
+        window.location.reload();
+      } else {
+        alert(`Enrollment failed: ${result.message}`);
+      }
+    } catch (err) {
+      alert(`Enrollment failed: ${err.message}`);
+    }
   };
 
   const handleFinancialAid = () => {
@@ -296,32 +318,44 @@ const CourseDetails = () => {
             </div>
           </div>
           
-          <div className="course-details-enrollment">
-            <div className="course-details-enrollment-card">
-              <h2>{title}</h2>
-              <div className="course-details-enrollment-price">{price}</div>
-              <button className="course-details-apply-button" onClick={handleApplyNow}>Enroll Now</button>
-              <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
-                Financial Aid Available
+          <div className="course-details-enrollment-card">
+            <h2>{title}</h2>
+            <div className="course-details-enrollment-price">{price}</div>
+
+            {isEnrolled ? (
+              <button
+                className="course-details-continue-button"
+                onClick={() => navigate('/my-learning')}
+              >
+                Continue Learning
               </button>
-              
-              <div className="course-details-enrollment-details">
-                <div className="course-details-enrollment-detail">
-                  <span className="course-details-detail-icon">🗓️</span>
-                  <span>Starts: <strong>Flexible</strong></span>
-                </div>
-                <div className="course-details-enrollment-detail">
-                  <span className="course-details-detail-icon">⏱️</span>
-                  <span>Duration: <strong>Not specified</strong></span>
-                </div>
-                <div className="course-details-enrollment-detail">
-                  <span className="course-details-detail-icon">🎓</span>
-                  <span>Level: <strong>{level}</strong></span>
-                </div>
-                <div className="course-details-enrollment-detail">
-                  <span className="course-details-detail-icon">📚</span>
-                  <span>Fully Online</span>
-                </div>
+            ) : (
+              <>
+                <button className="course-details-apply-button" onClick={handleEnrollNow}>
+                  Enroll Now
+                </button>
+                <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
+                  Financial Aid Available
+                </button>
+              </>
+            )}
+
+            <div className="course-details-enrollment-details">
+              <div className="course-details-enrollment-detail">
+                <span className="course-details-detail-icon">🗓️</span>
+                <span>Starts: <strong>Flexible</strong></span>
+              </div>
+              <div className="course-details-enrollment-detail">
+                <span className="course-details-detail-icon">⏱️</span>
+                <span>Duration: <strong>Not specified</strong></span>
+              </div>
+              <div className="course-details-enrollment-detail">
+                <span className="course-details-detail-icon">🎓</span>
+                <span>Level: <strong>{level}</strong></span>
+              </div>
+              <div className="course-details-enrollment-detail">
+                <span className="course-details-detail-icon">📚</span>
+                <span>Fully Online</span>
               </div>
             </div>
           </div>
