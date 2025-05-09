@@ -282,6 +282,7 @@ CREATE TABLE earn_certificate(
         REFERENCES enroll(student_id, course_id),
     FOREIGN KEY (certificate_id)
         REFERENCES certificate(certificate_id)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE report (

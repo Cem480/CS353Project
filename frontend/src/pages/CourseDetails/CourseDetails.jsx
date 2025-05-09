@@ -97,7 +97,7 @@ const CourseDetails = () => {
     fetchCourseData();
   }, [courseId, userData, navigate]);
 
-  const handleApplyNow = async () => {
+  const handleEnrollNow = async () => {
     if (!courseId) {
       alert('Invalid course information.');
       return;
@@ -107,6 +107,7 @@ const CourseDetails = () => {
       const result = await enrollInCourse(courseId, userData.user_id);
       if (result.success) {
         alert(`You have successfully enrolled in ${courseInfo.title}!`);
+        window.location.reload();
       } else {
         alert(`Enrollment failed: ${result.message}`);
       }
@@ -330,7 +331,7 @@ const CourseDetails = () => {
               </button>
             ) : (
               <>
-                <button className="course-details-apply-button" onClick={handleApplyNow}>
+                <button className="course-details-apply-button" onClick={handleEnrollNow}>
                   Enroll Now
                 </button>
                 <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>

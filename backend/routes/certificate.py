@@ -149,3 +149,34 @@ def list_certificates():
     finally:
         cursor.close()
         conn.close()
+
+@certificate_bp.route("/api/certificate/delete/<certificate_id>", methods=["DELETE"])
+def delete_certificate(certificate_id):
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    try:
+        # Check if the certificate exists
+        cursor.execute("""
+            SELECT 1 FROM certificate WHERE certificate_id = %s
+        """, (certificate_id,))
+        exists = cursor.fetchone()
+        
+        if not exists:
+            return jsonify({"success": False, "message": "Certificate not found."}), 404
+
+        # Delete the certificate (will cascade to earn_certificate)
+        cursor.execute("""
+            DELETE FROM certificate WHERE certificate_id = %s
+        """, (certificate_id,))
+
+        conn.commit()
+        return jsonify({"success": True, "message": "Certificate deleted successfully."}), 200
+
+    except Exception as e:
+        conn.rollback()
+        print("Error deleting certificate:", e)
+        return jsonify({"success": False, "message": f"Internal server error: {str(e)}"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
