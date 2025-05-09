@@ -167,3 +167,20 @@ export async function generateCertificate(courseId, studentId) {
     throw new Error('Failed to generate certificate.');
   }
 }
+
+export async function enrollInCourse(courseId, studentId) {
+  const response = await fetch(`${BASE_URL}/api/enroll/${courseId}/${studentId}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to enroll');
+  }
+
+  return data;
+}

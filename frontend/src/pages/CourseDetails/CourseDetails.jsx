@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './CourseDetails.css';
 import { getCurrentUser } from '../../services/auth';
+import { enrollInCourse } from '../../services/student';
+
 import { 
   getCourseInfo, 
   getCourseSections, 
@@ -50,6 +52,7 @@ const CourseDetails = () => {
 
         // Fetch course info
         const courseData = await getCourseInfo(courseId);
+        console.log('Fetched course info:', courseData);
         
         if (!courseData) {
           throw new Error('Failed to fetch course information');
@@ -90,8 +93,22 @@ const CourseDetails = () => {
     fetchCourseData();
   }, [courseId, userData, navigate]);
 
-  const handleApplyNow = () => {
-    alert(`Enrollment process initiated for ${courseInfo?.title || "this course"}`);
+  const handleApplyNow = async () => {
+    if (!courseId) {
+      alert('Invalid course information.');
+      return;
+    }
+      
+    try {
+      const result = await enrollInCourse(courseId, userData.user_id);
+      if (result.success) {
+        alert(`You have successfully enrolled in ${courseInfo.title}!`);
+      } else {
+        alert(`Enrollment failed: ${result.message}`);
+      }
+    } catch (err) {
+      alert(`Enrollment failed: ${err.message}`);
+    }
   };
 
   const handleFinancialAid = () => {
