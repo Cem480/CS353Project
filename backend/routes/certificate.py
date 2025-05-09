@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, session
 from db import connect_project_db
 import psycopg2.extras
-from datetime import datetime 
+from datetime import datetime
+import uuid
 
 certificate_bp = Blueprint("certificate", __name__)
 
@@ -51,12 +52,8 @@ def generate_certificate(course_id, student_id):
         if enroll["progress_rate"] < 100:
             return jsonify({"success": False, "message": "Course is not fully completed yet (100% progress required)."}), 403
 
-        # Count existing certificates
-        cursor.execute("SELECT COUNT(*) FROM certificate")
-        certificate_count = cursor.fetchone()[0]
-
         # Generate new certificate ID
-        cert_id = f"C{certificate_count + 1:07d}"
+        cert_id = f"CF{uuid.uuid4().hex[:6].upper()}"
         full_name = " ".join(filter(None, [student["first_name"], student["middle_name"], student["last_name"]]))
         course_title = course["title"]
         date_str = datetime.today().strftime("%B %d, %Y")  # e.g., April 30, 2025
