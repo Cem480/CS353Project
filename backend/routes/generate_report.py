@@ -2230,3 +2230,50 @@ def get_course_report(rid: str):
     finally:
         cur.close()
         conn.close()
+
+
+@report_bp.route("/api/report/list", methods=["GET"])
+def list_reports():
+    admin_id = (request.args.get("admin_id") or "").strip()
+    if not admin_id:
+        return jsonify({"success": False, "message": "missing admin_id"}), 400
+
+    conn = connect_project_db()
+    cur = conn.cursor(cursor_factory=psql.RealDictCursor)
+    try:
+        # Assumes your `report` table has a `created_at TIMESTAMP DEFAULT now()` column.
+        cur.execute(
+            """
+            SELECT report_id,
+                   report_type,
+                   time_range_start,
+                   time_range_end,
+                   creation_date
+              FROM report
+             WHERE admin_id = %s AND parent_report_id IS NULL
+             ORDER BY creation_date DESC
+        """,
+            (admin_id,),
+        )
+        rows = cur.fetchall()
+
+        # convert dates/timestamps into ISO strings for JSON
+        reports = [
+            {
+                "report_id": r["report_id"],
+                "report_type": r["report_type"],
+                "time_range_start": r["time_range_start"].isoformat(),
+                "time_range_end": r["time_range_end"].isoformat(),
+                "generated_at": r["creation_date"].isoformat(),
+            }
+            for r in rows
+        ]
+
+        return jsonify({"success": True, "data": {"reports": reports}}), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()

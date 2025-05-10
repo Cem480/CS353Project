@@ -21,6 +21,7 @@ import AdminCourseApprovals from './pages/AdminCourseApprovals/AdminCourseApprov
 import GenerateReportPage from './pages/GenerateReportPage/GenerateReportPage';
 import ReportResultsPage from './pages/ReportResultsPage/ReportResultsPage';
 import InstructorCourses from './pages/InstructorCourses/InstructorCourses';
+import AdminReportsPage from './pages/AdminReportsPage/AdminReportsPage';
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -94,6 +95,8 @@ function App() {
           element={<RoleProtectedRoute element={<AdminMainPage />} allowedRole="admin" />} />
         <Route path="/admin/course-approvals"
           element={<RoleProtectedRoute element={<AdminCourseApprovals />} allowedRole="admin" />} />
+        <Route path="/admin/past-reports"
+          element={<RoleProtectedRoute element={<AdminReportsPage />} allowedRole="admin" />} />
         <Route path="/admin/generate-report"
           element={<RoleProtectedRoute element={<GenerateReportPage />} allowedRole="admin" />} />
         <Route path="/admin/reports/:reportType/:reportId"

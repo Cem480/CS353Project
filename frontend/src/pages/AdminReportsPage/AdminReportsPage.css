@@ -1,0 +1,34 @@
+.admin-reports-page {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 1rem;
+}
+
+.admin-reports-page h2 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.reports-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.reports-table th,
+.reports-table td {
+    border: 1px solid var(--gray-medium);
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.reports-table tr.clickable {
+    cursor: pointer;
+}
+
+.reports-table tr.clickable:hover {
+    background: var(--gray-light);
+}
+
+.error {
+    color: #c12f2f;
+}
