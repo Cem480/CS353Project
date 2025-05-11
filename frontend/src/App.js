@@ -6,6 +6,7 @@ import MainPage from './pages/MainPage/MainPage';
 import DegreesPage from './pages/DegreesPage/DegreesPage';
 import MyLearningPage from './pages/MyLearning/MyLearningPage';
 import CoursePage from './pages/CoursePage/CoursePage';
+import AssignmentPage from './pages/CoursePage/AssignmentPage'; // Import the new AssignmentPage
 import NotificationPage from './pages/NotificationPage/NotificationPage';
 import CourseDetails from './pages/CourseDetails/CourseDetails';
 import FinancialAid from './pages/FinancialAid/FinancialAid';
@@ -63,7 +64,15 @@ function App() {
 
         {/* Auth-protected pages */}
         <Route path="/my-learning" element={<ProtectedRoute element={<MyLearningPage />} />} />
+        
+        {/* Course content routes */}
         <Route path="/course" element={<ProtectedRoute element={<CoursePage />} />} />
+        <Route path="/course/:courseId/content" element={<ProtectedRoute element={<CoursePage />} />} />
+        
+        {/* NEW - Assignment route */}
+        <Route path="/course/:courseId/section/:sectionId/assignment/:contentId" 
+               element={<ProtectedRoute element={<AssignmentPage />} />} />
+        
         <Route path="/notifications" element={<ProtectedRoute element={<NotificationPage />} />} />
         <Route path="/course-details" element={<ProtectedRoute element={<CourseDetails />} />} />
         <Route path="/financial-aid" element={<ProtectedRoute element={<FinancialAid />} />} />

@@ -1,113 +1,164 @@
 .review-popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--gray-medium);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.review-popup-header h3 {
+  margin: 0;
+  color: #0c6349;
+}
+
+.review-popup-close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #757575;
+}
+
+.review-popup-content {
+  padding: 20px;
+}
+
+.review-popup-course-name {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.review-popup-rating-container {
+  margin-bottom: 20px;
+}
+
+.review-popup-rating-container p {
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.review-popup-star-rating {
+  display: flex;
+  gap: 5px;
+}
+
+.review-popup-star {
+  font-size: 28px;
+  cursor: pointer;
+  color: #e0e0e0;
+  transition: color 0.2s ease;
+}
+
+.review-popup-star:hover {
+  color: #f4a261;
+}
+
+.review-popup-star.filled {
+  color: #f4a261;
+}
+
+.review-popup-comment-container {
+  margin-bottom: 20px;
+}
+
+.review-popup-comment-container label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.review-popup-comment-container textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.review-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.review-popup-actions button {
+  padding: 10px 16px;
+}
+
+.review-popup-submit-button {
+  background-color: #0c6349;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.review-popup-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.review-popup-cancel-button {
+  background-color: white;
+  color: #0c6349;
+  border: 1px solid #0c6349;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.review-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.review-popup {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 500px;
+  animation: popup-fadeIn 0.3s ease;
+}
+
+@keyframes popup-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 480px) {
+  .review-popup {
+    width: 95%;
   }
   
-  .review-popup-header h3 {
-    margin: 0;
-    color: var(--primary-color);
-  }
-  
-  .close-button {
-    background: none;
-    border: none;
+  .review-popup-star {
     font-size: 24px;
-    cursor: pointer;
-    color: var(--gray-dark);
-  }
-  
-  .review-popup-content {
-    padding: 20px;
-  }
-  
-  .course-name {
-    font-size: 1.2rem;
-    margin-bottom: 20px;
-    color: var(--text-dark);
-  }
-  
-  .rating-container {
-    margin-bottom: 20px;
-  }
-  
-  .rating-container p {
-    margin-bottom: 10px;
-    font-weight: 500;
-  }
-  
-  .star-rating {
-    display: flex;
-    gap: 5px;
-  }
-  
-  .star {
-    font-size: 28px;
-    cursor: pointer;
-    color: var(--gray-medium);
-    transition: color 0.2s ease;
-  }
-  
-  .star:hover {
-    color: var(--secondary-color);
-  }
-  
-  .star.filled {
-    color: var(--secondary-color);
-  }
-  
-  .comment-container {
-    margin-bottom: 20px;
-  }
-  
-  .comment-container label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-  }
-  
-  .comment-container textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--gray-medium);
-    border-radius: 4px;
-    resize: vertical;
-    font-family: inherit;
   }
   
   .review-popup-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
+    flex-direction: column;
   }
   
   .review-popup-actions button {
-    padding: 10px 16px;
+    width: 100%;
   }
-  
-  .review-popup-actions button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  /* Responsive styles */
-  @media (max-width: 480px) {
-    .review-popup {
-      width: 95%;
-    }
-    
-    .star {
-      font-size: 24px;
-    }
-    
-    .review-popup-actions {
-      flex-direction: column;
-    }
-    
-    .review-popup-actions button {
-      width: 100%;
-    }
-  }
+}

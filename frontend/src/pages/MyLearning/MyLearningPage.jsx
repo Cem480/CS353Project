@@ -69,6 +69,12 @@ const MyLearningPage = () => {
 
   const handleReviewSubmit = (reviewData) => {
     console.log('Review submitted:', reviewData);
+    // Here you'd typically send the review to the backend
+  };
+
+  // Handle Continue Learning button click
+  const handleContinueLearning = (courseId) => {
+    navigate(`/course/${courseId}/content`);
   };
 
   return (
@@ -112,7 +118,6 @@ const MyLearningPage = () => {
           {['all', 'inProgress', 'notStarted', 'completed'].map(filter => (
             <button key={filter} className={`filter-button ${activeFilter === filter ? 'active' : ''}`} onClick={() => setActiveFilter(filter)}>
               {filterDisplayNames[filter] || (filter.charAt(0).toUpperCase() + filter.slice(1))} 
-              {/* Fallback for safety, though all keys are covered here */}
             </button>
           ))}
         </div>
@@ -162,8 +167,13 @@ const MyLearningPage = () => {
                         </>
                       ) : (
                         <>
-                          {/* Direct use */}
-                          <button className="primary-button">Continue Learning</button>
+                          {/* Updated to use handleContinueLearning */}
+                          <button 
+                            className="primary-button" 
+                            onClick={() => handleContinueLearning(course.course_id)}
+                          >
+                            Continue Learning
+                          </button>
                           <button className="secondary-button" onClick={() => navigate(`/course-details?id=${course.course_id}`)}>Course Details</button>
                         </>
                       )}

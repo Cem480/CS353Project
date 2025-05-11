@@ -17,19 +17,19 @@ const CourseReviewPopup = ({ course, onClose, onSubmit }) => {
       <div className="review-popup">
         <div className="review-popup-header">
           <h3>Review Course</h3>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="review-popup-close-button" onClick={onClose}>×</button>
         </div>
         <div className="review-popup-content">
-          <h4 className="course-name">{course.title}</h4>
+          <h4 className="review-popup-course-name">{course.title}</h4>
           
           <form onSubmit={handleSubmit}>
-            <div className="rating-container">
+            <div className="review-popup-rating-container">
               <p>Rate this course:</p>
-              <div className="star-rating">
+              <div className="review-popup-star-rating">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <span 
                     key={star}
-                    className={`star ${star <= (hoverRating || rating) ? 'filled' : ''}`}
+                    className={`review-popup-star ${star <= (hoverRating || rating) ? 'filled' : ''}`}
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
@@ -40,7 +40,7 @@ const CourseReviewPopup = ({ course, onClose, onSubmit }) => {
               </div>
             </div>
             
-            <div className="comment-container">
+            <div className="review-popup-comment-container">
               <label htmlFor="comment">Your feedback:</label>
               <textarea 
                 id="comment" 
@@ -52,8 +52,8 @@ const CourseReviewPopup = ({ course, onClose, onSubmit }) => {
             </div>
             
             <div className="review-popup-actions">
-              <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
-              <button type="submit" className="primary-button" disabled={rating === 0}>Submit Review</button>
+              <button type="button" className="review-popup-cancel-button" onClick={onClose}>Cancel</button>
+              <button type="submit" className="review-popup-submit-button" disabled={rating === 0}>Submit Review</button>
             </div>
           </form>
         </div>
