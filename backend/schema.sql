@@ -1060,6 +1060,7 @@ INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, pas
     'student'
 );
 
+-- password456
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
         VALUES 
 (
@@ -1069,7 +1070,7 @@ INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, pas
     'Smith',
     '555-5678',
     'alice.smith@example.com',
-    'password456',
+    'scrypt:32768:8:1$f0sM9rEtnLqL8Xta$49031c97dd6b4b3ff3639f5387b662416e7ca51878275e6f34a2a6a38b48ad36dbc4f20447620d6a177e1b2e82289d6a2487783596872df03695b76d1ef8c69f',
     CURRENT_DATE,
     '1988-04-22',
     'instructor'
@@ -1220,7 +1221,7 @@ UPDATE course SET status = 'pending' WHERE course_id = 'C0000002';
 
 -- 5. Grade an assignment to trigger grade notification
 INSERT INTO submit (course_id, sec_id, content_id, student_id, grade, submission_date, answers)
-VALUES ('C0000001', 'S000001', 'CT000001', 'U0000001', 75, CURRENT_DATE, 'A;B;C;D;A');
+VALUES ('C0000001', 'S000001', 'CT000001', 'U0000001', NULL, CURRENT_DATE, 'A;B;C;D;A');
 
 -- 6. Mark content as completed to increment progress
 INSERT INTO complete (course_id, sec_id, content_id, student_id, is_completed)

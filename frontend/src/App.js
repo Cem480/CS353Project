@@ -22,6 +22,7 @@ import GenerateReportPage from './pages/GenerateReportPage/GenerateReportPage';
 import ReportResultsPage from './pages/ReportResultsPage/ReportResultsPage';
 import InstructorCourses from './pages/InstructorCourses/InstructorCourses';
 import AdminReportsPage from './pages/AdminReportsPage/AdminReportsPage';
+import Grading from './pages/Grading/Grading';
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -89,6 +90,8 @@ function App() {
           element={<RoleProtectedRoute element={<InstructorApplicationsPage />} allowedRole="instructor" />} />
         <Route path="/instructor/courses"
           element={<RoleProtectedRoute element={<InstructorCourses />} allowedRole="instructor" />} />
+        <Route path="/instructor/grading"
+          element={<RoleProtectedRoute element={<Grading />} allowedRole="instructor" />} />
 
         {/* Admin-only */}
         <Route path="/admin/dashboard"

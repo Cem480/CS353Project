@@ -1,0 +1,32 @@
+.grading-page {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+  }
+  
+  .grading-controls {
+    margin-bottom: 20px;
+  }
+  
+  .grading-controls select {
+    margin-left: 10px;
+  }
+  
+  .grading-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .grading-table th,
+  .grading-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+  }
+  
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    max-width: 300px;
+  }
+  
