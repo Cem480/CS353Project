@@ -85,6 +85,9 @@ const ProfilePage = () => {
                         <p><strong>Birth Date:</strong> {prettyDate(birth_date)}</p>
                         <p><strong>Joined:</strong> {prettyDate(registration_date)}</p>
                         <p><strong>Age:</strong> {age}</p>
+                        <button className="submit-button" style={{ marginTop: '20px' }} onClick={() => navigate('/change-password')}>
+                            Change Password
+                        </button>
                     </section>
 
                     {/* instructor gets Feedback card */}

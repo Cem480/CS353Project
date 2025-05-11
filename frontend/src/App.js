@@ -25,6 +25,7 @@ import InstructorCourses from './pages/InstructorCourses/InstructorCourses';
 import AdminReportsPage from './pages/AdminReportsPage/AdminReportsPage';
 import Grading from './pages/Grading/Grading';
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
+import ChangePasswordPage from './pages/ChangePasswordPage/ChangePasswordPage';
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -85,6 +86,7 @@ function App() {
 
         {/* NEW — profile page (all logged-in users) */}
         <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
 
         {/* NEW — certificates page */}
         <Route path="/my-certificates" element={<ProtectedRoute element={<CertificatesPage />} />} />
