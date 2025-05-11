@@ -24,6 +24,7 @@ import ReportResultsPage from './pages/ReportResultsPage/ReportResultsPage';
 import InstructorCourses from './pages/InstructorCourses/InstructorCourses';
 import AdminReportsPage from './pages/AdminReportsPage/AdminReportsPage';
 import Grading from './pages/Grading/Grading';
+import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -59,21 +60,22 @@ function App() {
       <Routes>
         {/* Public */}
         <Route path="/login" element={<AuthPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* Role-aware Home */}
         <Route path="/home" element={<HomeRoute />} />
 
         {/* Auth-protected pages */}
         <Route path="/my-learning" element={<ProtectedRoute element={<MyLearningPage />} />} />
-        
+
         {/* Course content routes */}
         <Route path="/course" element={<ProtectedRoute element={<CoursePage />} />} />
         <Route path="/course/:courseId/content" element={<ProtectedRoute element={<CoursePage />} />} />
-        
+
         {/* NEW - Assignment route */}
-        <Route path="/course/:courseId/section/:sectionId/assignment/:contentId" 
-               element={<ProtectedRoute element={<AssignmentPage />} />} />
-        
+        <Route path="/course/:courseId/section/:sectionId/assignment/:contentId"
+          element={<ProtectedRoute element={<AssignmentPage />} />} />
+
         <Route path="/notifications" element={<ProtectedRoute element={<NotificationPage />} />} />
         <Route path="/course-details" element={<ProtectedRoute element={<CourseDetails />} />} />
         <Route path="/financial-aid" element={<ProtectedRoute element={<FinancialAid />} />} />

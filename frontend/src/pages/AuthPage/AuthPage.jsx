@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './AuthPage.css';
 import { loginUser, registerUser, isLoggedIn } from '../../services/auth';
 
@@ -21,12 +22,7 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Check if already logged in
-  useEffect(() => {
-    if (isLoggedIn()) {
-      navigate('/home');
-    }
-  }, [navigate]);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -51,60 +47,60 @@ const AuthPage = () => {
         setError('First name and last name are required');
         return false;
       }
-      
+
       if (!formData.email) {
         setError('Email is required');
         return false;
       }
-      
+
       if (!formData.password) {
         setError('Password is required');
         return false;
       }
-      
+
       if (formData.password !== formData.confirmPassword) {
         setError("Passwords don't match");
         return false;
       }
-      
+
       if (!formData.birth_date) {
         setError('Birth date is required');
         return false;
       }
-      
+
       // Validate major when role is student
       if (formData.role === 'student' && !formData.major) {
         setError('Major is required for students');
         return false;
       }
     }
-    
+
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
     setError('');
-    
+
     try {
       if (isLogin) {
         // Login logic
         console.log('Submitting login with:', { email: formData.email, password: formData.password });
         const result = await loginUser(formData.email, formData.password);
         console.log('Login successful:', result);
-        
+
         if (result.success) {
           // Navigate based on role
           if (result.role === 'instructor') {
             navigate('/instructor/dashboard'); // Use the instructor dashboard
-          } 
-          else if (result.role === "admin"){
+          }
+          else if (result.role === "admin") {
             navigate('/admin/dashboard');
           }
           else {
@@ -126,7 +122,7 @@ const AuthPage = () => {
           birth_date: formData.birth_date,
           role: formData.role
         };
-        
+
         // Add major if role is student
         if (formData.role === 'student') {
           registrationData.major = formData.major;
@@ -135,7 +131,7 @@ const AuthPage = () => {
         console.log('Submitting registration with:', registrationData);
         const result = await registerUser(registrationData);
         console.log('Registration successful:', result);
-        
+
         if (result.success) {
           // Switch to login screen with success message
           setIsLogin(true);
@@ -230,7 +226,7 @@ const AuthPage = () => {
                   />
                 </div>
               )}
-              
+
               {!isLogin && (
                 <div className="form-group">
                   <label htmlFor="middle_name" className="form-label">
@@ -265,7 +261,7 @@ const AuthPage = () => {
                   />
                 </div>
               )}
-              
+
               {!isLogin && (
                 <div className="form-group">
                   <label htmlFor="phone_no" className="form-label">
@@ -300,7 +296,7 @@ const AuthPage = () => {
                   />
                 </div>
               )}
-              
+
               <div className="form-group">
                 <label htmlFor="email" className="form-label">
                   Email
@@ -350,7 +346,7 @@ const AuthPage = () => {
                   />
                 </div>
               )}
-              
+
               {!isLogin && (
                 <div className="form-group">
                   <label htmlFor="role" className="form-label">
@@ -369,7 +365,7 @@ const AuthPage = () => {
                   </select>
                 </div>
               )}
-              
+
               {/* Show Major field only when role is student */}
               {!isLogin && formData.role === 'student' && (
                 <div className="form-group">
@@ -391,20 +387,21 @@ const AuthPage = () => {
 
               <div className="form-actions">
                 {isLogin && (
-                  <a className="forgot-password" href="#">
+                  <Link to="/forgot-password" className="forgot-password">
                     Forgot Password?
-                  </a>
+                  </Link>
+
                 )}
               </div>
 
               <div className="form-submit">
-                <button 
-                  type="submit" 
-                  className="submit-button" 
+                <button
+                  type="submit"
+                  className="submit-button"
                   disabled={loading}
                 >
-                  {loading 
-                    ? (isLogin ? 'Logging In...' : 'Signing Up...') 
+                  {loading
+                    ? (isLogin ? 'Logging In...' : 'Signing Up...')
                     : (isLogin ? 'Log In' : 'Sign Up')
                   }
                 </button>

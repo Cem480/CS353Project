@@ -175,17 +175,18 @@ function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSou
             <section className="cards-section">
                 <h3>{report.top_students ? 'Top 3 Students' : 'Top 3 Instructors'}</h3>
                 <div className="cards-grid">
-                    {(report.top_students || report.top_instructors).map(item => (
-                        <Highlight
-                            key={item.id}
-                            title={item.full_name}
-                            lines={[
-                                ...('major' in item ? [['Major', item.major]] : []),
-                                ...('rating' in item ? [['Rating', item.rating]] : []),
-                                ...('achievement_score' in item ? [['Score', item.achievement_score]] : []),
-                            ]}
-                        />
+                    {(report.top_students || report.top_instructors).map((item, idx) => (
+                        <div className="info-card" key={item.id}>
+                            <div className="rank-badge">{idx + 1}</div>
+                            <div>
+                                <h4>{item.full_name}</h4>
+                                {('major' in item) && <p><strong>Major:</strong> {item.major}</p>}
+                                {('rating' in item) && <p><strong>Rating:</strong> {item.rating}</p>}
+                                {('achievement_score' in item) && <p><strong>Score:</strong> {item.achievement_score}</p>}
+                            </div>
+                        </div>
                     ))}
+
                 </div>
             </section>
 
@@ -197,10 +198,10 @@ function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSou
                         <>
                             <Metric label="Total Students" value={report.total_students} />
                             <Metric label="Active Students" value={report.active_student_count} />
-                            <Metric label="Avg Enroll / Student" value={report.avg_enrollments_per_student} />
-                            <Metric label="Avg Certificates" value={report.avg_certificate_per_student} />
-                            <Metric label="Completion Rate" value={`${report.avg_completion_rate}%`} />
-                            <Metric label="Avg Age" value={report.avg_age} />
+                            <Metric label="Average Enrollment Per Student" value={report.avg_enrollments_per_student} />
+                            <Metric label="Average Certificates" value={report.avg_certificate_per_student} />
+                            <Metric label="Average Completion Rate" value={`${report.avg_completion_rate}%`} />
+                            <Metric label="Average Age" value={report.avg_age} />
                             <Metric label="Age Range" value={`${report.youngest_age} – ${report.oldest_age}`} />
                             <Metric label="Most Common Major" value={`${report.most_common_major} (${report.most_common_major_count})`} />
                         </>
@@ -223,16 +224,19 @@ function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSou
             {isInstructor && (
                 <section className="cards-section">
                     <h3>Highlights</h3>
-                    <div className="cards-grid">
-                        <Highlight title="Most Active Instructor" lines={[
-                            ['Name', report.most_active_instructor.full_name],
-                            ['Courses', report.most_active_instructor.total_courses],
-                        ]} />
-                        <Highlight title="Most Popular Instructor" lines={[
-                            ['Name', report.most_popular_instructor.full_name],
-                            ['Enrollments', report.most_popular_instructor.total_enrollments],
-                        ]} />
+                    <div className="monthly-highlight-list">
+                        <div className="monthly-highlight-card">
+                            <h4>Most Active Instructor</h4>
+                            <p><strong>Name:</strong> {report.most_active_instructor.full_name}</p>
+                            <p><strong>Courses:</strong> {report.most_active_instructor.total_courses}</p>
+                        </div>
+                        <div className="monthly-highlight-card">
+                            <h4>Most Popular Instructor</h4>
+                            <p><strong>Name:</strong> {report.most_popular_instructor.full_name}</p>
+                            <p><strong>Enrollments:</strong> {report.most_popular_instructor.total_enrollments}</p>
+                        </div>
                     </div>
+
                 </section>
             )}
         </>
@@ -287,22 +291,25 @@ function CourseGeneralUI({ report, pieData, enrollBarData, createdLine }) {
 
             <section className="cards-section">
                 <h3>Highlights</h3>
-                <div className="cards-grid">
-                    <Highlight title="Most Popular Course" lines={[
-                        ['Title', report.most_popular_course_title],
-                        ['Enrollments', report.most_popular_enrollment_count],
-                        ['Price', report.most_popular_price === 0 ? 'Free' : `$${report.most_popular_price}`],
-                        ['Instructor', report.most_popular_instructor_name],
-                    ]} />
-                    <Highlight title="Most Completed Course" lines={[
-                        ['Title', report.most_completed_course_title],
-                        ['Completions', report.most_completed_enrollment_count],
-                        ['Ratio', `${report.most_completed_completion_ratio}%`],
-                        ['Price', report.most_completed_price === 0 ? 'Free' : `$${report.most_completed_price}`],
-                        ['Instructor', report.most_completed_instructor_name],
-                    ]} />
+                <div className="monthly-highlight-list">
+                    <div className="monthly-highlight-card">
+                        <h4>Most Popular Course</h4>
+                        <p><strong>Title:</strong> {report.most_popular_course_title}</p>
+                        <p><strong>Enrollments:</strong> {report.most_popular_enrollment_count}</p>
+                        <p><strong>Price:</strong> {report.most_popular_price === 0 ? 'Free' : `$${report.most_popular_price}`}</p>
+                        <p><strong>Instructor:</strong> {report.most_popular_instructor_name}</p>
+                    </div>
+                    <div className="monthly-highlight-card">
+                        <h4>Most Completed Course</h4>
+                        <p><strong>Title:</strong> {report.most_completed_course_title}</p>
+                        <p><strong>Completions:</strong> {report.most_completed_enrollment_count}</p>
+                        <p><strong>Ratio:</strong> {report.most_completed_completion_ratio}%</p>
+                        <p><strong>Price:</strong> {report.most_completed_price === 0 ? 'Free' : `$${report.most_completed_price}`}</p>
+                        <p><strong>Instructor:</strong> {report.most_completed_instructor_name}</p>
+                    </div>
                 </div>
             </section>
+
         </>
     );
 }
@@ -319,31 +326,35 @@ function CourseRangedUI({ report }) {
 
             <section className="cards-section">
                 <h3>Most Popular Course – by Month</h3>
-                <div className="cards-grid">
+                <div className="monthly-highlight-list">
                     {mm.map(m => (
-                        <Highlight key={`pop-${m.month}`} title={m.month} lines={[
-                            ['Title', m.most_popular_course_title],
-                            ['Enrollments', m.pop_enroll_count ?? m.enroll_count],
-                            ['Price', m.price === 0 ? 'Free' : `$${m.price}`],
-                            ['Instructor', m.most_popular_instructor_name],
-                        ]} />
+                        <div className="monthly-highlight-card" key={`pop-${m.month}`}>
+                            <h4>{m.month}</h4>
+                            <p><strong>Title:</strong> {m.most_popular_course_title}</p>
+                            <p><strong>Enrollments:</strong> {m.pop_enroll_count ?? m.enroll_count}</p>
+                            <p><strong>Price:</strong> {m.price === 0 ? 'Free' : `$${m.price}`}</p>
+                            <p><strong>Instructor:</strong> {m.most_popular_instructor_name}</p>
+                        </div>
                     ))}
                 </div>
+
             </section>
 
             <section className="cards-section">
                 <h3>Most Completed Course – by Month</h3>
-                <div className="cards-grid">
+                <div className="monthly-highlight-list">
                     {mm.map(m => (
-                        <Highlight key={`cmp-${m.month}`} title={m.month} lines={[
-                            ['Title', m.most_completed_course_title],
-                            ['Completions', m.completion_count ?? m.most_completed_count],
-                            ['Price', m.price === 0 ? 'Free' : `$${m.price}`],
-                            ['Instructor', m.most_completed_instructor_name],
-                        ]} />
+                        <div className="monthly-highlight-card" key={`cmp-${m.month}`}>
+                            <h4>{m.month}</h4>
+                            <p><strong>Title:</strong> {m.most_completed_course_title}</p>
+                            <p><strong>Completions:</strong> {m.completion_count ?? m.most_completed_count}</p>
+                            <p><strong>Price:</strong> {m.price === 0 ? 'Free' : `$${m.price}`}</p>
+                            <p><strong>Instructor:</strong> {m.most_completed_instructor_name}</p>
+                        </div>
                     ))}
                 </div>
             </section>
+
         </>
     );
 }
