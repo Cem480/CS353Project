@@ -71,7 +71,8 @@ const ProfilePage = () => {
                 </div>
             </header>
 
-            <main className="profile-columns">
+            <main className="profile-main flex-row">
+
                 {/* LEFT column */}
                 <div className="profile-col">
                     {/* green info */}
@@ -80,15 +81,17 @@ const ProfilePage = () => {
                             {full_name}
                             <span className="name-role"> – {role}</span>
                         </h2>
-                        <p><strong>Email:</strong> {email}</p>
-                        <p><strong>Phone:</strong> {phone_no}</p>
-                        <p><strong>Birth Date:</strong> {prettyDate(birth_date)}</p>
-                        <p><strong>Joined:</strong> {prettyDate(registration_date)}</p>
-                        <p><strong>Age:</strong> {age}</p>
-                        <button className="submit-button" style={{ marginTop: '20px' }} onClick={() => navigate('/change-password')}>
-                            Change Password
-                        </button>
+                        <div className="info-details">
+                            <p><strong>Email:</strong> {email}</p>
+                            <p><strong>Phone:</strong> {phone_no}</p>
+                            <p><strong>Birth Date:</strong> {prettyDate(birth_date)}</p>
+                            <p><strong>Joined:</strong> {prettyDate(registration_date)}</p>
+                            <p><strong>Age:</strong> {age}</p>
+                        </div>
                     </section>
+
+
+
 
                     {/* instructor gets Feedback card */}
                     {role === 'instructor' && (
@@ -116,9 +119,10 @@ const ProfilePage = () => {
 
                 {/* RIGHT column  (role panel) */}
                 <div className="profile-col">
-                    {role === 'admin' && <AdminPanel      {...profile.admin_info} />}
-                    {role === 'instructor' && <InstructorPanel {...profile.instructor_info} />}
-                    {role === 'student' && <StudentPanel    {...profile.student_info} />}
+                    {role === 'admin' && <AdminPanel {...profile.admin_info} navigate={navigate} />}
+                    {role === 'instructor' && <InstructorPanel {...profile.instructor_info} navigate={navigate} />}
+                    {role === 'student' && <StudentPanel {...profile.student_info} navigate={navigate} />}
+
                 </div>
             </main>
 
@@ -128,9 +132,16 @@ const ProfilePage = () => {
 
 /* ───── helper sub-components ───── */
 
-const AdminPanel = ({ report_count, approved_courses, rejected_courses }) => (
+const AdminPanel = ({ report_count, approved_courses, rejected_courses, navigate }) => (
     <section className="role-card admin-panel">
-        <h3>Admin Overview</h3>
+        <div className="panel-header-row">
+            <h3 className="panel-title">Admin Overview</h3>
+            <button className="change-password-btn" onClick={() => navigate('/change-password')}>
+                Change Password
+            </button>
+        </div>
+
+
         <p><strong>Reports generated:</strong> {report_count}</p>
 
         <h4>Approved Courses</h4>
@@ -141,11 +152,18 @@ const AdminPanel = ({ report_count, approved_courses, rejected_courses }) => (
     </section>
 );
 
-const InstructorPanel = ({ i_rating, course_count, experience_year, courses, feedbacks }) => {
+const InstructorPanel = ({ i_rating, course_count, experience_year, courses, feedbacks, navigate }) => {
     const fullStars = Math.round(i_rating);
     return (
         <section className="role-card instructor-panel">
-            <h3>Instructor Overview</h3>
+            <div className="panel-header-row">
+                <h3 className="panel-title">Instructor Overview</h3>
+                <button className="change-password-btn" onClick={() => navigate('/change-password')}>
+                    Change Password
+                </button>
+            </div>
+
+
             <p>
                 <strong>Rating:</strong> {i_rating.toFixed(2)}{' '}
                 {Array.from({ length: fullStars }, (_, idx) => (
@@ -166,9 +184,16 @@ const InstructorPanel = ({ i_rating, course_count, experience_year, courses, fee
 
 
 const StudentPanel = ({ major, certificate_count, certificates,
-    enrolled_courses, completed_courses }) => (
+    enrolled_courses, completed_courses, navigate }) => (
     <section className="role-card">
-        <h3>Student Overview</h3>
+        <div className="panel-header-row">
+            <h3 className="panel-title">Student Overview</h3>
+            <button className="change-password-btn" onClick={() => navigate('/change-password')}>
+                Change Password
+            </button>
+        </div>
+
+
         <p><strong>Major:</strong> {major}</p>
 
         <h4>Continuing Courses</h4>

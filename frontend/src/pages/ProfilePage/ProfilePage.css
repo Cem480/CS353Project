@@ -116,12 +116,7 @@
     box-shadow: 0 3px 10px rgba(0, 0, 0, .07);
 }
 
-/* green variant */
-.info-card--green {
-    background: var(--primary-color);
-    color: #fff;
-    border: none;
-}
+
 
 .info-card--green h2,
 .info-card--green strong {
@@ -253,15 +248,7 @@
     gap: 24px 24px;
 }
 
-/* course cards — green style */
-.course-card {
-    flex: 1 1 260px;
-    background: var(--primary-color);
-    color: #fff;
-    border-radius: 14px;
-    padding: 20px 22px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
-}
+
 
 .course-title {
     margin: 0 0 8px;
@@ -361,17 +348,7 @@
    • meta pushed to far-right
    • no stray line / underline
 ======================================================= */
-.course-card {
-    display: flex;
-    justify-content: space-between;
-    /* title left – meta right  */
-    align-items: center;
-    /* vertical centering       */
-    padding: 24px 32px;
-    background: var(--primary-color);
-    border-radius: 14px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
-}
+
 
 .course-title {
     margin: 0;
@@ -813,4 +790,426 @@
 .student-course-info .course-meta {
     font-size: 1.2rem;
     /* or 1.1rem, 16px, etc. */
+}
+
+/* Make info rows stack neatly and shrink font */
+.info-card--green p {
+    display: block;
+    font-size: 1.1rem;
+    /* smaller than base */
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+/* force info card content to stack rows */
+.info-card--green {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* one per row with smaller font */
+.info-card--green p {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.info-card--green h2 {
+    margin-bottom: 16px;
+}
+
+/* smaller font for each line */
+.info-details p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Make sure h2 aligns left */
+.info-card--green h2 {
+    text-align: left;
+    width: 100%;
+    margin-bottom: 16px;
+    /* or 40px if you want more space */
+}
+
+.info-card--green {
+    text-align: left;
+}
+
+.info-card {
+    text-align: left;
+}
+
+.info-card--green {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+
+
+.info-card--green {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 32px 36px;
+}
+
+/* name and role block */
+.info-card--green h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+/* force name+role on the left only */
+.info-card--green h2,
+.info-card--green .name-role {
+    flex-shrink: 0;
+}
+
+
+
+/* Card layout */
+.info-card--green {
+    padding: 36px;
+}
+
+/* Inner flex container */
+.info-card-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    /* just in case it gets tight */
+}
+
+/* Left block: name and role */
+.info-name {
+    flex: 1 1 50%;
+    min-width: 250px;
+}
+
+
+
+/* Text fix */
+.info-card--green p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: white;
+}
+
+.info-card--green h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.info-card--green {
+    display: flex;
+    justify-content: space-between;
+    padding: 36px 48px;
+    background: #0c6349;
+    color: white;
+}
+
+/* Your name block stays left-aligned */
+.info-card--green h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    flex: 1;
+}
+
+/* Your details block on the right, just moved a bit left */
+.info-details {
+    flex: 1;
+    max-width: 300px;
+    margin-left: 40px;
+    /* was too far — reduce this */
+}
+
+.info-card--green {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 36px 48px;
+    background: #0c6349 !important;
+    color: white !important;
+}
+
+.info-card--green h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    flex: 1;
+    color: white;
+}
+
+.info-details {
+    flex: 1;
+    max-width: 300px;
+    margin-left: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: white;
+}
+
+.info-details p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: white;
+}
+
+/* Flex layout for top row of panel */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+/* Style for Change Password button */
+.change-password-btn {
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.change-password-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Proper row alignment of heading + button */
+.panel-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+/* Reset h3 margin to align better */
+.panel-title {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+/* Button styles */
+.change-password-btn {
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    height: fit-content;
+}
+
+.change-password-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Match shape and color of student course cards */
+.instructor-panel .course-card,
+.admin-panel .course-card {
+    background: #0c6349;
+    /* match student green */
+    color: #fff;
+    /* white text */
+    border-radius: 14px;
+    /* match student card shape */
+    padding: 20px 24px;
+    /* same inner spacing */
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
+    /* consistent shadow */
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+/* Make title text consistent */
+.instructor-panel .course-title,
+.admin-panel .course-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+    color: #fff;
+}
+
+/* Meta info like price/level */
+.instructor-panel .course-meta,
+.admin-panel .course-meta {
+    font-size: 1.05rem;
+    color: #ffffffcc;
+    /* semi-transparent white */
+    margin: 0;
+}
+
+/* Hover effect like students */
+.instructor-panel .course-card:hover,
+.admin-panel .course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+}
+
+/* Base: dark green card for all course displays */
+.course-card {
+    background: #0c6349;
+    /* deep green */
+    color: #fff;
+    border-radius: 14px;
+    padding: 24px 32px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.09);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+/* Title inside card */
+.course-card .course-title {
+    color: white;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+    text-decoration: none;
+}
+
+/* Meta text (e.g., category · level) */
+.course-card .course-meta {
+    color: #ffffffcc;
+    /* translucent white */
+    font-size: 1.05rem;
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* Hover effect */
+.course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+}
+
+.student-course-card .progress-inner {
+    background: #f7c948;
+    /* yellow bar */
+}
+
+/* FINAL OVERRIDES – DARK GREEN COURSE CARDS WITH WHITE TEXT */
+
+/* Applies to all student/instructor/admin course cards */
+.course-card {
+    background: #0c6349 !important;
+    /* dark green */
+    color: white !important;
+    border-radius: 14px;
+    padding: 24px 32px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+}
+
+.course-card .course-title {
+    color: white !important;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.course-card .course-meta {
+    color: #ffffffcc !important;
+    font-size: 1.05rem;
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* Keep progress bar yellow */
+.student-course-card .progress-inner {
+    background: #f7c948 !important;
+}
+
+/* ============================
+   Make ALL course cards dark green
+   ============================ */
+
+/* For instructor and admin course cards */
+.course-grid .course-card {
+    background: #0c6349 !important;
+    /* dark green */
+    color: white !important;
+    border-radius: 14px;
+    padding: 24px 32px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
+    transition: transform .15s ease, box-shadow .15s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Title inside those cards */
+.course-grid .course-card .course-title {
+    color: white !important;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Metadata (category, level, price) */
+.course-grid .course-card .course-meta {
+    color: #ffffffcc !important;
+    font-size: 1.05rem;
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* Hover effect */
+.course-grid .course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
+}
+
+/* Only keep yellow progress bar for student cards */
+.student-course-card .progress-inner {
+    background: #f7c948 !important;
+}
+
+/* 🔥 Force ALL .course-card variants to use dark green */
+.course-card,
+.instructor-panel .course-card,
+.admin-panel .course-card,
+.student-course-card {
+    background: #0c6349 !important;
+    color: white !important;
+    border-radius: 14px;
+    padding: 24px 32px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .09);
+}
+
+/* 🔥 Force text colors white */
+.course-card .course-title,
+.course-card .course-meta,
+.student-course-card .course-title,
+.student-course-card .course-meta {
+    color: white !important;
+}
+
+/* 🔥 Keep only progress bar yellow for student cards */
+.student-course-card .progress-inner {
+    background: #f7c948 !important;
 }
