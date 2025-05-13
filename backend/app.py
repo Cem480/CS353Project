@@ -5,63 +5,75 @@ from dotenv import load_dotenv
 from db import connect_postgres_db, connect_project_db
 
 app = Flask(__name__)
-
 load_dotenv()
 
+# Load database config
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 
-
 app.secret_key = os.getenv("SECRET_KEY", "your_default_secret_key")
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
-"""
-To drop learn_hub_db database, connect to postgres database 
-because we can not drop a database that we currently use.
-"""
-
 
 def reset_database():
+    """
+    Drops and recreates the LearnHub DB by connecting to 'postgres' DB
+    (because we can't drop the DB we're connected to).
+    """
     conn = connect_postgres_db()
     conn.autocommit = True
     cursor = conn.cursor()
-    POSTGRES_DB = os.getenv("POSTGRES_DB")
 
+    print(f"Terminating all connections to '{POSTGRES_DB}'...")
     cursor.execute(
         f"""
         SELECT pg_terminate_backend(pg_stat_activity.pid)
         FROM pg_stat_activity
         WHERE pg_stat_activity.datname = '{POSTGRES_DB}'
-            AND pid <> pg_backend_pid();
+          AND pid <> pg_backend_pid();
     """
     )
-    print(f"Disconnected all users from {POSTGRES_DB}")
 
     cursor.execute(f"DROP DATABASE IF EXISTS {POSTGRES_DB};")
-    print(f"Dropped database {POSTGRES_DB}")
+    print(f"Dropped database: {POSTGRES_DB}")
 
     cursor.execute(f"CREATE DATABASE {POSTGRES_DB};")
-    print(f"Created database {POSTGRES_DB}")
+    print(f"Created new database: {POSTGRES_DB}")
 
     cursor.close()
     conn.close()
 
 
-def initialize_tables() -> None:
-    conn = connect_project_db()
-    conn.set_client_encoding("UTF8")
-    cursor = conn.cursor()
+import subprocess
+
+
+def initialize_tables():
+    db_name = os.getenv("POSTGRES_DB")
+    user = os.getenv("POSTGRES_USER")
+    host = os.getenv("DB_HOST")
+    port = os.getenv("DB_PORT")
     schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
-    with open(schema_path, "r", encoding="utf-8") as f:
-        schema_sql = f.read()
-        cursor.execute(schema_sql)
-    conn.commit()
-    cursor.close()
-    conn.close()
-    print(f"Initialized tables from schema.sql")
+
+    print("Running schema.sql via psql CLI...")
+    result = subprocess.run(
+        [
+            "psql",
+            f"--host={host}",
+            f"--port={port}",
+            f"--username={user}",
+            f"--dbname={db_name}",
+            "--file",
+            schema_path,
+        ],
+        env=os.environ,
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError("❌ schema.sql failed to execute via psql")
+    print("✅ Tables initialized via psql")
 
 
 @app.route("/")
@@ -69,6 +81,7 @@ def home():
     return "Backend is running!"
 
 
+# ───── ROUTES ─────
 from routes.auth import auth_bp
 from routes.create_course import course_bp
 from routes.user_course import user_course_bp
@@ -108,6 +121,7 @@ app.register_blueprint(content_operations_bp)
 app.register_blueprint(grading_bp)
 
 
+# ───── DB RESET IF SPECIFIED ─────
 RESET_DB = os.getenv("RESET_DB", "false").lower() == "true"
 print(f"RESET_DB = {RESET_DB}")
 

@@ -32,7 +32,7 @@ CREATE TABLE receive(
     read_at TIMESTAMP,
     PRIMARY KEY (notification_id, id),
     FOREIGN KEY (notification_id) REFERENCES notification(notification_id) ON DELETE CASCADE,
-    FOREIGN KEY (id) REFERENCES "user"(id)
+    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE student (
@@ -41,7 +41,7 @@ CREATE TABLE student (
     account_status VARCHAR(20),
     certificate_count INTEGER DEFAULT 0 CHECK (certificate_count >= 0),
     PRIMARY KEY (id),
-    FOREIGN KEY (id) REFERENCES "user"(id)
+    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 
@@ -49,7 +49,7 @@ CREATE TABLE admin (
     id VARCHAR(8),
     report_count INTEGER DEFAULT 0 CHECK (report_count >= 0) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (id) REFERENCES "user"(id)
+    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE instructor (
@@ -57,7 +57,7 @@ CREATE TABLE instructor (
     i_rating FLOAT CHECK (i_rating BETWEEN 0 AND 5),
     course_count INTEGER DEFAULT 0 CHECK (course_count >= 0),
     PRIMARY KEY (id),
-    FOREIGN KEY (id) REFERENCES "user"(id)
+    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 
@@ -77,8 +77,8 @@ CREATE TABLE course(
     creator_id VARCHAR(8) NOT NULL,
     approver_id VARCHAR(8),
     PRIMARY KEY (course_id),
-    FOREIGN KEY (creator_id) REFERENCES instructor(id),
-    FOREIGN KEY (approver_id) REFERENCES admin(id)
+    FOREIGN KEY (creator_id) REFERENCES instructor(id) ON DELETE CASCADE,
+    FOREIGN KEY (approver_id) REFERENCES admin(id) ON DELETE CASCADE
 );
 
 CREATE TABLE section(
@@ -89,7 +89,7 @@ CREATE TABLE section(
     order_number INTEGER NOT NULL CHECK (order_number >= 0),
     allocated_time INTEGER CHECK (allocated_time >= 0),
     PRIMARY KEY (course_id, sec_id),
-    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    FOREIGN KEY (course_id) REFERENCES course(course_id) ON DELETE CASCADE
 );
 
 CREATE TABLE content(
@@ -200,8 +200,8 @@ CREATE TABLE enroll(
     enroll_date DATE, 
     progress_rate INTEGER CHECK (progress_rate BETWEEN 0 AND 100),
     PRIMARY KEY (course_id, student_id),
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    FOREIGN KEY (student_id) REFERENCES student(id)
+    FOREIGN KEY (course_id) REFERENCES course(course_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
 );
 
 CREATE TABLE submit(
@@ -214,7 +214,7 @@ CREATE TABLE submit(
     answers TEXT,
     PRIMARY KEY (course_id, sec_id, content_id, student_id),
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES task(course_id, sec_id, content_id),
-    FOREIGN KEY (student_id) REFERENCES student(id)
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
 );
 
 CREATE TABLE complete(
@@ -225,7 +225,7 @@ CREATE TABLE complete(
     is_completed BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (course_id, sec_id, content_id, student_id),
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id),
-    FOREIGN KEY (student_id) REFERENCES student(id)
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
 );
 
 CREATE TABLE feedback(
@@ -235,8 +235,8 @@ CREATE TABLE feedback(
     comment VARCHAR(500),
     feedback_date DATE,
     PRIMARY KEY (course_id, student_id),
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    FOREIGN KEY (student_id) REFERENCES student(id)
+    FOREIGN KEY (course_id) REFERENCES course(course_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE
 );
 
 CREATE TABLE comment(
@@ -248,7 +248,7 @@ CREATE TABLE comment(
     timestamp TIMESTAMP,
     PRIMARY KEY (course_id, sec_id, content_id, user_id, timestamp),
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE apply_financial_aid (
@@ -260,9 +260,9 @@ CREATE TABLE apply_financial_aid (
     status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
     evaluator_id VARCHAR(8),
     PRIMARY KEY (course_id, student_id),
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    FOREIGN KEY (student_id) REFERENCES student(id),
-    FOREIGN KEY (evaluator_id) REFERENCES instructor(id)
+    FOREIGN KEY (course_id) REFERENCES course(course_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
+    FOREIGN KEY (evaluator_id) REFERENCES instructor(id) ON DELETE CASCADE
 );
 
 CREATE TABLE certificate(
@@ -310,7 +310,7 @@ CREATE TABLE report (
              AND time_range_end = (time_range_start
                                    + INTERVAL '1 month' - INTERVAL '1 day') )
     ),
-    FOREIGN KEY (admin_id)         REFERENCES admin(id),
+    FOREIGN KEY (admin_id)         REFERENCES admin(id) ON DELETE CASCADE,
     FOREIGN KEY (parent_report_id) REFERENCES report(report_id)
 );
 
@@ -348,9 +348,9 @@ CREATE TABLE student_report (
     top2_id  VARCHAR(8),
     top3_id  VARCHAR(8),
 
-    FOREIGN KEY (top1_id) REFERENCES student(id),
-    FOREIGN KEY (top2_id) REFERENCES student(id),
-    FOREIGN KEY (top3_id) REFERENCES student(id)
+    FOREIGN KEY (top1_id) REFERENCES student(id) ON DELETE SET NULL,
+    FOREIGN KEY (top2_id) REFERENCES student(id) ON DELETE SET NULL,
+    FOREIGN KEY (top3_id) REFERENCES student(id) ON DELETE SET NULL
 );
 
 CREATE INDEX idx_student_report_top
@@ -374,11 +374,11 @@ top3_id VARCHAR(8),
 
         PRIMARY KEY (report_id),
 FOREIGN KEY (report_id) REFERENCES report(report_id) ON DELETE CASCADE,
-        FOREIGN KEY (most_popular_instructor_id) REFERENCES instructor(id),
-        FOREIGN KEY (most_active_instructor_id) REFERENCES instructor(id),
-FOREIGN KEY (top1_id) REFERENCES instructor(ID),
-FOREIGN KEY (top2_id) REFERENCES instructor(ID),
-FOREIGN KEY (top3_id) REFERENCES instructor(ID),
+        FOREIGN KEY (most_popular_instructor_id) REFERENCES instructor(id) ON DELETE SET NULL,
+        FOREIGN KEY (most_active_instructor_id) REFERENCES instructor(id) ON DELETE SET NULL,
+FOREIGN KEY (top1_id) REFERENCES instructor(ID) ON DELETE SET NULL,
+FOREIGN KEY (top2_id) REFERENCES instructor(ID) ON DELETE SET NULL,
+FOREIGN KEY (top3_id) REFERENCES instructor(ID) ON DELETE SET NULL,
   CHECK (total_instructors >= 0),
   CHECK (instructors_with_paid_course  >= 0),
   CHECK (instructors_with_free_course >= 0),
@@ -507,6 +507,48 @@ GROUP BY category;
 -- TRIGGERS
 -- Update instructor rating when feedback is added
 -- Trigger function to maintain admin.report_count
+CREATE OR REPLACE FUNCTION after_course_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Decrease course count of instructor
+    UPDATE instructor
+    SET course_count = course_count - 1
+    WHERE id = OLD.creator_id;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION decrement_enrollment_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE course
+    SET enrollment_count = enrollment_count - 1
+    WHERE course_id = OLD.course_id;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_decrement_enrollment_count
+AFTER DELETE ON enroll
+FOR EACH ROW
+EXECUTE FUNCTION decrement_enrollment_count();
+
+CREATE OR REPLACE FUNCTION decrement_certificate_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE student
+    SET certificate_count = certificate_count - 1
+    WHERE ID = OLD.student_id;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_decrement_certificate_count
+AFTER DELETE ON earn_certificate
+FOR EACH ROW
+EXECUTE FUNCTION decrement_certificate_count();
+
 CREATE OR REPLACE FUNCTION update_admin_report_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -1095,7 +1137,273 @@ BEFORE DELETE ON certificate
 FOR EACH ROW
 EXECUTE FUNCTION decrement_certificate_count_on_certificate_delete();
 
+-- TRIGGER FUNCTION: When a course is deleted, update the instructor's course_count
+CREATE OR REPLACE FUNCTION decrement_instructor_course_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE instructor
+    SET course_count = course_count - 1
+    WHERE id = OLD.creator_id;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
 
+-- TRIGGER: Run above function after deleting a course
+CREATE TRIGGER trg_decrement_course_count
+AFTER DELETE ON course
+FOR EACH ROW
+EXECUTE FUNCTION decrement_instructor_course_count();
+
+
+-- CASCADING DELETE CONSTRAINTS (if not already set manually)
+-- If possible, modify foreign keys on dependent tables like this:
+
+-- 1. Sections
+ALTER TABLE section
+    DROP CONSTRAINT IF EXISTS section_course_id_fkey,
+    ADD CONSTRAINT section_course_id_fkey
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    ON DELETE CASCADE;
+
+-- 2. Content
+ALTER TABLE content
+    DROP CONSTRAINT IF EXISTS content_course_sec_fkey,
+    ADD CONSTRAINT content_course_sec_fkey
+    FOREIGN KEY (course_id, sec_id) REFERENCES section(course_id, sec_id)
+    ON DELETE CASCADE;
+
+-- 3. Feedback
+ALTER TABLE feedback
+    DROP CONSTRAINT IF EXISTS feedback_course_id_fkey,
+    ADD CONSTRAINT feedback_course_id_fkey
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    ON DELETE CASCADE;
+
+-- 4. Enroll
+ALTER TABLE enroll
+    DROP CONSTRAINT IF EXISTS enroll_course_id_fkey,
+    ADD CONSTRAINT enroll_course_id_fkey
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    ON DELETE CASCADE;
+
+-- 5. Complete
+ALTER TABLE complete
+    DROP CONSTRAINT IF EXISTS complete_course_id_fkey,
+    ADD CONSTRAINT complete_course_id_fkey
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    ON DELETE CASCADE;
+
+-- 6. Submit
+ALTER TABLE submit
+    DROP CONSTRAINT IF EXISTS submit_course_id_fkey,
+    ADD CONSTRAINT submit_course_id_fkey
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    ON DELETE CASCADE;
+
+-- 7. Comment
+ALTER TABLE comment
+    DROP CONSTRAINT IF EXISTS comment_course_id_fkey,
+    ADD CONSTRAINT comment_course_id_fkey
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    ON DELETE CASCADE;
+
+-- 8. Apply Financial Aid
+ALTER TABLE apply_financial_aid
+    DROP CONSTRAINT IF EXISTS apply_financial_aid_course_id_fkey,
+    ADD CONSTRAINT apply_financial_aid_course_id_fkey
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    ON DELETE CASCADE;
+
+-- 9. Earn Certificate
+ALTER TABLE earn_certificate
+    DROP CONSTRAINT IF EXISTS earn_certificate_course_id_fkey,
+    ADD CONSTRAINT earn_certificate_course_id_fkey
+    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    ON DELETE CASCADE;
+
+-- 10. Course Reports (optional, if you're maintaining historical data carefully)
+ALTER TABLE course_report
+    DROP CONSTRAINT IF EXISTS course_report_id_fkey,
+    ADD CONSTRAINT course_report_id_fkey
+    FOREIGN KEY (report_id) REFERENCES report(report_id)
+    ON DELETE CASCADE;
+
+-- Ensure content deletions clean up dependent task/document/visual_material
+ALTER TABLE task
+    DROP CONSTRAINT IF EXISTS task_content_fkey,
+    ADD CONSTRAINT task_content_fkey
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+ALTER TABLE document
+    DROP CONSTRAINT IF EXISTS document_content_fkey,
+    ADD CONSTRAINT document_content_fkey
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+ALTER TABLE visual_material
+    DROP CONSTRAINT IF EXISTS visual_material_content_fkey,
+    ADD CONSTRAINT visual_material_content_fkey
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure task deletions cascade to assessment and assignment
+ALTER TABLE assessment
+    DROP CONSTRAINT IF EXISTS assessment_task_fkey,
+    ADD CONSTRAINT assessment_task_fkey
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES task(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+ALTER TABLE assignment
+    DROP CONSTRAINT IF EXISTS assignment_task_fkey,
+    ADD CONSTRAINT assignment_task_fkey
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES task(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure assessment deletions cascade to question
+ALTER TABLE question
+    DROP CONSTRAINT IF EXISTS question_assessment_fkey,
+    ADD CONSTRAINT question_assessment_fkey
+    FOREIGN KEY (course_id, sec_id, content_id) REFERENCES assessment(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure question deletions cascade to multiple_choice and open_ended
+ALTER TABLE multiple_choice
+    DROP CONSTRAINT IF EXISTS mc_question_fkey,
+    ADD CONSTRAINT mc_question_fkey
+    FOREIGN KEY (course_id, sec_id, content_id, question_id) REFERENCES question(course_id, sec_id, content_id, question_id)
+    ON DELETE CASCADE;
+
+ALTER TABLE open_ended
+    DROP CONSTRAINT IF EXISTS oe_question_fkey,
+    ADD CONSTRAINT oe_question_fkey
+    FOREIGN KEY (course_id, sec_id, content_id, question_id) REFERENCES question(course_id, sec_id, content_id, question_id)
+    ON DELETE CASCADE;
+
+ALTER TABLE content
+DROP CONSTRAINT IF EXISTS content_course_id_sec_id_fkey,
+ADD CONSTRAINT content_course_id_sec_id_fkey
+FOREIGN KEY (course_id, sec_id)
+REFERENCES section(course_id, sec_id)
+ON DELETE CASCADE;
+
+ALTER TABLE task
+DROP CONSTRAINT IF EXISTS task_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT task_course_id_sec_id_content_id_fkey
+FOREIGN KEY (course_id, sec_id, content_id)
+REFERENCES content(course_id, sec_id, content_id)
+ON DELETE CASCADE;
+
+-- Ensure cascading delete for content → document
+ALTER TABLE document
+DROP CONSTRAINT IF EXISTS document_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT document_course_id_sec_id_content_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id)
+    REFERENCES content(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for content → visual_material
+ALTER TABLE visual_material
+DROP CONSTRAINT IF EXISTS visual_material_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT visual_material_course_id_sec_id_content_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id)
+    REFERENCES content(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for content → task
+ALTER TABLE task
+DROP CONSTRAINT IF EXISTS task_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT task_course_id_sec_id_content_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id)
+    REFERENCES content(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for content → comment
+ALTER TABLE comment
+DROP CONSTRAINT IF EXISTS comment_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT comment_course_id_sec_id_content_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id)
+    REFERENCES content(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for content → complete
+ALTER TABLE complete
+DROP CONSTRAINT IF EXISTS complete_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT complete_course_id_sec_id_content_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id)
+    REFERENCES content(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for content → submit
+ALTER TABLE submit
+DROP CONSTRAINT IF EXISTS submit_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT submit_course_id_sec_id_content_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id)
+    REFERENCES task(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for task → assessment
+ALTER TABLE assessment
+DROP CONSTRAINT IF EXISTS assessment_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT assessment_course_id_sec_id_content_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id)
+    REFERENCES task(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for task → assignment
+ALTER TABLE assignment
+DROP CONSTRAINT IF EXISTS assignment_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT assignment_course_id_sec_id_content_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id)
+    REFERENCES task(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for assessment → question
+ALTER TABLE question
+DROP CONSTRAINT IF EXISTS question_course_id_sec_id_content_id_fkey,
+ADD CONSTRAINT question_course_id_sec_id_content_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id)
+    REFERENCES assessment(course_id, sec_id, content_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for question → multiple_choice
+ALTER TABLE multiple_choice
+DROP CONSTRAINT IF EXISTS multiple_choice_course_id_sec_id_content_id_question_id_fkey,
+ADD CONSTRAINT multiple_choice_course_id_sec_id_content_id_question_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id, question_id)
+    REFERENCES question(course_id, sec_id, content_id, question_id)
+    ON DELETE CASCADE;
+
+-- Ensure cascading delete for question → open_ended
+ALTER TABLE open_ended
+DROP CONSTRAINT IF EXISTS open_ended_course_id_sec_id_content_id_question_id_fkey,
+ADD CONSTRAINT open_ended_course_id_sec_id_content_id_question_id_fkey
+    FOREIGN KEY (course_id, sec_id, content_id, question_id)
+    REFERENCES question(course_id, sec_id, content_id, question_id)
+    ON DELETE CASCADE;
+
+ALTER TABLE student
+DROP CONSTRAINT IF EXISTS student_id_fkey,
+ADD CONSTRAINT student_id_fkey
+FOREIGN KEY (id) REFERENCES "user"(id)
+ON DELETE CASCADE;
+
+ALTER TABLE instructor
+DROP CONSTRAINT IF EXISTS instructor_id_fkey,
+ADD CONSTRAINT instructor_id_fkey
+FOREIGN KEY (id) REFERENCES "user"(id)
+ON DELETE CASCADE;
+
+ALTER TABLE admin
+DROP CONSTRAINT IF EXISTS admin_id_fkey,
+ADD CONSTRAINT admin_id_fkey
+FOREIGN KEY (id) REFERENCES "user"(id)
+ON DELETE CASCADE;
+
+ALTER TABLE comment
+DROP CONSTRAINT IF EXISTS comment_user_id_fkey,
+ADD CONSTRAINT comment_user_id_fkey
+FOREIGN KEY
 
 -- INSERTIONS
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
@@ -1630,4 +1938,14 @@ INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct
 INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S014719', 'CT000012', 'Q786756', 'D');
 INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer) VALUES ('C0000110', 'S014719', 'CT000012', 'Q727235', 'C');
 
+-- Insert certificate
+INSERT INTO certificate (certificate_id, title, body)
+VALUES ('CERT0001', 'Python Completion Certificate', 'Certified completion of Intro to Python course.');
 
+-- Earned certificate
+INSERT INTO earn_certificate (student_id, course_id, certificate_id, certification_date)
+VALUES ('U0000001', 'C0000001', 'CERT0001', '2025-05-13');
+
+-- Insert comment by student
+INSERT INTO comment (course_id, sec_id, content_id, user_id, text, timestamp)
+VALUES ('C0000001', 'S000001', 'CT000001', 'U0000001', 'Very helpful quiz!', CURRENT_TIMESTAMP);
