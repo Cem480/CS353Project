@@ -424,6 +424,14 @@ CREATE INDEX idx_course_report_highlights
 CREATE INDEX idx_course_report_extstats
     ON course_report USING gin (ext_stats);
 
+
+CREATE TABLE admin_report (
+    admin_id  VARCHAR(8),
+    report_id VARCHAR(8),
+    PRIMARY KEY (admin_id, report_id),
+    FOREIGN KEY (admin_id) REFERENCES admin(id) ON DELETE CASCADE,
+    FOREIGN KEY (report_id) REFERENCES report(report_id) ON DELETE CASCADE
+);
 -- VIEWS
 -- User with computed age
 CREATE VIEW user_with_age AS
@@ -498,6 +506,51 @@ GROUP BY category;
 
 -- TRIGGERS
 -- Update instructor rating when feedback is added
+-- Trigger function to maintain admin.report_count
+CREATE OR REPLACE FUNCTION update_admin_report_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE admin
+        SET report_count = report_count + 1
+        WHERE id = NEW.admin_id;
+
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE admin
+        SET report_count = report_count - 1
+        WHERE id = OLD.admin_id;
+    END IF;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Trigger to call the function on insert/delete
+CREATE TRIGGER trg_admin_report_count
+AFTER INSERT OR DELETE ON admin_report
+FOR EACH ROW
+EXECUTE FUNCTION update_admin_report_count();
+
+ALTER TABLE admin_report
+ADD CONSTRAINT uq_admin_report UNIQUE (admin_id, report_id);
+
+
+CREATE OR REPLACE FUNCTION decrement_admin_report_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE admin
+    SET report_count = report_count - 1
+    WHERE id = OLD.admin_id;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_decrement_admin_report_count
+AFTER DELETE ON report
+FOR EACH ROW
+EXECUTE FUNCTION decrement_admin_report_count();
+
 CREATE OR REPLACE FUNCTION update_instructor_rating()
 RETURNS TRIGGER AS $$
 BEGIN

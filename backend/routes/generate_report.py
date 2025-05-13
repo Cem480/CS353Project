@@ -736,8 +736,7 @@ def student_general_report():
 
         # 2) determine & sort report range
         cur.execute(
-            """SELECT MIN(date_trunc('month', registration_date)) AS min_month
-               FROM "user";"""
+            """SELECT MIN(date_trunc('month', registration_date)) AS min_month FROM "user";"""
         )
         earliest_row = cur.fetchone()
         raw_start = (
@@ -753,7 +752,8 @@ def student_general_report():
             "end": month_label(end_month),
         }
 
-        # 3) upsert header & metrics
+        # 3) Insert or fetch report, then ensure admin-report link exists
+        report_rid = new_report_id("SG")
         upsert_sql = """
         WITH ins AS (
             INSERT INTO report (
@@ -770,10 +770,15 @@ def student_general_report():
             UNION ALL
             SELECT report_id
             FROM report
-            WHERE report_type      = 'student_general'
+            WHERE report_type = 'student_general'
               AND time_range_start = %(start)s
-              AND time_range_end   = %(end)s
+              AND time_range_end = %(end)s
             LIMIT 1
+        ),
+        link AS (
+            INSERT INTO admin_report (admin_id, report_id)
+            SELECT %(admin)s, report_id FROM chosen
+            ON CONFLICT DO NOTHING
         )
         INSERT INTO student_report (
             report_id,
@@ -800,7 +805,7 @@ def student_general_report():
         cur.execute(
             upsert_sql,
             {
-                "rid": new_report_id("SG"),
+                "rid": report_rid,
                 "admin": admin_id,
                 "start": start_month,
                 "end": end_month,
@@ -825,14 +830,14 @@ def student_general_report():
         )
         conn.commit()
 
-        # 4) fetch the actual report_id we just upserted (or found)
+        # 4) fetch the actual report_id
         cur.execute(
             """
             SELECT report_id
             FROM report
             WHERE report_type = 'student_general'
               AND time_range_start = %s
-              AND time_range_end   = %s
+              AND time_range_end = %s
             LIMIT 1
             """,
             (start_month, end_month),
@@ -866,7 +871,6 @@ def student_general_report():
 
 @report_bp.route("/api/report/student/ranged", methods=["GET"])
 def student_ranged_report():
-    # 0) validate admin_id + dates
     admin_id = (request.args.get("admin_id") or "").strip()
     if not admin_id:
         return jsonify({"success": False, "message": "missing admin_id"}), 400
@@ -882,7 +886,6 @@ def student_ranged_report():
     if edt < sdt:
         return jsonify({"success": False, "message": "end < start"}), 400
 
-    # build the list of month-start dates we need
     months_needed = []
     cur_m = sdt
     while cur_m <= edt:
@@ -891,61 +894,70 @@ def student_ranged_report():
 
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
     try:
-        # 1) find or insert the parent header
-        cur.execute(
-            """
-            SELECT report_id
-              FROM report
+        # 1) Insert or get parent report
+        parent_id = new_report_id("SR")
+        parent_upsert = """
+        WITH ins AS (
+            INSERT INTO report (
+                report_id, admin_id, report_type,
+                time_range_start, time_range_end, description
+            )
+            VALUES (%s, %s, 'student_ranged', %s, %s, %s)
+            ON CONFLICT (report_type, time_range_start, time_range_end)
+              DO NOTHING
+            RETURNING report_id
+        ), chosen AS (
+            SELECT report_id FROM ins
+            UNION ALL
+            SELECT report_id FROM report
              WHERE report_type = 'student_ranged'
-               AND parent_report_id IS NULL
                AND time_range_start = %s
                AND time_range_end   = %s
-             LIMIT 1
-            """,
-            (sdt, edt),
+            LIMIT 1
         )
-        row0 = cur.fetchone()
-        if row0:
-            parent_id = row0["report_id"]
-        else:
-            parent_id = new_report_id("SR")
-            cur.execute(
-                """
-                INSERT INTO report (
-                  report_id, admin_id, report_type,
-                  time_range_start, time_range_end, description
-                ) VALUES (%s,%s,'student_ranged',%s,%s,%s)
-                """,
-                (
-                    parent_id,
-                    admin_id,
-                    sdt,
-                    edt,
-                    f"student range {start_raw} - {end_raw}",
-                ),
-            )
+        SELECT report_id FROM chosen;
+        """
+        cur.execute(
+            parent_upsert,
+            (
+                parent_id,
+                admin_id,
+                sdt,
+                edt,
+                f"student range {start_raw} - {end_raw}",
+                sdt,
+                edt,
+            ),
+        )
+        parent_id = cur.fetchone()["report_id"]
 
-        # 2) load any already‐cached months
+        # Link admin to parent report
+        cur.execute(
+            "INSERT INTO admin_report (admin_id, report_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+            (admin_id, parent_id),
+        )
+
+        # 2) Load cached children
         cur.execute(
             """
             SELECT r.time_range_start AS month_start, sr.*
-              FROM report r
-              JOIN student_report sr USING(report_id)
-             WHERE r.parent_report_id = %s
+            FROM report r
+            JOIN student_report sr USING(report_id)
+            WHERE r.parent_report_id = %s
             """,
             (parent_id,),
         )
         cached = {r["month_start"]: r for r in cur.fetchall()}
 
         month_rows = []
-        # 3) for each month, either pull cached or recompute + upsert
         for m in months_needed:
             if m in cached:
                 month_rows.append(cached[m])
                 continue
 
-            # a) compute fresh metrics for this month
+            # a) Compute fresh metrics
             cur.execute(STUDENT_RANGE_SQL, (m, m) * 6)
             one = cur.fetchone()
             one["active_student_count"] = one.pop("active_students")
@@ -953,53 +965,74 @@ def student_ranged_report():
             cur.execute(STUDENT_RANGE_TOP_SQL, (m, m))
             tops = cur.fetchall()
 
-            # b) upsert the header row (avoid unique‐constraint failure)
-            new_rid = new_report_id("SR")
+            # b) Insert or get child report
+            child_id = new_report_id("SR")
             cur.execute(
                 """
-                INSERT INTO report (
-                  report_id, admin_id, report_type,
-                  time_range_start, time_range_end,
-                  parent_report_id, description
-                ) VALUES (%s,%s,'student_ranged',%s,%s,%s,%s)
-                ON CONFLICT (report_type, time_range_start, time_range_end)
-                  DO UPDATE SET parent_report_id = EXCLUDED.parent_report_id
-                RETURNING report_id
+                WITH ins AS (
+                    INSERT INTO report (
+                        report_id, admin_id, report_type,
+                        time_range_start, time_range_end,
+                        parent_report_id, description
+                    )
+                    VALUES (%s, %s, 'student_ranged', %s, %s, %s, %s)
+                    ON CONFLICT (report_type, time_range_start, time_range_end)
+                      DO UPDATE SET parent_report_id = EXCLUDED.parent_report_id
+                    RETURNING report_id
+                ), chosen AS (
+                    SELECT report_id FROM ins
+                    UNION ALL
+                    SELECT report_id FROM report
+                     WHERE report_type = 'student_ranged'
+                       AND time_range_start = %s
+                       AND time_range_end   = %s
+                    LIMIT 1
+                )
+                SELECT report_id FROM chosen;
                 """,
                 (
-                    new_rid,
+                    child_id,
                     admin_id,
                     m,
                     last_day(m),
                     parent_id,
                     f"monthly student {m:%Y-%m}",
+                    m,
+                    last_day(m),
                 ),
             )
             child_id = cur.fetchone()["report_id"]
 
-            # c) insert metrics row if missing
+            # Link admin to child report
+            cur.execute(
+                "INSERT INTO admin_report (admin_id, report_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                (admin_id, child_id),
+            )
+
+            # c) Insert metrics
             cur.execute(
                 """
                 INSERT INTO student_report (
-                  report_id,
-                  total_students, avg_certificate_per_student,
-                  avg_enrollments_per_student, avg_completion_rate,
-                  active_student_count,
-                  most_common_major, most_common_major_count,
-                  avg_age, youngest_age, oldest_age,
-                  monthly_reg_count,
-                  top1_id, top2_id, top3_id
-                ) VALUES (
-                  %(rid)s,
-                  %(total_students)s, %(avg_cert_per_student)s,
-                  %(avg_enroll_per_student)s, %(avg_completion_rate)s,
-                  %(active_student_count)s,
-                  %(most_common_major)s, %(most_common_major_count)s,
-                  %(avg_age)s, %(youngest_age)s, %(oldest_age)s,
-                  %(registration_count)s,
-                  %(top1)s, %(top2)s, %(top3)s
+                    report_id,
+                    total_students, avg_certificate_per_student,
+                    avg_enrollments_per_student, avg_completion_rate,
+                    active_student_count,
+                    most_common_major, most_common_major_count,
+                    avg_age, youngest_age, oldest_age,
+                    monthly_reg_count,
+                    top1_id, top2_id, top3_id
                 )
-                ON CONFLICT (report_id) DO NOTHING
+                VALUES (
+                    %(rid)s,
+                    %(total_students)s, %(avg_cert_per_student)s,
+                    %(avg_enroll_per_student)s, %(avg_completion_rate)s,
+                    %(active_student_count)s,
+                    %(most_common_major)s, %(most_common_major_count)s,
+                    %(avg_age)s, %(youngest_age)s, %(oldest_age)s,
+                    %(registration_count)s,
+                    %(top1)s, %(top2)s, %(top3)s
+                )
+                ON CONFLICT DO NOTHING
                 """,
                 {
                     **one,
@@ -1010,29 +1043,33 @@ def student_ranged_report():
                 },
             )
 
-            # d) include the freshly computed row
             one["report_id"] = child_id
             month_rows.append(one)
 
-        # 4) recompute overall top‐3 for the full range
+        # 4) Top-3 overall
         cur.execute(STUDENT_RANGE_TOP_SQL, (sdt, edt))
         overall_top = cur.fetchall()
 
         conn.commit()
 
-        # build and return a fully JSON-safe payload
-        payload = {
-            "success": True,
-            "report_type": "student_ranged",
-            "report_id": parent_id,
-            "data": {
-                "parent_report_id": parent_id,
-                "range": {"start": start_raw, "end": end_raw},
-                "monthly_stats": month_rows,
-                "top_students": overall_top,
-            },
-        }
-        return jsonify(_dec2py(payload)), 200
+        return (
+            jsonify(
+                _dec2py(
+                    {
+                        "success": True,
+                        "report_type": "student_ranged",
+                        "report_id": parent_id,
+                        "data": {
+                            "parent_report_id": parent_id,
+                            "range": {"start": start_raw, "end": end_raw},
+                            "monthly_stats": month_rows,
+                            "top_students": overall_top,
+                        },
+                    }
+                )
+            ),
+            200,
+        )
 
     except Exception as e:
         conn.rollback()
@@ -1046,7 +1083,6 @@ def student_ranged_report():
 
 @report_bp.route("/api/report/course/general", methods=["GET"])
 def course_general_report() -> tuple:
-    # 0) validate admin_id
     admin_id = (request.args.get("admin_id") or "").strip()
     if not admin_id:
         return jsonify({"success": False, "message": "missing admin_id"}), 400
@@ -1079,7 +1115,7 @@ def course_general_report() -> tuple:
         for st in ("accepted", "rejected"):
             status_counts.setdefault(st, 0)
 
-        # 1d) category & difficulty lists
+        # 1d) category & difficulty stats
         cur.execute(CATEGORY_ENROLL_SQL)
         category_enrollments = cur.fetchall()
         cur.execute(DIFFICULTY_STATS_SQL)
@@ -1095,7 +1131,7 @@ def course_general_report() -> tuple:
         start_month = mn.date() if mn else dt.date.today().replace(day=1)
         end_month = last_completed_month()
 
-        # 2) prepare a JSONB summary with NO Decimals
+        # 2) prepare ext_stats
         ext_stats = _dec2py(
             {
                 "status_counts": status_counts,
@@ -1105,7 +1141,7 @@ def course_general_report() -> tuple:
             }
         )
 
-        # 3) upsert into report + course_report
+        # 3) upsert report + course_report + admin_report
         upsert_sql = """
         WITH ins AS (
           INSERT INTO report
@@ -1127,65 +1163,75 @@ def course_general_report() -> tuple:
              AND time_range_start=%(start)s
              AND time_range_end=%(end)s
           LIMIT 1
+        ), link AS (
+          INSERT INTO admin_report (admin_id, report_id)
+          SELECT %(admin)s, report_id FROM chosen
+          ON CONFLICT DO NOTHING
         )
-        INSERT INTO course_report
-          (report_id, total_courses, free_course_count,
-           paid_course_count, free_enroll_count, paid_enroll_count,
-           avg_enroll_per_course, total_revenue, avg_completion_rate,
-           most_popular_course_id, most_completed_course_id)
+        INSERT INTO course_report (
+          report_id, total_courses, free_course_count,
+          paid_course_count, free_enroll_count, paid_enroll_count,
+          avg_enroll_per_course, total_revenue, avg_completion_rate,
+          most_popular_course_id, most_completed_course_id
+        )
         SELECT
-          c.report_id,
+          report_id,
           %(total_courses)s, %(free_course_count)s, %(paid_course_count)s,
           %(free_enroll_count)s, %(paid_enroll_count)s,
           %(avg_enroll_per_course)s, %(total_revenue)s, %(avg_completion_rate)s,
           %(most_popular_course_id)s, %(most_completed_course_id)s
-        FROM chosen c
+        FROM chosen
         ON CONFLICT DO NOTHING;
         """
-        params = {
-            "rid": new_report_id("CG"),
-            "admin": admin_id,
-            "start": start_month,
-            "end": end_month,
-            "summary_json": psql.Json(ext_stats),
-            **_dec2py(summary),
-        }
-        cur.execute(upsert_sql, params)
+        cur.execute(
+            upsert_sql,
+            {
+                "rid": new_report_id("CG"),
+                "admin": admin_id,
+                "start": start_month,
+                "end": end_month,
+                "summary_json": psql.Json(ext_stats),
+                **_dec2py(summary),
+            },
+        )
         conn.commit()
 
-        # 4) grab the report_id we just inserted/found
+        # 4) fetch report_id again
         cur.execute(
             """
-          SELECT report_id
-            FROM report
-           WHERE report_type='course_general'
-             AND time_range_start=%s
-             AND time_range_end=%s
-           LIMIT 1
+            SELECT report_id
+              FROM report
+             WHERE report_type='course_general'
+               AND time_range_start=%s
+               AND time_range_end=%s
+             LIMIT 1
         """,
             (start_month, end_month),
         )
-        row = cur.fetchone()
-        report_id = row["report_id"] if row else None
+        report_id = cur.fetchone()["report_id"]
 
-        # 5) build a fully Decimal‐free payload
-        payload = {
-            "success": True,
-            "report_type": "course_general",
-            "report_id": report_id,
-            "data": {
-                **_dec2py(summary),
-                "status_counts": status_counts,
-                "category_enrollments": _dec2py(category_enrollments),
-                "difficulty_stats": _dec2py(difficulty_stats),
-                "courses_created_last_year": courses_last_year,
-                "range": {
-                    "start": start_month.strftime("%Y-%m"),
-                    "end": end_month.strftime("%Y-%m"),
-                },
-            },
-        }
-        return jsonify(payload), 200
+        # 5) return payload
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "report_type": "course_general",
+                    "report_id": report_id,
+                    "data": {
+                        **_dec2py(summary),
+                        "status_counts": status_counts,
+                        "category_enrollments": _dec2py(category_enrollments),
+                        "difficulty_stats": _dec2py(difficulty_stats),
+                        "courses_created_last_year": courses_last_year,
+                        "range": {
+                            "start": start_month.strftime("%Y-%m"),
+                            "end": end_month.strftime("%Y-%m"),
+                        },
+                    },
+                }
+            ),
+            200,
+        )
 
     except Exception as e:
         conn.rollback()
@@ -1221,13 +1267,13 @@ def course_ranged_report() -> tuple:
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psql.RealDictCursor)
     try:
-        # 1) Upsert parent report header and grab its ID
+        # 1) Upsert parent report and link admin
         upsert_parent = """
         WITH ins AS (
           INSERT INTO report
             (report_id, admin_id, report_type, time_range_start, time_range_end, description)
           VALUES (%(rid)s, %(admin)s, 'course_ranged', %(start)s, %(end)s,
-                  'course range {sr} - {er}')
+                  %(desc)s)
           ON CONFLICT (report_type, time_range_start, time_range_end) DO NOTHING
           RETURNING report_id
         ), chosen AS (
@@ -1238,13 +1284,15 @@ def course_ranged_report() -> tuple:
            WHERE report_type='course_ranged'
              AND time_range_start=%(start)s
              AND time_range_end=%(end)s
-           LIMIT 1
+          LIMIT 1
+        ),
+        link AS (
+          INSERT INTO admin_report (admin_id, report_id)
+          SELECT %(admin)s, report_id FROM chosen
+          ON CONFLICT DO NOTHING
         )
         SELECT report_id FROM chosen;
-        """.format(
-            sr=start_raw, er=end_raw
-        )
-
+        """
         cur.execute(
             upsert_parent,
             {
@@ -1252,91 +1300,75 @@ def course_ranged_report() -> tuple:
                 "admin": admin_id,
                 "start": sdt,
                 "end": last_day(edt),
+                "desc": f"course range {start_raw} - {end_raw}",
             },
         )
         parent_id = cur.fetchone()["report_id"]
 
-        # 2) Snapshot metrics for courses CREATED in that range
+        # 2) Snapshot metrics
         cur.execute(
             """
-        WITH base AS (
-          SELECT price, COALESCE(enrollment_count,0) AS enrollment_count
-          FROM course
-          WHERE creation_date BETWEEN %s
-                AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
-        ), freepaid AS (
-          SELECT
-            COUNT(*)                   AS total_courses,
-            COUNT(*) FILTER (WHERE price=0) AS free_course_count,
-            COUNT(*) FILTER (WHERE price>0) AS paid_course_count
-          FROM base
-        ), rev AS (
-          SELECT
-            ROUND(AVG(enrollment_count)::numeric,2) AS avg_enroll_per_course,
-            COALESCE(SUM(price*enrollment_count),0)  AS total_revenue
-          FROM base
-        )
-        SELECT fp.total_courses,
-               fp.free_course_count,
-               fp.paid_course_count,
-               rv.avg_enroll_per_course,
-               rv.total_revenue
-        FROM freepaid fp CROSS JOIN rev rv;
-        """,
+            WITH base AS (
+              SELECT price, COALESCE(enrollment_count,0) AS enrollment_count
+              FROM course
+              WHERE creation_date BETWEEN %s AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
+            ), freepaid AS (
+              SELECT COUNT(*) AS total_courses,
+                     COUNT(*) FILTER (WHERE price=0) AS free_course_count,
+                     COUNT(*) FILTER (WHERE price>0) AS paid_course_count
+              FROM base
+            ), rev AS (
+              SELECT ROUND(AVG(enrollment_count)::numeric,2) AS avg_enroll_per_course,
+                     COALESCE(SUM(price*enrollment_count),0) AS total_revenue
+              FROM base
+            )
+            SELECT * FROM freepaid CROSS JOIN rev;
+            """,
             (sdt, edt),
         )
         snapshot = cur.fetchone() or {}
 
-        # 3) Highlights – most‐popular course by enrollments in that period
+        # 3) Most popular course
         cur.execute(
             """
-        SELECT
-          c.course_id,
-          c.title,
-          COUNT(e.student_id)   AS enrollments,
-          c.price,
-          u.first_name || ' ' || u.last_name AS instructor_name
-        FROM enroll e
-        JOIN course c  ON c.course_id=e.course_id
-        JOIN "user" u  ON u.id=c.creator_id
-        WHERE e.enroll_date BETWEEN %s AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
-        GROUP BY c.course_id, c.title, c.price, u.first_name, u.last_name
-        ORDER BY enrollments DESC
-        LIMIT 1;
-        """,
+            SELECT c.course_id, c.title, COUNT(e.student_id) AS enrollments,
+                   c.price, u.first_name || ' ' || u.last_name AS instructor_name
+            FROM enroll e
+            JOIN course c ON c.course_id = e.course_id
+            JOIN "user" u ON u.id = c.creator_id
+            WHERE e.enroll_date BETWEEN %s AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
+            GROUP BY c.course_id, c.title, c.price, u.first_name, u.last_name
+            ORDER BY enrollments DESC LIMIT 1;
+            """,
             (sdt, edt),
         )
         most_popular = cur.fetchone() or {}
 
-        # 4) Highlights – most‐completed course
+        # 4) Most completed course
         cur.execute(
             """
-        SELECT
-          c.course_id,
-          c.title,
-          COUNT(*) FILTER (WHERE e.progress_rate=100)      AS completions,
-          CASE WHEN COUNT(*)>0
-               THEN ROUND(100.0*SUM((e.progress_rate=100)::int)/COUNT(*),2)
-               ELSE 0 END                                   AS completion_ratio,
-          c.price,
-          u.first_name || ' ' || u.last_name               AS instructor_name
-        FROM enroll e
-        JOIN course c  ON c.course_id=e.course_id
-        JOIN "user" u  ON u.id=c.creator_id
-        WHERE e.enroll_date BETWEEN %s AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
-        GROUP BY c.course_id, c.title, c.price, u.first_name, u.last_name
-        ORDER BY completions DESC
-        LIMIT 1;
-        """,
+            SELECT c.course_id, c.title,
+                   COUNT(*) FILTER (WHERE e.progress_rate=100) AS completions,
+                   CASE WHEN COUNT(*) > 0
+                        THEN ROUND(100.0 * SUM((e.progress_rate=100)::int)/COUNT(*), 2)
+                        ELSE 0 END AS completion_ratio,
+                   c.price, u.first_name || ' ' || u.last_name AS instructor_name
+            FROM enroll e
+            JOIN course c ON c.course_id = e.course_id
+            JOIN "user" u ON u.id = c.creator_id
+            WHERE e.enroll_date BETWEEN %s AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
+            GROUP BY c.course_id, c.title, c.price, u.first_name, u.last_name
+            ORDER BY completions DESC LIMIT 1;
+            """,
             (sdt, edt),
         )
         most_completed = cur.fetchone() or {}
 
-        # 5) Monthly series
+        # 5) Monthly stats
         cur.execute(COURSE_RANGE_SQL, (sdt, edt) * 5)
         monthly_metrics = cur.fetchall()
 
-        # 6) Category & difficulty
+        # 6) Category & difficulty stats
         cur.execute(CATEGORY_ENROLL_SQL)
         category_stats = cur.fetchall()
         cur.execute(DIFFICULTY_STATS_SQL)
@@ -1373,7 +1405,6 @@ def course_ranged_report() -> tuple:
 
 @report_bp.route("/api/report/instructor/general", methods=["GET"])
 def instructor_general_report():
-    # 0) validate admin_id
     admin_id = (request.args.get("admin_id") or "").strip()
     if not admin_id:
         return jsonify({"success": False, "message": "missing admin_id"}), 400
@@ -1383,12 +1414,12 @@ def instructor_general_report():
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psql.RealDictCursor)
     try:
-        # 1) determine date range
+        # 1) Determine time range
         cur.execute(
             """
             SELECT MIN(date_trunc('month', u.registration_date)) AS min_month
-              FROM "user" u
-              JOIN instructor i ON i.id = u.id
+            FROM "user" u
+            JOIN instructor i ON i.id = u.id
         """
         )
         r0 = cur.fetchone()
@@ -1400,7 +1431,7 @@ def instructor_general_report():
         raw_end = last_completed_month()
         start_month, end_month = sorted((raw_start, raw_end))
 
-        # 2) build the snapshot
+        # 2) Build snapshot summary
         summary = {}
 
         cur.execute(TOTAL_INSTR_SQL)
@@ -1427,7 +1458,6 @@ def instructor_general_report():
 
         cur.execute(INSTR_MONTHLY_SQL, (start_month, end_month))
         regs = cur.fetchall()
-        # note: your SQL aliases this column "registrations"
         summary["monthly_registrations"] = {
             r["month"]: r.get("registrations", r.get("registration_count", 0))
             for r in regs
@@ -1441,38 +1471,48 @@ def instructor_general_report():
             "end": month_label(end_month),
         }
 
-        # 3) upsert into report & instructor_report
-        report_rid = new_report_id("IG")
+        # 3) Upsert report + link + metrics
         upsert_sql = """
         WITH ins AS (
           INSERT INTO report
-            (report_id, admin_id, report_type, time_range_start, time_range_end, description)
-          VALUES (%(rid)s, %(admin)s, 'instructor_general', %(start)s, %(end)s,
+            (report_id, admin_id, report_type,
+             time_range_start, time_range_end,
+             description)
+          VALUES (%(rid)s, %(admin)s, 'instructor_general',
+                  %(start)s, %(end)s,
                   'site-wide instructor snapshot')
-          ON CONFLICT (report_type, time_range_start, time_range_end) DO NOTHING
+          ON CONFLICT (report_type, time_range_start, time_range_end)
+            DO NOTHING
           RETURNING report_id
         ), chosen AS (
           SELECT report_id FROM ins
           UNION ALL
-          SELECT report_id FROM report
-           WHERE report_type='instructor_general'
-             AND time_range_start=%(start)s
-             AND time_range_end  =%(end)s
-           LIMIT 1
+          SELECT report_id
+          FROM report
+          WHERE report_type = 'instructor_general'
+            AND time_range_start = %(start)s
+            AND time_range_end = %(end)s
+          LIMIT 1
+        ),
+        link AS (
+          INSERT INTO admin_report (admin_id, report_id)
+          SELECT %(admin)s, report_id FROM chosen
+          ON CONFLICT DO NOTHING
         )
-        INSERT INTO instructor_report
-          (report_id,
-           total_instructors,
-           instructors_with_paid_course,
-           instructors_with_free_course,
-           avg_courses_per_instructor,
-           most_popular_instructor_id,
-           most_active_instructor_id,
-           avg_age, youngest_age, oldest_age,
-           registration_count,
-           top1_id, top2_id, top3_id)
+        INSERT INTO instructor_report (
+          report_id,
+          total_instructors,
+          instructors_with_paid_course,
+          instructors_with_free_course,
+          avg_courses_per_instructor,
+          most_popular_instructor_id,
+          most_active_instructor_id,
+          avg_age, youngest_age, oldest_age,
+          registration_count,
+          top1_id, top2_id, top3_id
+        )
         SELECT
-          c.report_id,
+          report_id,
           %(total_instructors)s,
           %(instructors_with_paid_course)s,
           %(instructors_with_free_course)s,
@@ -1482,59 +1522,61 @@ def instructor_general_report():
           %(avg_age)s, %(youngest_age)s, %(oldest_age)s,
           %(reg_cnt)s,
           %(top1)s, %(top2)s, %(top3)s
-        FROM chosen c
+        FROM chosen
         ON CONFLICT DO NOTHING;
         """
-        params = {
-            "rid": report_rid,
-            "admin": admin_id,
-            "start": start_month,
-            "end": end_month,
-            "total_instructors": summary["total_instructors"],
-            "instructors_with_paid_course": summary["instructors_with_paid_course"],
-            "instructors_with_free_course": summary["instructors_with_free_course"],
-            "avg_courses_per_instructor": summary["avg_courses_per_instructor"],
-            "most_popular_instructor_id": summary["most_popular_instructor_id"],
-            "most_active_instructor_id": summary["most_active_instructor_id"],
-            "avg_age": summary["avg_age"],
-            "youngest_age": summary["youngest_age"],
-            "oldest_age": summary["oldest_age"],
-            "reg_cnt": sum(summary["monthly_registrations"].values()),
-            "top1": (
-                summary["top_instructors"][0]["id"]
-                if summary["top_instructors"]
-                else None
-            ),
-            "top2": (
-                summary["top_instructors"][1]["id"]
-                if len(summary["top_instructors"]) > 1
-                else None
-            ),
-            "top3": (
-                summary["top_instructors"][2]["id"]
-                if len(summary["top_instructors"]) > 2
-                else None
-            ),
-        }
-        cur.execute(upsert_sql, params)
+
+        cur.execute(
+            upsert_sql,
+            {
+                "rid": new_report_id("IG"),
+                "admin": admin_id,
+                "start": start_month,
+                "end": end_month,
+                "total_instructors": summary["total_instructors"],
+                "instructors_with_paid_course": summary["instructors_with_paid_course"],
+                "instructors_with_free_course": summary["instructors_with_free_course"],
+                "avg_courses_per_instructor": summary["avg_courses_per_instructor"],
+                "most_popular_instructor_id": summary["most_popular_instructor_id"],
+                "most_active_instructor_id": summary["most_active_instructor_id"],
+                "avg_age": summary["avg_age"],
+                "youngest_age": summary["youngest_age"],
+                "oldest_age": summary["oldest_age"],
+                "reg_cnt": sum(summary["monthly_registrations"].values()),
+                "top1": (
+                    summary["top_instructors"][0]["id"]
+                    if summary["top_instructors"]
+                    else None
+                ),
+                "top2": (
+                    summary["top_instructors"][1]["id"]
+                    if len(summary["top_instructors"]) > 1
+                    else None
+                ),
+                "top3": (
+                    summary["top_instructors"][2]["id"]
+                    if len(summary["top_instructors"]) > 2
+                    else None
+                ),
+            },
+        )
         conn.commit()
 
-        # 4) fetch the actual report_id (in case it already existed)
+        # 4) Fetch report_id for response
         cur.execute(
             """
             SELECT report_id
               FROM report
-             WHERE report_type='instructor_general'
-               AND time_range_start=%s
-               AND time_range_end  =%s
+             WHERE report_type = 'instructor_general'
+               AND time_range_start = %s
+               AND time_range_end = %s
              LIMIT 1
             """,
             (start_month, end_month),
         )
-        rr = cur.fetchone()
-        report_id = rr["report_id"] if rr else None
+        report_id = cur.fetchone()["report_id"]
 
-        # 5) return JSON
+        # 5) Respond
         return (
             jsonify(
                 _dec2py(
@@ -1553,6 +1595,7 @@ def instructor_general_report():
         conn.rollback()
         print(f"[INSTRUCTOR GENERAL ERROR] {e}", file=sys.stderr)
         return jsonify({"success": False, "message": str(e)}), 500
+
     finally:
         cur.close()
         conn.close()
@@ -1560,7 +1603,6 @@ def instructor_general_report():
 
 @report_bp.route("/api/report/instructor/ranged", methods=["GET"])
 def instructor_ranged_report() -> tuple:
-    # 0) validate admin_id + dates
     admin_id = (request.args.get("admin_id") or "").strip()
     if not admin_id:
         return jsonify({"success": False, "message": "missing admin_id"}), 400
@@ -1590,7 +1632,7 @@ def instructor_ranged_report() -> tuple:
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psql.RealDictCursor)
     try:
-        # 1) upsert parent header
+        # 1) upsert parent report + admin link
         parent_upsert_sql = """
         WITH ins AS (
           INSERT INTO report
@@ -1608,6 +1650,11 @@ def instructor_ranged_report() -> tuple:
              AND time_range_start=%(start)s
              AND time_range_end=%(end)s
           LIMIT 1
+        ),
+        link AS (
+          INSERT INTO admin_report (admin_id, report_id)
+          SELECT %(admin)s, report_id FROM chosen
+          ON CONFLICT DO NOTHING
         )
         SELECT report_id FROM chosen;
         """
@@ -1626,23 +1673,22 @@ def instructor_ranged_report() -> tuple:
         # 2) for each month, insert child header + metrics
         monthly_rows = []
         for m in months:
-            # a) compute metrics for this month
             cur.execute(INSTRUCTOR_RANGE_SQL, (m, m, m, m))
             one = cur.fetchone()
-            # b) insert child report header
-            child_upsert = """
-            INSERT INTO report
-              (report_id, admin_id, report_type,
-               time_range_start, time_range_end,
-               parent_report_id, description)
-            VALUES (%s, %s, 'instructor_ranged', %s, %s, %s, %s)
-            ON CONFLICT (report_type, time_range_start, time_range_end)
-              DO UPDATE SET parent_report_id = EXCLUDED.parent_report_id
-            RETURNING report_id;
-            """
+
+            # child report header
             child_id = new_report_id("IR")
             cur.execute(
-                child_upsert,
+                """
+                INSERT INTO report
+                  (report_id, admin_id, report_type,
+                   time_range_start, time_range_end,
+                   parent_report_id, description)
+                VALUES (%s, %s, 'instructor_ranged', %s, %s, %s, %s)
+                ON CONFLICT (report_type, time_range_start, time_range_end)
+                  DO UPDATE SET parent_report_id = EXCLUDED.parent_report_id
+                RETURNING report_id;
+                """,
                 (
                     child_id,
                     admin_id,
@@ -1654,7 +1700,7 @@ def instructor_ranged_report() -> tuple:
             )
             child_id = cur.fetchone()["report_id"]
 
-            # c) insert the metrics row
+            # insert metrics
             cur.execute(
                 """
                 INSERT INTO instructor_report
@@ -2241,23 +2287,23 @@ def list_reports():
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psql.RealDictCursor)
     try:
-        # Assumes your `report` table has a `created_at TIMESTAMP DEFAULT now()` column.
+        # List all reports associated with the admin
         cur.execute(
             """
-            SELECT report_id,
-                   report_type,
-                   time_range_start,
-                   time_range_end,
-                   creation_date
-              FROM report
-             WHERE admin_id = %s AND parent_report_id IS NULL
-             ORDER BY creation_date DESC
-        """,
+            SELECT r.report_id,
+                   r.report_type,
+                   r.time_range_start,
+                   r.time_range_end,
+                   r.creation_date
+              FROM report r
+              JOIN admin_report ar ON ar.report_id = r.report_id
+             WHERE ar.admin_id = %s AND r.parent_report_id IS NULL
+             ORDER BY r.creation_date DESC
+            """,
             (admin_id,),
         )
         rows = cur.fetchall()
 
-        # convert dates/timestamps into ISO strings for JSON
         reports = [
             {
                 "report_id": r["report_id"],
