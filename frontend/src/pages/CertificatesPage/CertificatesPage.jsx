@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './CertificatesPage.css';
 import html2pdf from 'html2pdf.js';
 import { getStudentCertificates, deleteCertificate } from '../../services/certificates';
@@ -7,6 +7,7 @@ import { getStudentCertificates, deleteCertificate } from '../../services/certif
 
 const CertificatesPage = () => {
   const [certificates, setCertificates] = useState([]);
+  const navigate = useNavigate();
 
     useEffect(() => {
       fetchCertificates();
@@ -108,7 +109,21 @@ const CertificatesPage = () => {
             <input type="text" placeholder="Search my certificates..." />
             <button className="search-button1">Search</button>
           </div>
-          <div className="profile-icon">JS</div>
+          <div 
+            className="notification-button"
+            onClick={() => navigate('/notifications')}
+            style={{ cursor: 'pointer' }}
+            title="View notifications"
+          >
+            <span className="notification-icon">🔔</span>
+          </div>
+          <div 
+            className="profile-icon"
+            onClick={() => navigate('/profile')}
+            style={{ cursor: 'pointer' }}
+          >
+            JS
+          </div>
         </div>
       </header>
 

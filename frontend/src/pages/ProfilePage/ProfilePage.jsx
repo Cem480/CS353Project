@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../../services/auth';
+import * as notificationService from '../../services/notification';
 import './ProfilePage.css';
 
 /* ───── helper for nice dates (e.g. 30 Apr 2025) ───── */
@@ -16,6 +17,7 @@ const ProfilePage = () => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     /* ───── read user from storage ───── */
     const userInfo = getCurrentUser();          // { user_id, role }
@@ -43,8 +45,23 @@ const ProfilePage = () => {
             } catch (e) { setError(e.message); }
             finally { setLoading(false); }
         };
+        
         fetchProfile();
+        fetchNotificationCount();
     }, [userId]);
+
+    const fetchNotificationCount = async () => {
+        if (!userId) return;
+        
+        try {
+            const response = await notificationService.getNotificationStats(userId);
+            if (response.success) {
+                setUnreadCount(response.stats.by_status.unread || 0);
+            }
+        } catch (err) {
+            console.error('Error fetching notification count:', err);
+        }
+    };
 
     /* ───── early states ───── */
     if (loading) return <div className="profile-page"><p>Loading…</p></div>;
@@ -66,7 +83,14 @@ const ProfilePage = () => {
                     <span className="logo-text">LearnHub</span>
                 </div>
                 <div className="header-right">
-                    <button className="notification-btn">🔔</button>
+                    <button 
+                        className="notification-btn" 
+                        onClick={() => navigate('/notifications')}
+                        title="View notifications"
+                    >
+                        🔔
+                        {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+                    </button>
                     <button className="profile-icon" onClick={handleLogout}>{full_name[0]}</button>
                 </div>
             </header>

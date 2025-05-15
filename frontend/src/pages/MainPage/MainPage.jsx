@@ -139,6 +139,15 @@ const MainPage = () => {
             />
             <button className="main-page-search-button">Search</button>
           </div>
+          <div 
+            className="notification-button" 
+            onClick={() => navigate('/notifications')} 
+            style={{ cursor: 'pointer' }}
+            title="View notifications"
+          >
+            <span className="notification-icon">🔔</span>
+            {/* Add notification count badge here if you have unread notifications */}
+          </div>
           <div className="main-page-profile-dropdown">
             <div className="main-page-profile-icon" onClick={toggleProfileMenu}>
               {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}

@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../services/auth';
 import { getBasicProfile } from '../services/user';
 import { useLocation } from 'react-router-dom';
+import * as notificationService from '../services/notification';
 
 const InstructorHeader = () => {
   const navigate = useNavigate();
   const userData = getCurrentUser();
   const [userName, setUserName] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
 
   useEffect(() => {
@@ -21,8 +23,24 @@ const InstructorHeader = () => {
         setUserName('Instructor');
       }
     };
-    if (userData?.user_id) fetchName();
+    if (userData?.user_id) {
+      fetchName();
+      fetchNotificationCount();
+    }
   }, [userData?.user_id]);
+  
+  const fetchNotificationCount = async () => {
+    if (!userData?.user_id) return;
+    
+    try {
+      const response = await notificationService.getNotificationStats(userData.user_id);
+      if (response.success) {
+        setUnreadCount(response.stats.by_status.unread || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching notification count:', err);
+    }
+  };
 
   const toggleProfileMenu = () => setShowProfileMenu(!showProfileMenu);
   const handleLogout = () => {
@@ -58,6 +76,15 @@ const InstructorHeader = () => {
           <input type="text" placeholder="Search courses..." />
           <button className="search-button">Search</button>
         </div>
+        <div 
+          className="notification-button"
+          onClick={() => navigate('/notifications')}
+          style={{ cursor: 'pointer' }}
+          title="View notifications"
+        >
+          <span className="notification-icon">🔔</span>
+          {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+        </div>
         <div className="profile-dropdown">
           <div className="profile-icon" onClick={toggleProfileMenu}>
             {userData ? userData.user_id.charAt(0).toUpperCase() : 'I'}
@@ -76,7 +103,7 @@ const InstructorHeader = () => {
               <ul>
                 <li><a href="/my-courses">My Courses</a></li>
                 <li><a href="/earnings">Earnings</a></li>
-                <li><a href="/notifications">Notifications</a></li>
+                <li><a href="/notifications">Notifications {unreadCount > 0 && `(${unreadCount})`}</a></li>
                 <li><a href="/applications">Financial Aid</a></li>
                 <li><a href="/settings">Account Settings</a></li>
                 <div className="menu-divider"></div>

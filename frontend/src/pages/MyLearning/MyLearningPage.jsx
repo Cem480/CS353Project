@@ -94,7 +94,21 @@ const MyLearningPage = () => {
             <input type="text" placeholder="Search my courses..." />
             <button className="search-button1">Search</button>
           </div>
-          <div className="profile-icon">{user.user_id.charAt(0).toUpperCase()}</div>
+          <div 
+            className="notification-button"
+            onClick={() => navigate('/notifications')}
+            style={{ cursor: 'pointer' }}
+            title="View notifications"
+          >
+            <span className="notification-icon">🔔</span>
+          </div>
+          <div 
+            className="profile-icon"
+            onClick={() => navigate('/profile')}
+            style={{ cursor: 'pointer' }}
+          >
+            {user.user_id.charAt(0).toUpperCase()}
+          </div>
         </div>
       </header>
 

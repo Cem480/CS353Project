@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import './FinancialAid.css';
+import { getCurrentUser } from '../../services/auth';
+import * as notificationService from '../../services/notification';
 
 const FinancialAid = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const userData = getCurrentUser();
+  const [unreadCount, setUnreadCount] = useState(0);
   const [formData, setFormData] = useState({
     // Personal Information
     fullName: '',
@@ -88,6 +92,23 @@ const FinancialAid = () => {
   const handleGoBack = () => {
     navigate(`/degree/${courseId}`);
   };
+
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      if (!userData?.user_id) return;
+      
+      try {
+        const response = await notificationService.getNotificationStats(userData.user_id);
+        if (response.success) {
+          setUnreadCount(response.stats.by_status.unread || 0);
+        }
+      } catch (err) {
+        console.error('Error fetching notification count:', err);
+      }
+    };
+    
+    fetchNotificationCount();
+  }, [userData?.user_id]);
 
   const renderStepContent = () => {
     switch(currentStep) {
@@ -481,8 +502,14 @@ const FinancialAid = () => {
               <button className="search-button">Search</button>
             </div>
             <div className="user-controls">
-              <button className="notification-button">
+              <button 
+                className="notification-button"
+                onClick={() => navigate('/notifications')}
+                style={{ cursor: 'pointer' }}
+                title="View notifications"
+              >
                 <span className="notification-icon">🔔</span>
+                {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
               </button>
               <button className="user-profile">
                 <span className="profile-initials">JS</span>
