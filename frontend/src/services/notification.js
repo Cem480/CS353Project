@@ -149,3 +149,35 @@ export async function createNotification(notificationData) {
     throw error;
   }
 }
+
+// Local storage keys
+const LAST_NOTIFICATION_COUNT_KEY = 'lastNotificationCount';
+const LAST_NOTIFICATION_CHECK_KEY = 'lastNotificationCheck';
+
+// Function to check if there are new notifications
+export function hasNewNotifications(currentCount) {
+  try {
+    const lastCount = parseInt(localStorage.getItem(LAST_NOTIFICATION_COUNT_KEY) || '0');
+    
+    // If current count is higher than last stored count, we have new notifications
+    if (currentCount > lastCount) {
+      // Update last count
+      localStorage.setItem(LAST_NOTIFICATION_COUNT_KEY, currentCount.toString());
+      localStorage.setItem(LAST_NOTIFICATION_CHECK_KEY, Date.now().toString());
+      return true;
+    }
+    
+    // If counts are the same, no new notifications
+    localStorage.setItem(LAST_NOTIFICATION_CHECK_KEY, Date.now().toString());
+    return false;
+  } catch (error) {
+    console.error('Error checking for new notifications:', error);
+    return false;
+  }
+}
+
+// Function to acknowledge notifications (call this when user views notifications)
+export function acknowledgeNotifications(count) {
+  localStorage.setItem(LAST_NOTIFICATION_COUNT_KEY, count.toString());
+  localStorage.setItem(LAST_NOTIFICATION_CHECK_KEY, Date.now().toString());
+}

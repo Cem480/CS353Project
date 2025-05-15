@@ -54,6 +54,10 @@ const NotificationPage = () => {
           }));
           
           setNotifications(transformedNotifications);
+          
+          // Update the notification count in local storage for comparison
+          const unreadCount = transformedNotifications.filter(note => !note.read).length;
+          notificationService.acknowledgeNotifications(unreadCount);
         } else {
           setError(response.message || 'Failed to fetch notifications');
         }
@@ -194,6 +198,38 @@ const NotificationPage = () => {
 
   // Count unread notifications
   const unreadCount = notifications.filter(note => !note.read).length;
+  
+  // Create a test notification for demonstration
+  const createTestNotification = async () => {
+    if (!userId) return;
+    
+    try {
+      // Remove from localStorage to ensure animation triggers
+      localStorage.removeItem('lastNotificationCount');
+      
+      const testNotification = {
+        receiver_id: userId,
+        type: 'announcement',
+        message: 'This is a test notification. It was created at ' + new Date().toLocaleTimeString(),
+        entity_type: 'system',
+        entity_id: 'test'
+      };
+      
+      const response = await notificationService.createNotification(testNotification);
+      
+      if (response.success) {
+        // Display a temporary alert so the user knows the test worked
+        alert('Test notification created! Navigate to another page and back to see the animation and hear the sound effect on the notification bell.');
+        
+        // Force refresh the notifications
+        const currentFilter = activeFilter;
+        setActiveFilter('temp');
+        setTimeout(() => setActiveFilter(currentFilter), 100);
+      }
+    } catch (err) {
+      console.error('Error creating test notification:', err);
+    }
+  };
 
   // Get filtered notifications
   const filteredNotifications = getFilteredNotifications();
@@ -242,16 +278,26 @@ const NotificationPage = () => {
       <div className="notification-container">
         <div className="notification-header">
           <h1>Notifications</h1>
-          {unreadCount > 0 && (
+          <div className="notification-actions">
+            {unreadCount > 0 && (
+              <button 
+                className="mark-all-read" 
+                onClick={markAllAsRead}
+                aria-label="Mark all notifications as read"
+                title="Mark all notifications as read"
+              >
+                Mark all as read
+              </button>
+            )}
             <button 
-              className="mark-all-read" 
-              onClick={markAllAsRead}
-              aria-label="Mark all notifications as read"
-              title="Mark all notifications as read"
+              className="test-notification" 
+              onClick={createTestNotification}
+              aria-label="Create test notification"
+              title="Create a test notification to see the sound and animation"
             >
-              Mark all as read
+              Test Notification Sound
             </button>
-          )}
+          </div>
         </div>
 
         {/* Filter Tabs */}
@@ -280,6 +326,14 @@ const NotificationPage = () => {
           >
             Archived
           </button>
+        </div>
+
+        {/* Test notification info */}
+        <div className="test-notification-info">
+          <p>
+            <strong>🔔 Testing notifications:</strong> Click the "Test Notification Sound" button above, then navigate to 
+            another page (like Home) to see the animation and hear the sound effect on the notification bell.
+          </p>
         </div>
 
         {/* Notification List */}

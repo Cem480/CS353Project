@@ -1,9 +1,10 @@
 // components/InstructorHeader.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { getCurrentUser, logout } from '../services/auth';
 import { getBasicProfile } from '../services/user';
 import { useLocation } from 'react-router-dom';
+import NotificationButton from './NotificationButton';
 import * as notificationService from '../services/notification';
 
 const InstructorHeader = () => {
@@ -76,15 +77,7 @@ const InstructorHeader = () => {
           <input type="text" placeholder="Search courses..." />
           <button className="search-button">Search</button>
         </div>
-        <div 
-          className="notification-button"
-          onClick={() => navigate('/notifications')}
-          style={{ cursor: 'pointer' }}
-          title="View notifications"
-        >
-          <span className="notification-icon">🔔</span>
-          {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
-        </div>
+        <NotificationButton />
         <div className="profile-dropdown">
           <div className="profile-icon" onClick={toggleProfileMenu}>
             {userData ? userData.user_id.charAt(0).toUpperCase() : 'I'}

@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../services/auth';
 import { getEnrolledCourses } from '../../services/course';
 import { getStudentCertificates, generateCertificate } from '../../services/student';
+import NotificationButton from '../../components/NotificationButton';
 
 const MyLearningPage = () => {
   const navigate = useNavigate();
@@ -94,14 +95,7 @@ const MyLearningPage = () => {
             <input type="text" placeholder="Search my courses..." />
             <button className="search-button1">Search</button>
           </div>
-          <div 
-            className="notification-button"
-            onClick={() => navigate('/notifications')}
-            style={{ cursor: 'pointer' }}
-            title="View notifications"
-          >
-            <span className="notification-icon">🔔</span>
-          </div>
+          <NotificationButton />
           <div 
             className="profile-icon"
             onClick={() => navigate('/profile')}

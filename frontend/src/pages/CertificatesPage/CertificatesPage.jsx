@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import './CertificatesPage.css';
 import html2pdf from 'html2pdf.js';
 import { getStudentCertificates, deleteCertificate } from '../../services/certificates';
+import NotificationButton from '../../components/NotificationButton';
 
 
 const CertificatesPage = () => {
@@ -109,14 +110,7 @@ const CertificatesPage = () => {
             <input type="text" placeholder="Search my certificates..." />
             <button className="search-button1">Search</button>
           </div>
-          <div 
-            className="notification-button"
-            onClick={() => navigate('/notifications')}
-            style={{ cursor: 'pointer' }}
-            title="View notifications"
-          >
-            <span className="notification-icon">🔔</span>
-          </div>
+          <NotificationButton />
           <div 
             className="profile-icon"
             onClick={() => navigate('/profile')}
