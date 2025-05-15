@@ -11,10 +11,15 @@ const InstructorCourses = () => {
   const navigate = useNavigate();
   const userData = getCurrentUser();
   const [userName, setUserName] = useState('');
-  const [courses, setCourses] = useState([]);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [allCourses, setAllCourses] = useState([]);
 
   const firstName = userName;
+
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const filteredCourses = allCourses.filter(course =>
+    statusFilter === 'all' ? true : course.status === statusFilter
+  );
 
    // Handle Edit button click (change this to edit page for instructor)
   const handleEditClick = (courseId) => {
@@ -35,7 +40,7 @@ const InstructorCourses = () => {
     const fetchCourses = async () => {
       try {
         const result = await getInstructorCourses(userData.user_id);
-        setCourses(result.courses);
+        setAllCourses(result.courses);
       } catch (err) {
         console.error('Could not fetch instructor courses:', err);
       }
@@ -52,13 +57,26 @@ const InstructorCourses = () => {
       {/* ...header stays the same... */}
       <InstructorHeader />  
 
+
+
       <main className="main-content">
         <h2>Your Courses</h2>
+        <div className="course-filter-bar">
+          {['all', 'accepted', 'draft', 'pending', 'rejected'].map((status) => (
+            <button
+              key={status}
+              className={`filter-pill ${statusFilter === status ? 'active' : ''}`}
+              onClick={() => setStatusFilter(status)}
+            >
+              {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+            </button>
+          ))}
+        </div>
         <div className="course-list">
-          {courses.length === 0 ? (
+          {allCourses.length === 0 ? (
             <p>No courses created yet.</p>
           ) : (
-            courses.map(course => (
+            filteredCourses.map(course => (
               <div className="instructor-course-card" key={course.course_id}>
                 <div className="instructor-course-title">{course.title}</div>
                 <div className="instructor-course-description">{course.description}</div>

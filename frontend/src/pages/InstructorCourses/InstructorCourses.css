@@ -93,7 +93,7 @@
   color: #666;
   display: flex;
   flex-direction: column;
-  align-items: center; /* ⬅ centers the content unless overridden below */
+  align-items: center; 
 }
 
 .main-content h2 {
@@ -145,7 +145,8 @@
   color: #222;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   margin-bottom: 8px;
-  max-width: 800px;
+  max-width: 1000px;
+  min-width: 600px;
   width: 100%;
 }
 
@@ -207,5 +208,30 @@
 
 .edit-course-button:hover {
   background-color: #0c6349;
+  color: white;
+}
+
+.course-filter-bar {
+  display: flex;
+  gap: 12px;
+  padding: 0 40px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.filter-pill {
+  padding: 8px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: white;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-pill.active {
+  background-color: #d4a800;
   color: white;
 }
