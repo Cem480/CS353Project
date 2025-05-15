@@ -27,6 +27,7 @@ def get_course_general_info(course_id):
                 c.description,
                 c.category,
                 c.price,
+                cw.is_free,  -- from the view
                 c.creation_date,
                 c.last_update_date,
                 c.difficulty_level,
@@ -38,6 +39,7 @@ def get_course_general_info(course_id):
                 u.last_name,
                 i.i_rating
             FROM course AS c
+            JOIN course_with_is_free AS cw ON c.course_id = cw.course_id
             JOIN instructor AS i ON c.creator_id = i.id
             JOIN "user" AS u ON i.id = u.id
             WHERE c.course_id = %s;

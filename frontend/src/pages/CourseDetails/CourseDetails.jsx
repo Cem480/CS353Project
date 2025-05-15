@@ -341,7 +341,7 @@ const CourseDetails = () => {
                   className="course-details-apply-button"
                   onClick={handleEnrollNow}
                 >
-                  {course.price > 0 ? 'Continue with Payment' : 'Enroll Now'}
+                  {course.is_free ? 'Enroll Now' : 'Continue with Payment'}
                 </button>
 
                 <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
