@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../services/auth';
 import { getBasicProfile } from '../services/user';
+import { useLocation } from 'react-router-dom';
 
 const InstructorHeader = () => {
   const navigate = useNavigate();
   const userData = getCurrentUser();
   const [userName, setUserName] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const fetchName = async () => {
@@ -45,10 +47,10 @@ const InstructorHeader = () => {
           <h1>LearnHub</h1>
         </div>
         <div className="nav-links">
-          <a href="/home">Dashboard</a>
-          <a href="/instructor/courses" className="active">My Courses</a>
-          <a href="/instructor/grading">Grading</a>
-          <a href="/applications">Financial Aid</a>
+            <a href="/home" className={location.pathname === '/home' ? 'active' : ''}>Dashboard</a>
+            <a href="/instructor/courses" className={location.pathname === '/instructor/courses' ? 'active' : ''}>My Courses</a>
+            <a href="/instructor/grading" className={location.pathname === '/instructor/grading' ? 'active' : ''}>Grading</a>
+            <a href="/applications" className={location.pathname === '/applications' ? 'active' : ''}>Financial Aid</a>
         </div>
       </div>
       <div className="header-right">

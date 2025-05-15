@@ -16,6 +16,12 @@ const InstructorCourses = () => {
 
   const firstName = userName;
 
+   // Handle Edit button click (change this to edit page for instructor)
+  const handleEditClick = (courseId) => {
+    navigate(`/course/${courseId}/content`);
+  };
+
+
   useEffect(() => {
     const fetchName = async () => {
       try {
@@ -53,12 +59,18 @@ const InstructorCourses = () => {
             <p>No courses created yet.</p>
           ) : (
             courses.map(course => (
-              <div className="instructor-course-card" key={course.id}>
+              <div className="instructor-course-card" key={course.course_id}>
                 <div className="instructor-course-title">{course.title}</div>
                 <div className="instructor-course-description">{course.description}</div>
                 <div className="instructor-course-meta"><strong>Level:</strong> {course.difficulty_level || 'N/A'}</div>
                 <div className="instructor-course-meta"><strong>Students:</strong> {course.students}</div>
                 <div className="instructor-course-meta"><strong>Status:</strong> <span className="instructor-course-status">{course.status}</span></div>
+                <button 
+                  className="edit-course-button" 
+                  onClick={() => handleEditClick(course.course_id)}
+                >
+                  ✏️ Edit
+                </button>
               </div>
             ))
           )}

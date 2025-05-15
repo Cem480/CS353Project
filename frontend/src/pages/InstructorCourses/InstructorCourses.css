@@ -145,6 +145,8 @@
   color: #222;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   margin-bottom: 8px;
+  max-width: 800px;
+  width: 100%;
 }
 
 .instructor-course-card:hover {
@@ -164,6 +166,8 @@
   color: #444;
   line-height: 1.4;
   margin-bottom: 16px;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .instructor-course-meta {
@@ -187,4 +191,21 @@
   color: #0c6349;
   font-size: 0.9rem;
   margin-top: 8px;
+}
+
+.edit-course-button {
+  margin-top: 12px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  background-color: #ffffff;
+  border: 1px solid #0c6349;
+  color: #0c6349;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.edit-course-button:hover {
+  background-color: #0c6349;
+  color: white;
 }
