@@ -103,10 +103,15 @@ const CourseDetails = () => {
       return;
     }
 
+    if (course.price > 0) {
+      navigate(`/transaction?courseId=${courseId}`);
+      return;
+    }
+
     try {
       const result = await enrollInCourse(courseId, userData.user_id);
       if (result.success) {
-        alert(`You have successfully enrolled in ${courseInfo.title}!`);
+        alert(`You have successfully enrolled in ${course.title}!`);
         window.location.reload();
       } else {
         alert(`Enrollment failed: ${result.message}`);
@@ -188,9 +193,13 @@ const CourseDetails = () => {
   const level = course.difficulty_level 
     ? `Level ${course.difficulty_level}` 
     : 'Not specified';
-  const price = course.price 
-    ? `$${course.price}` 
-    : 'Price not available';
+
+  const price = course.price === 0
+  ? 'Free'
+  : course.price > 0
+    ? `$${course.price}`
+    : 'Price Not Available';
+
   const enrolled = course.enrollment_count 
     ? `${course.enrollment_count} student${course.enrollment_count !== 1 ? 's' : ''}` 
     : 'Not specified';
@@ -323,17 +332,18 @@ const CourseDetails = () => {
             <div className="course-details-enrollment-price">{price}</div>
 
             {isEnrolled ? (
-              <button
-                className="course-details-continue-button"
-                onClick={() => navigate('/my-learning')}
-              >
+              <button className="course-details-continue-button" onClick={() => navigate('/my-learning')}>
                 Continue Learning
               </button>
             ) : (
               <>
-                <button className="course-details-apply-button" onClick={handleEnrollNow}>
-                  Enroll Now
+                <button
+                  className="course-details-apply-button"
+                  onClick={handleEnrollNow}
+                >
+                  {course.price > 0 ? 'Continue with Payment' : 'Enroll Now'}
                 </button>
+
                 <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
                   Financial Aid Available
                 </button>
@@ -352,10 +362,6 @@ const CourseDetails = () => {
               <div className="course-details-enrollment-detail">
                 <span className="course-details-detail-icon">🎓</span>
                 <span>Level: <strong>{level}</strong></span>
-              </div>
-              <div className="course-details-enrollment-detail">
-                <span className="course-details-detail-icon">📚</span>
-                <span>Fully Online</span>
               </div>
             </div>
           </div>

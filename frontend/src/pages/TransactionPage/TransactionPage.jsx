@@ -1,54 +1,73 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import './TransactionPage.css';
+import { getCurrentUser, logout } from '../../services/auth';
+import { getCourseInfo } from '../../services/courseContent';
+import { enrollInCourse } from '../../services/student';
+
+
+
 
 const TransactionPage = () => {
-  const { courseId } = useParams();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const courseId = searchParams.get('courseId');
+
   const navigate = useNavigate();
+
+  const userData = getCurrentUser();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const toggleProfileMenu = () => {
+    setShowProfileMenu(!showProfileMenu);
+  };
+
+const firstName = userData?.user_id?.split('@')[0] || 'User';
   
   // State for form fields
   const [cardNumber, setCardNumber] = useState('');
   const [cardName, setCardName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
-  const [billingAddress, setBillingAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [country, setCountry] = useState('');
   
-  // Mock course data - in a real app, fetch based on courseId
-  const courses = {
-    "mcs": {
-      id: "mcs",
-      title: "Master of Computer Science",
-      university: "Tech Global University",
-      price: "$15,000",
-      duration: "18-24 months",
-      image: "/mcs-thumbnail.jpg",
-      startDate: "Flexible"
-    },
-    "bds": {
-      id: "bds",
-      title: "Bachelor of Data Science",
-      university: "Analytics Institute",
-      price: "$12,500",
-      duration: "36 months",
-      image: "/bds-thumbnail.jpg",
-      startDate: "Next cohort: March 15, 2025"
-    },
-    "mba": {
-      id: "mba",
-      title: "MBA in Digital Marketing",
-      university: "Business Academy",
-      price: "$12,500",
-      duration: "12-15 months",
-      image: "/mba-thumbnail.jpg",
-      startDate: "Next cohort: April 1, 2025"
-    }
-  };
-  
-  const course = courses[courseId] || courses.mcs;
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const user = getCurrentUser();
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        const data = await getCourseInfo(courseId);
+        setCourse(data);
+      } catch (err) {
+        console.error('Failed to load course info:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourse();
+  }, [courseId]);
+
+  if (loading) return <p>Loading course details...</p>;
+  if (!course) return <p>Course not found.</p>;
+
+
+  const formattedPrice = course.price ? `$${Number(course.price).toLocaleString()}` : 'Free';
+  const formattedDate = course.creation_date
+    ? new Date(course.creation_date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit'
+      })
+    : 'Not available';
   
   const formatCardNumber = (value) => {
     const input = value.replace(/\D/g, '');
@@ -82,43 +101,84 @@ const TransactionPage = () => {
     }
   };
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, process payment here
-    alert("Payment processed successfully! You are now enrolled in the course.");
-    navigate('/my-courses');
+
+    if (!user || !courseId) {
+      alert("User not logged in or course not found.");
+      return;
+    }
+
+    try {
+      const result = await enrollInCourse(courseId, user.user_id);
+      if (result.success) {
+        alert("Payment successful! You are now enrolled.");
+        navigate('/my-learning');
+      } else {
+        alert(`Enrollment failed: ${result.message}`);
+      }
+    } catch (err) {
+      console.error("Enrollment error:", err);
+      alert("An error occurred during enrollment.");
+    }
   };
   
   const handleCancel = () => {
-    navigate(`/degree/${courseId}`);
+    navigate(`/course-details?id=${courseId}`);
   };
   
   return (
     <div>
-      {/* LearnHub Header */}
-      <header className="learnhub-header">
-        <div className="header-container">
-          <div className="header-left">
-            <Link to="/" className="logo">LearnHub</Link>
-            <nav className="main-nav">
-              <Link to="/" className="nav-link">Home</Link>
-              <Link to="/degrees" className="nav-link active">Online Degrees</Link>
-              <Link to="/certificates" className="nav-link">Certificates</Link>
-            </nav>
+      <header className="main-page-header">
+        <div className="main-page-header-left">
+          <div className="main-page-logo">
+            <h1 onClick={() => navigate('/home')}>LearnHub</h1>
           </div>
-          <div className="header-right">
-            <div className="search-container">
-              <input type="text" placeholder="Search degrees..." className="search-input" />
-              <button className="search-button">Search</button>
+          <div className="main-page-nav-links">
+            <a href="/home">Home</a>
+            <a href="/degrees">Online Degrees</a>
+            <a href="/my-learning">My Learning</a>
+            <a href="/my-certificates">My Certificates</a>
+          </div>
+        </div>
+        <div className="main-page-header-right">
+          <div className="main-page-search-bar">
+            <input 
+              type="text" 
+              placeholder="Search my courses..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button className="main-page-search-button">Search</button>
+          </div>
+          <div className="main-page-profile-dropdown">
+            <div className="main-page-profile-icon" onClick={toggleProfileMenu}>
+              {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}
             </div>
-            <div className="user-controls">
-              <button className="notification-button">
-                <span className="notification-icon">🔔</span>
-              </button>
-              <button className="user-profile">
-                <span className="profile-initials">JS</span>
-              </button>
-            </div>
+            {showProfileMenu && (
+              <div className="main-page-dropdown-menu">
+                <div className="main-page-profile-info">
+                  <div className="main-page-profile-avatar-large">
+                    {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div className="main-page-profile-details">
+                    <div className="main-page-profile-name">{firstName}</div>
+                    <div className="main-page-profile-role">{userData ? userData.role : 'Student'}</div>
+                  </div>
+                </div>
+                <ul>
+                  <li><a href="/my-learning">My Learning</a></li>
+                  <li><a href="/notifications">Notifications</a></li>
+                  <li><a href="/transaction">Transactions</a></li>
+                  {userData?.role === 'instructor' && (
+                    <li><a href="/applications">Instructor Applications</a></li>
+                  )}
+                  <div className="main-page-menu-divider"></div>
+                  <li><a href="/profile">Profile</a></li>
+                  <li><a href="#" onClick={handleLogout}>Logout</a></li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -204,80 +264,12 @@ const TransactionPage = () => {
                 </div>
               </div>
               
-              <h3 className="billing-header">Billing Address</h3>
-              
-              <div className="form-row">
-                <div className="form-group full-width">
-                  <label htmlFor="billingAddress">Street Address</label>
-                  <input 
-                    type="text" 
-                    id="billingAddress" 
-                    value={billingAddress}
-                    onChange={(e) => setBillingAddress(e.target.value)}
-                    required 
-                  />
-                </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group third-width">
-                  <label htmlFor="city">City</label>
-                  <input 
-                    type="text" 
-                    id="city" 
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    required 
-                  />
-                </div>
-                <div className="form-group third-width">
-                  <label htmlFor="state">State/Province</label>
-                  <input 
-                    type="text" 
-                    id="state" 
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    required 
-                  />
-                </div>
-                <div className="form-group third-width">
-                  <label htmlFor="zipCode">ZIP/Postal Code</label>
-                  <input 
-                    type="text" 
-                    id="zipCode" 
-                    value={zipCode}
-                    onChange={(e) => setZipCode(e.target.value)}
-                    required 
-                  />
-                </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group full-width">
-                  <label htmlFor="country">Country</label>
-                  <select 
-                    id="country" 
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    required
-                  >
-                    <option value="">Select a country</option>
-                    <option value="US">United States</option>
-                    <option value="CA">Canada</option>
-                    <option value="UK">United Kingdom</option>
-                    <option value="AU">Australia</option>
-                    <option value="IN">India</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-              </div>
-              
               <div className="form-actions">
                 <button type="button" className="cancel-button" onClick={handleCancel}>
                   Cancel
                 </button>
                 <button type="submit" className="pay-button">
-                  Pay {course.price}
+                  Pay
                 </button>
               </div>
             </form>
@@ -286,63 +278,44 @@ const TransactionPage = () => {
           <div className="order-summary-container">
             <div className="order-summary">
               <h2>Order Summary</h2>
-              
+
               <div className="course-preview">
                 <div className="course-image">
-                  {/* This would be an actual image in a real app */}
                   <div className="image-placeholder"></div>
                 </div>
+
                 <div className="course-preview-details">
                   <h3>{course.title}</h3>
-                  <p className="university">{course.university}</p>
                 </div>
               </div>
-              
-              <div className="order-details">
+
+              <div className="order-details">      
                 <div className="order-detail-item">
-                  <span className="detail-label">Start Date</span>
-                  <span className="detail-value">{course.startDate}</span>
+                  <span className="detail-label">Instructor Name</span>
+                  <span className="detail-value">{course.first_name + " " + course.last_name}</span>
                 </div>
                 <div className="order-detail-item">
-                  <span className="detail-label">Duration</span>
-                  <span className="detail-value">{course.duration}</span>
+                  <span className="detail-label">Creation Date</span>
+                  <span className="detail-value">{formattedDate}</span>
                 </div>
                 <div className="order-detail-item">
-                  <span className="detail-label">Credential</span>
-                  <span className="detail-value">Full Degree</span>
+                  <span className="detail-label">Level</span>
+                  <span className="detail-value">Level {course.difficulty_level}</span>
                 </div>
               </div>
-              
+
               <div className="price-breakdown">
                 <div className="price-item">
                   <span className="price-label">Program Price</span>
-                  <span className="price-value">{course.price}</span>
-                </div>
-                <div className="price-item">
-                  <span className="price-label">Application Fee</span>
-                  <span className="price-value">$0.00</span>
-                </div>
-                <div className="price-item discount">
-                  <span className="price-label">Early Enrollment Discount</span>
-                  <span className="price-value">-$0.00</span>
+                  <span className="price-value">{formattedPrice}</span>
                 </div>
                 <div className="price-item total">
                   <span className="price-label">Total</span>
-                  <span className="price-value">{course.price}</span>
+                  <span className="price-value">{formattedPrice}</span>
                 </div>
               </div>
-              
-              <div className="order-notes">
-                <p>
-                  <i className="note-icon">ℹ️</i>
-                  By completing this purchase, you agree to LearnHub's <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.
-                </p>
-                <p>
-                  <i className="note-icon">🔒</i>
-                  Your payment information is secure and encrypted.
-                </p>
-              </div>
             </div>
+
           </div>
         </div>
       </div>

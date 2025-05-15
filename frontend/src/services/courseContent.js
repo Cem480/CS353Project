@@ -5,7 +5,7 @@ const BASE_URL = 'http://localhost:5001';
 export async function getCourseInfo(courseId) {
   try {
     // First try to get course content info
-    const response = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/info`, {
+    const response = await fetch(`${BASE_URL}/api/course-overview/${courseId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
