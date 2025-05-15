@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getUngradedSubmissions } from '../../services/instructor';
 import { getCurrentUser } from '../../services/auth';
 import './Grading.css';
+import InstructorHeader from '../../components/InstructorHeader';
 
 const InstructorGradingPage = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -38,8 +39,13 @@ const InstructorGradingPage = () => {
   };
 
   return (
+    <>
+    {/* Use the same Instructor Header */}
+    <InstructorHeader />  
+      
+    
     <div className="grading-page">
-      <h2>Ungraded Submissions</h2>
+    <h2>Ungraded Submissions</h2>
 
       <div className="grading-controls">
         <label>Sort by:</label>
@@ -87,6 +93,7 @@ const InstructorGradingPage = () => {
         <button onClick={() => setPage(page + 1)}>Next</button>
       </div>
     </div>
+    </>
   );
 };
 
