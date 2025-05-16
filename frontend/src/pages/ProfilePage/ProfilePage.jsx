@@ -135,7 +135,7 @@ const ProfilePage = () => {
 /* ───── helper sub-components ───── */
 
 const AdminPanel = ({ report_count, approved_courses, rejected_courses, navigate }) => (
-    <section className="role-card admin-panel">
+    <section className="role-card profile-admin-panel">
         <div className="panel-header-row">
             <h3 className="panel-title">Admin Overview</h3>
             <button className="change-password-btn" onClick={() => navigate('/change-password')}>
@@ -157,7 +157,7 @@ const AdminPanel = ({ report_count, approved_courses, rejected_courses, navigate
 const InstructorPanel = ({ i_rating, course_count, experience_year, courses, feedbacks, navigate }) => {
     const fullStars = Math.round(i_rating);
     return (
-        <section className="role-card instructor-panel">
+        <section className="role-card profile-instructor-panel">
             <div className="panel-header-row">
                 <h3 className="panel-title">Instructor Overview</h3>
                 <button className="change-password-btn" onClick={() => navigate('/change-password')}>
@@ -221,7 +221,7 @@ const CourseCardGrid = ({ list, empty }) => {
     return (
         <div className="course-grid">
             {list.map(c => (
-                <div key={c.course_id} className="course-card">
+                <div key={c.course_id} className="profile-course-card">
                     <h5 className="course-title">{c.title}</h5>
                     <p className="course-meta">
                         {c.category} &nbsp;·&nbsp; ${c.price} &nbsp;·&nbsp; Level {c.difficulty_level}

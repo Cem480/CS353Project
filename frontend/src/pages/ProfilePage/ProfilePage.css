@@ -333,7 +333,7 @@
 /* responsive: full width on phones */
 @media (max-width: 600px) {
 
-    .course-card,
+    .profile-course-card,
     .feedback-card {
         flex: 1 1 100%;
     }
@@ -352,7 +352,7 @@
 /* =======================================================
    COURSE CARD REFINEMENTS
 ======================================================= */
-.course-card {
+.profile-course-card {
     display: flex;
     align-items: center;
     /* vertical centering              */
@@ -379,7 +379,7 @@
 }
 
 /* keep entire card clickable if you later add an onClick */
-.course-card:hover {
+.profile-course-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
 }
 
@@ -537,7 +537,7 @@
 }
 
 /* grid cards (course / feedback) more vertical room */
-.course-card,
+.profile-course-card,
 .feedback-card {
     padding: 26px 32px;
     /* +2-4px */
@@ -655,14 +655,14 @@
 }
 
 /* admin panel: force one‐course-per-row */
-.admin-panel .course-grid {
+.profile-admin-panel .course-grid {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
 /* make each card full-width inside the admin panel */
-.admin-panel .course-card {
+.profile-admin-panel .profile-course-card {
     flex: none;
     width: 100%;
 }
@@ -678,32 +678,32 @@
 }
 
 /* force one-per-row in the instructor panel */
-.instructor-panel .course-grid {
+.profile-instructor-panel .course-grid {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.instructor-panel .course-card {
+.profile-instructor-panel .profile-course-card {
     flex: none;
     width: 100%;
 }
 
 /* one-per-row feedback in instructor panel */
-.instructor-panel .feedback-grid {
+.profile-instructor-panel .feedback-grid {
     display: flex;
     flex-direction: column;
     gap: 24px;
     /* match student gap */
 }
 
-.instructor-panel .feedback-card {
+.profile-instructor-panel .feedback-card {
     flex: none;
     width: 100%;
     transition: transform .15s ease, box-shadow .15s ease;
 }
 
-.instructor-panel .feedback-card:hover {
+.profile-instructor-panel .feedback-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
 }
@@ -719,8 +719,8 @@
 }
 
 .feedback-grid,
-.instructor-panel .feedback-grid,
-.admin-panel .feedback-grid {
+.profile-instructor-panel .feedback-grid,
+.profile-admin-panel .feedback-grid {
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -728,8 +728,8 @@
 }
 
 .feedback-grid .feedback-card,
-.instructor-panel .feedback-card,
-.admin-panel .feedback-card {
+.profile-instructor-panel .feedback-card,
+.profile-admin-panel .feedback-card {
     padding: 24px 32px;
     /* match .course-card’s 24px top/bottom and 32px left/right */
     /* border-radius, box-shadow, colors etc. will stay as they are */
@@ -757,8 +757,8 @@
 }
 
 /* 2. Use the same gap as student cards for instructor/admin feedback lists */
-.instructor-panel .feedback-grid,
-.admin-panel .feedback-grid {
+.profile-instructor-panel .feedback-grid,
+.profile-admin-panel .feedback-grid {
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -1062,8 +1062,8 @@
 }
 
 /* Match shape and color of student course cards */
-.instructor-panel .course-card,
-.admin-panel .course-card {
+.profile-instructor-panel .profile-course-card,
+.profile-admin-panel .profile-course-card {
     background: #0c6349;
     /* match student green */
     color: #fff;
@@ -1078,8 +1078,8 @@
 }
 
 /* Make title text consistent */
-.instructor-panel .course-title,
-.admin-panel .course-title {
+.profile-instructor-panel .course-title,
+.profile-admin-panel .course-title {
     font-size: 1.3rem;
     font-weight: 700;
     margin: 0;
@@ -1087,8 +1087,8 @@
 }
 
 /* Meta info like price/level */
-.instructor-panel .course-meta,
-.admin-panel .course-meta {
+.profile-instructor-panel .course-meta,
+.profile-admin-panel .course-meta {
     font-size: 1.05rem;
     color: #ffffffcc;
     /* semi-transparent white */
@@ -1096,14 +1096,14 @@
 }
 
 /* Hover effect like students */
-.instructor-panel .course-card:hover,
-.admin-panel .course-card:hover {
+.profile-instructor-panel .profile-course-card:hover,
+.profile-admin-panel .profile-course-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
 }
 
 /* Base: dark green card for all course displays */
-.course-card {
+.profile-course-card {
     background: #0c6349;
     /* deep green */
     color: #fff;
@@ -1117,7 +1117,7 @@
 }
 
 /* Title inside card */
-.course-card .course-title {
+.profile-course-card .course-title {
     color: white;
     font-size: 1.35rem;
     font-weight: 700;
@@ -1126,7 +1126,7 @@
 }
 
 /* Meta text (e.g., category · level) */
-.course-card .course-meta {
+.profile-course-card .course-meta {
     color: #ffffffcc;
     /* translucent white */
     font-size: 1.05rem;
@@ -1135,7 +1135,7 @@
 }
 
 /* Hover effect */
-.course-card:hover {
+.profile-course-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
 }
@@ -1148,7 +1148,7 @@
 /* FINAL OVERRIDES – DARK GREEN COURSE CARDS WITH WHITE TEXT */
 
 /* Applies to all student/instructor/admin course cards */
-.course-card {
+.profile-course-card {
     background: #0c6349 !important;
     /* dark green */
     color: white !important;
@@ -1161,19 +1161,19 @@
     transition: transform .15s ease, box-shadow .15s ease;
 }
 
-.course-card:hover {
+.profile-course-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
 }
 
-.course-card .course-title {
+.profile-course-card .course-title {
     color: white !important;
     font-size: 1.35rem;
     font-weight: 700;
     margin: 0;
 }
 
-.course-card .course-meta {
+.profile-course-card .course-meta {
     color: #ffffffcc !important;
     font-size: 1.05rem;
     margin: 0;
@@ -1190,7 +1190,7 @@
    ============================ */
 
 /* For instructor and admin course cards */
-.course-grid .course-card {
+.profile-course-grid .profile-course-card {
     background: #0c6349 !important;
     /* dark green */
     color: white !important;
@@ -1204,7 +1204,7 @@
 }
 
 /* Title inside those cards */
-.course-grid .course-card .course-title {
+.profile-course-grid .profile-course-card .course-title {
     color: white !important;
     font-size: 1.35rem;
     font-weight: 700;
@@ -1212,7 +1212,7 @@
 }
 
 /* Metadata (category, level, price) */
-.course-grid .course-card .course-meta {
+.profile-course-grid .profile-course-card .course-meta {
     color: #ffffffcc !important;
     font-size: 1.05rem;
     margin: 0;
@@ -1220,7 +1220,7 @@
 }
 
 /* Hover effect */
-.course-grid .course-card:hover {
+.profile-course-grid .profile-course-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 14px rgba(0, 0, 0, .12);
 }
@@ -1231,9 +1231,9 @@
 }
 
 /* 🔥 Force ALL .course-card variants to use dark green */
-.course-card,
-.instructor-panel .course-card,
-.admin-panel .course-card,
+.profile-course-card,
+.profile-instructor-panel .profile-course-card,
+.profile-admin-panel .profile-course-card,
 .student-course-card {
     background: #0c6349 !important;
     color: white !important;
@@ -1243,8 +1243,8 @@
 }
 
 /* 🔥 Force text colors white */
-.course-card .course-title,
-.course-card .course-meta,
+.profile-course-card .course-title,
+.profile-course-card .course-meta,
 .student-course-card .course-title,
 .student-course-card .course-meta {
     color: white !important;
