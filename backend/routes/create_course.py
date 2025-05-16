@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, session
 from db import connect_project_db
 import psycopg2.extras
 import uuid
+import datetime
 from passlib.context import CryptContext
 from werkzeug.utils import secure_filename
 import os
@@ -22,7 +23,8 @@ def create_overall_course():
         "price",
         "qna_link",
         "difficulty_level",
-        "instructor_id"
+        "instructor_id",
+        "status"
     ]
 
     for field in required_fields:
@@ -31,12 +33,48 @@ def create_overall_course():
         if isinstance(data[field], str) and not data[field].strip():
             return jsonify({"success": False, "message": f"Field {field} cannot be empty"}), 400
 
+    # Validate field lengths
+    if len(data["title"]) > 150:
+        return jsonify({"success": False, "message": "Title must be at most 150 characters"}), 400
+    if len(data["description"]) > 2000:
+        return jsonify({"success": False, "message": "Description must be at most 2000 characters"}), 400
+    if len(data["category"]) > 50:
+        return jsonify({"success": False, "message": "Category must be at most 50 characters"}), 400
+    if len(data["qna_link"]) > 100:
+        return jsonify({"success": False, "message": "QnA link must be at most 100 characters"}), 400
+
+    # Validate difficulty level
+    try:
+        difficulty = int(data["difficulty_level"])
+        if not (1 <= difficulty <= 5):
+            raise ValueError
+    except ValueError:
+        return jsonify({"success": False, "message": "Difficulty level must be an integer between 1 and 5"}), 400
+
+    # Validate status
+    allowed_statuses = {"draft", "pending", "accepted", "rejected"}
+    if data["status"] not in allowed_statuses:
+        return jsonify({"success": False, "message": f"Invalid status. Must be one of {allowed_statuses}"}), 400
 
     conn = connect_project_db()
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+    cursor.execute("SELECT 1 FROM instructor WHERE id = %s", (data["instructor_id"],))
+    if cursor.fetchone() is None:
+        return jsonify({"success": False, "message": "Invalid instructor ID"}), 400
+
     try:
-        course_id = f"C{uuid.uuid4().hex[:7].upper()}"  # UUID-based course_id   Total length = 8
+        # Check if instructor exists
+        cursor.execute("SELECT 1 FROM instructor WHERE id = %s", (data["instructor_id"],))
+        if cursor.fetchone() is None:
+            return jsonify({"success": False, "message": "Instructor ID not found"}), 400
+
+        # Generate unique course_id
+        while True:
+            course_id = f"C{uuid.uuid4().hex[:7].upper()}"
+            cursor.execute("SELECT 1 FROM course WHERE course_id = %s", (course_id,))
+            if not cursor.fetchone():
+                break
 
         cursor.execute(
             """
@@ -54,7 +92,7 @@ def create_overall_course():
                 data["description"],
                 data["category"],
                 int(data["price"]),
-                "draft",                  # is_approved = FALSE
+                data["status"],                  # is_approved = FALSE
                 0,                      # enrollment_count = 0
                 data["qna_link"],
                 int(data["difficulty_level"]),
@@ -63,7 +101,23 @@ def create_overall_course():
         )
 
         conn.commit()
-        return jsonify({"success": True, "course_id": course_id}), 201
+        return jsonify({
+            "success": True,
+            "course": {
+                "course_id": course_id,
+                "title": data["title"],
+                "description": data["description"],
+                "category": data["category"],
+                "price": int(data["price"]),
+                "creation_date": str(datetime.date.today()),
+                "last_update_date": str(datetime.date.today()),
+                "status": data["status"],
+                "enrollment_count": 0,
+                "qna_link": data["qna_link"],
+                "difficulty_level": difficulty,
+                "creator_id": data["instructor_id"]
+            }
+        }), 201
 
     except Exception as e:
         conn.rollback()
@@ -72,6 +126,45 @@ def create_overall_course():
     finally:
         cursor.close()
         conn.close()
+
+
+@course_bp.route("/api/course/<course_id>/status", methods=["PUT"])
+def update_course_status(course_id):
+    data = request.json
+    new_status = data.get("status")
+
+    allowed_statuses = {"draft", "pending", "accepted", "rejected"}
+    if new_status not in allowed_statuses:
+        return jsonify({"success": False, "message": f"Invalid status. Must be one of {allowed_statuses}"}), 400
+
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute("SELECT 1 FROM course WHERE course_id = %s", (course_id,))
+        if not cursor.fetchone():
+            return jsonify({"success": False, "message": "Course not found"}), 404
+
+        cursor.execute(
+            """
+            UPDATE course
+            SET status = %s, last_update_date = CURRENT_DATE
+            WHERE course_id = %s
+            """,
+            (new_status, course_id)
+        )
+        conn.commit()
+
+        return jsonify({"success": True, "message": "Course status updated"}), 200
+
+    except Exception as e:
+        conn.rollback()
+        print(f"[ERROR] {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @course_bp.route("/api/add/course/<course_id>/section", methods=["POST"])
 def add_section(course_id):
