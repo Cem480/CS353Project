@@ -27,6 +27,7 @@ import Grading from './pages/Grading/Grading';
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import ChangePasswordPage from './pages/ChangePasswordPage/ChangePasswordPage';
 import StudentFinancialAidPage from './pages/StudentFinancialAidPage/StudentFinancialAidPage'
+import AdminUserListPage from './pages/AdminUserListPage/AdminUserListPage';
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -121,6 +122,7 @@ function App() {
           element={<RoleProtectedRoute element={<GenerateReportPage />} allowedRole="admin" />} />
         <Route path="/admin/reports/:reportType/:reportId"
           element={<RoleProtectedRoute element={<ReportResultsPage />} allowedRole="admin" />} />
+        <Route path="/admin/users" element={<AdminUserListPage />} />
 
         {/* Fallbacks */}
         <Route path="/" element={<Navigate to="/login" replace />} />
