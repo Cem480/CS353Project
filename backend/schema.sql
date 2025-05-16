@@ -505,20 +505,6 @@ GROUP BY category;
 
 
 -- TRIGGERS
--- Update instructor rating when feedback is added
--- Trigger function to maintain admin.report_count
-CREATE OR REPLACE FUNCTION after_course_delete()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Decrease course count of instructor
-    UPDATE instructor
-    SET course_count = course_count - 1
-    WHERE id = OLD.creator_id;
-
-    RETURN OLD;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION decrement_enrollment_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -561,22 +547,6 @@ EXECUTE FUNCTION update_admin_report_count();
 
 ALTER TABLE admin_report
 ADD CONSTRAINT uq_admin_report UNIQUE (admin_id, report_id);
-
-
-CREATE OR REPLACE FUNCTION decrement_admin_report_count()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE admin
-    SET report_count = report_count - 1
-    WHERE id = OLD.admin_id;
-    RETURN OLD;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_decrement_admin_report_count
-AFTER DELETE ON report
-FOR EACH ROW
-EXECUTE FUNCTION decrement_admin_report_count();
 
 CREATE OR REPLACE FUNCTION update_instructor_rating()
 RETURNS TRIGGER AS $$
