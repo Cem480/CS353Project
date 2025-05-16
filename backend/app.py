@@ -55,6 +55,7 @@ def initialize_tables():
     user = os.getenv("POSTGRES_USER")
     host = os.getenv("DB_HOST")
     port = os.getenv("DB_PORT")
+    password = os.getenv("POSTGRES_PASSWORD")  # <-- fetch password from env
     schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
 
     print("Running schema.sql via psql CLI...")
@@ -68,7 +69,7 @@ def initialize_tables():
             "--file",
             schema_path,
         ],
-        env=os.environ,
+        env={**os.environ, "PGPASSWORD": password},  # <-- inject password here
     )
 
     if result.returncode != 0:
