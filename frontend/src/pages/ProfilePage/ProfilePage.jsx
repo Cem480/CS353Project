@@ -165,11 +165,19 @@ const InstructorPanel = ({ i_rating, course_count, experience_year, courses, fee
 
 
             <p>
-                <strong>Rating:</strong> {i_rating.toFixed(2)}{' '}
-                {Array.from({ length: fullStars }, (_, idx) => (
-                    <span key={idx} className="yellow-star">★</span>
-                ))}
+                <strong>Rating:</strong>{' '}
+                {feedbacks.length === 0 ? (
+                    "No ratings yet"
+                ) : (
+                    <>
+                        {i_rating.toFixed(2)}{' '}
+                        {Array.from({ length: fullStars }, (_, idx) => (
+                            <span key={idx} className="yellow-star">★</span>
+                        ))}
+                    </>
+                )}
             </p>
+
             <p><strong>Experience:</strong> {experience_year} years</p>
 
             <h4>Your Courses ({course_count})</h4>

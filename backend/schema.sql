@@ -1143,7 +1143,6 @@ ALTER TABLE section
 
 -- 2. Content
 ALTER TABLE content
-    DROP CONSTRAINT IF EXISTS content_course_sec_fkey,
     ADD CONSTRAINT content_course_sec_fkey
     FOREIGN KEY (course_id, sec_id) REFERENCES section(course_id, sec_id)
     ON DELETE CASCADE;
@@ -1164,21 +1163,18 @@ ALTER TABLE enroll
 
 -- 5. Complete
 ALTER TABLE complete
-    DROP CONSTRAINT IF EXISTS complete_course_id_fkey,
     ADD CONSTRAINT complete_course_id_fkey
     FOREIGN KEY (course_id) REFERENCES course(course_id)
     ON DELETE CASCADE;
 
 -- 6. Submit
 ALTER TABLE submit
-    DROP CONSTRAINT IF EXISTS submit_course_id_fkey,
     ADD CONSTRAINT submit_course_id_fkey
     FOREIGN KEY (course_id) REFERENCES course(course_id)
     ON DELETE CASCADE;
 
 -- 7. Comment
 ALTER TABLE comment
-    DROP CONSTRAINT IF EXISTS comment_course_id_fkey,
     ADD CONSTRAINT comment_course_id_fkey
     FOREIGN KEY (course_id) REFERENCES course(course_id)
     ON DELETE CASCADE;
@@ -1192,66 +1188,53 @@ ALTER TABLE apply_financial_aid
 
 -- 9. Earn Certificate
 ALTER TABLE earn_certificate
-    DROP CONSTRAINT IF EXISTS earn_certificate_course_id_fkey,
     ADD CONSTRAINT earn_certificate_course_id_fkey
     FOREIGN KEY (course_id) REFERENCES course(course_id)
     ON DELETE CASCADE;
 
 -- 10. Course Reports (optional, if you're maintaining historical data carefully)
 ALTER TABLE course_report
-    DROP CONSTRAINT IF EXISTS course_report_id_fkey,
     ADD CONSTRAINT course_report_id_fkey
     FOREIGN KEY (report_id) REFERENCES report(report_id)
     ON DELETE CASCADE;
 
 -- Ensure content deletions clean up dependent task/document/visual_material
 ALTER TABLE task
-    DROP CONSTRAINT IF EXISTS task_content_fkey,
     ADD CONSTRAINT task_content_fkey
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
     ON DELETE CASCADE;
 
 ALTER TABLE document
-    DROP CONSTRAINT IF EXISTS document_content_fkey,
     ADD CONSTRAINT document_content_fkey
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
     ON DELETE CASCADE;
 
 ALTER TABLE visual_material
-    DROP CONSTRAINT IF EXISTS visual_material_content_fkey,
     ADD CONSTRAINT visual_material_content_fkey
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES content(course_id, sec_id, content_id)
     ON DELETE CASCADE;
 
--- Ensure task deletions cascade to assessment and assignment
 ALTER TABLE assessment
-    DROP CONSTRAINT IF EXISTS assessment_task_fkey,
     ADD CONSTRAINT assessment_task_fkey
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES task(course_id, sec_id, content_id)
     ON DELETE CASCADE;
 
 ALTER TABLE assignment
-    DROP CONSTRAINT IF EXISTS assignment_task_fkey,
     ADD CONSTRAINT assignment_task_fkey
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES task(course_id, sec_id, content_id)
     ON DELETE CASCADE;
 
--- Ensure assessment deletions cascade to question
 ALTER TABLE question
-    DROP CONSTRAINT IF EXISTS question_assessment_fkey,
     ADD CONSTRAINT question_assessment_fkey
     FOREIGN KEY (course_id, sec_id, content_id) REFERENCES assessment(course_id, sec_id, content_id)
     ON DELETE CASCADE;
 
--- Ensure question deletions cascade to multiple_choice and open_ended
 ALTER TABLE multiple_choice
-    DROP CONSTRAINT IF EXISTS mc_question_fkey,
     ADD CONSTRAINT mc_question_fkey
     FOREIGN KEY (course_id, sec_id, content_id, question_id) REFERENCES question(course_id, sec_id, content_id, question_id)
     ON DELETE CASCADE;
 
 ALTER TABLE open_ended
-    DROP CONSTRAINT IF EXISTS oe_question_fkey,
     ADD CONSTRAINT oe_question_fkey
     FOREIGN KEY (course_id, sec_id, content_id, question_id) REFERENCES question(course_id, sec_id, content_id, question_id)
     ON DELETE CASCADE;
@@ -1379,9 +1362,10 @@ ON DELETE CASCADE;
 ALTER TABLE comment
 DROP CONSTRAINT IF EXISTS comment_user_id_fkey,
 ADD CONSTRAINT comment_user_id_fkey
-FOREIGN KEY
+FOREIGN KEY (user_id) REFERENCES "user"(id);
 
 -- INSERTIONS
+-- password456
 INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, password, registration_date, birth_date, role)
         VALUES 
 (
@@ -1391,7 +1375,7 @@ INSERT INTO "user" (id, first_name, middle_name, last_name, phone_no, email, pas
     'Doe',
     '555-1234',
     'john.doe@example.com',
-    'password123',
+    'scrypt:32768:8:1$f0sM9rEtnLqL8Xta$49031c97dd6b4b3ff3639f5387b662416e7ca51878275e6f34a2a6a38b48ad36dbc4f20447620d6a177e1b2e82289d6a2487783596872df03695b76d1ef8c69f',
     CURRENT_DATE,
     '1995-06-15',
     'student'
@@ -1917,10 +1901,6 @@ INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct
 INSERT INTO certificate (certificate_id, title, body)
 VALUES ('CERT0001', 'Python Completion Certificate', 'Certified completion of Intro to Python course.');
 
--- Earned certificate
-INSERT INTO earn_certificate (student_id, course_id, certificate_id, certification_date)
-VALUES ('U0000001', 'C0000001', 'CERT0001', '2025-05-13');
-
 -- Insert comment by student
 INSERT INTO comment (course_id, sec_id, content_id, user_id, text, timestamp)
 VALUES ('C0000001', 'S000001', 'CT000001', 'U0000001', 'Very helpful quiz!', CURRENT_TIMESTAMP);
@@ -1928,6 +1908,7 @@ VALUES ('C0000001', 'S000001', 'CT000001', 'U0000001', 'Very helpful quiz!', CUR
 -- Insert Enrollment Relation Mock Data
 INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate) VALUES
 -- Student 20
+('C0000001', 'U0000001', CURRENT_DATE - INTERVAL '20 days', 100),
 ('C0000112', 'U0000020', CURRENT_DATE - INTERVAL '20 days', 100),
 ('C0000113', 'U0000020', CURRENT_DATE - INTERVAL '18 days', 90),
 ('C0000114', 'U0000020', CURRENT_DATE - INTERVAL '16 days', 0),
@@ -1965,6 +1946,9 @@ INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate) VALUES
 -- Student 28
 ('C0000113', 'U0000028', CURRENT_DATE - INTERVAL '4 days', 60);
 
+-- Earned certificate
+INSERT INTO earn_certificate (student_id, course_id, certificate_id, certification_date)
+VALUES ('U0000001', 'C0000001', 'CERT0001', '2025-05-13');
 
 -- Insert Financial Aid Application Mock Data
 INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status, evaluator_id)
