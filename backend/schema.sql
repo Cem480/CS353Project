@@ -534,21 +534,6 @@ AFTER DELETE ON enroll
 FOR EACH ROW
 EXECUTE FUNCTION decrement_enrollment_count();
 
-CREATE OR REPLACE FUNCTION decrement_certificate_count()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE student
-    SET certificate_count = certificate_count - 1
-    WHERE ID = OLD.student_id;
-    RETURN OLD;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_decrement_certificate_count
-AFTER DELETE ON earn_certificate
-FOR EACH ROW
-EXECUTE FUNCTION decrement_certificate_count();
-
 CREATE OR REPLACE FUNCTION update_admin_report_count()
 RETURNS TRIGGER AS $$
 BEGIN

@@ -42,3 +42,25 @@ const BASE_URL = 'http://localhost:5001';
       throw err;
     }
   }
+
+  export async function get_student_financial_aid_applications(studentId) {
+    try {
+      const response = await fetch(`${BASE_URL}/api/student/${studentId}/financial_aid_applications`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      // Log status and headers
+      console.log("Response status:", response.status);
+      console.log("Content-Type:", response.headers.get("content-type"));
+
+      // Try parsing JSON
+      const data = await response.json();
+      console.log("Response JSON:", data);
+      return data;
+
+    } catch (err) {
+      console.error("Failed to fetch student's financial aid applications:", err);
+      throw err;
+    }
+  }

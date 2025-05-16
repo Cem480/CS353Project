@@ -26,6 +26,7 @@ import AdminReportsPage from './pages/AdminReportsPage/AdminReportsPage';
 import Grading from './pages/Grading/Grading';
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import ChangePasswordPage from './pages/ChangePasswordPage/ChangePasswordPage';
+import StudentFinancialAidPage from './pages/StudentFinancialAidPage/StudentFinancialAidPage'
 
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
@@ -90,6 +91,9 @@ function App() {
 
         {/* NEW — certificates page */}
         <Route path="/my-certificates" element={<ProtectedRoute element={<CertificatesPage />} />} />
+
+        {/* NEW — Student Financial Aid page */}
+        <Route path="/student/fapplications" element={<ProtectedRoute element={<StudentFinancialAidPage />} />} />
 
 
         {/* Instructor-only */}

@@ -127,6 +127,7 @@ const MainPage = () => {
             <a href="/degrees">Online Degrees</a>
             <a href="/my-learning">My Learning</a>
             <a href="/my-certificates">My Certificates</a>
+            <a href="/student/fapplications">My Fapplications</a>
           </div>
         </div>
         <div className="main-page-header-right">
