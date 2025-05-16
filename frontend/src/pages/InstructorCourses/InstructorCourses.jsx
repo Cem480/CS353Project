@@ -25,6 +25,10 @@ const InstructorCourses = () => {
   const handleEditClick = (courseId) => {
     navigate(`/course/${courseId}/content`);
   };
+  
+  const handleCourseDetailsClick = (courseId) => {
+    navigate(`/course-details?id=${courseId}`);
+  };
 
 
   useEffect(() => {
@@ -83,12 +87,22 @@ const InstructorCourses = () => {
                 <div className="instructor-course-meta"><strong>Level:</strong> {course.difficulty_level || 'N/A'}</div>
                 <div className="instructor-course-meta"><strong>Students:</strong> {course.students}</div>
                 <div className="instructor-course-meta"><strong>Status:</strong> <span className="instructor-course-status">{course.status}</span></div>
-                <button 
-                  className="edit-course-button" 
-                  onClick={() => handleEditClick(course.course_id)}
-                >
-                  ✏️ Edit
-                </button>
+                <div className="instructor-course-actions">
+                  <button 
+                    className="details-button" 
+                    onClick={() => handleCourseDetailsClick(course.course_id)}
+                  >
+                    Course Details
+                  </button>
+                  
+                  <button 
+                    className="edit-button" 
+                    onClick={() => handleEditClick(course.course_id)}
+                  >
+                    ✏️ Edit
+                  </button>
+                </div>
+
               </div>
             ))
           )}

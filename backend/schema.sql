@@ -1949,3 +1949,25 @@ VALUES ('U0000001', 'C0000001', 'CERT0001', '2025-05-13');
 -- Insert comment by student
 INSERT INTO comment (course_id, sec_id, content_id, user_id, text, timestamp)
 VALUES ('C0000001', 'S000001', 'CT000001', 'U0000001', 'Very helpful quiz!', CURRENT_TIMESTAMP);
+
+-- Insert Financial Aid Application Mock Data
+INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status, evaluator_id)
+VALUES ('C0000111', 'U0000020', 18000.00, 'Requesting aid due to financial constraints.', 'approved', 'U0000013');
+
+INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status)
+VALUES ('C0000111', 'U0000021', 100.00, 'Currently unemployed, seeking support.', 'pending');
+
+INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status, evaluator_id)
+VALUES ('C0000116', 'U0000022', 10.00, 'Low-income background, passionate about learning.', 'approved', 'U0000013');
+
+INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status)
+VALUES ('C0000111', 'U0000023', 1800.00, 'Requesting aid due to financial constraints.', 'pending');
+
+INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status)
+VALUES ('C0000114', 'U0000023', 180.00, 'Looking for creative career development.', 'pending');
+
+INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status, evaluator_id)
+VALUES ('C0000116', 'U0000023', 200000.00, 'Interested in architecture but cannot afford tuition.', 'rejected', 'U0000013');
+
+INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status, evaluator_id)
+VALUES ('C0000111', 'U0000022', 180000.00, 'Requesting aid due to financial constraints.', 'rejected', 'U0000013');

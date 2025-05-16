@@ -330,8 +330,22 @@ const CourseDetails = () => {
           <div className="course-details-enrollment-card">
             <h2>{title}</h2>
             <div className="course-details-enrollment-price">{price}</div>
-
-            {isEnrolled ? (
+            {userData?.role === 'instructor' ? (
+                <>
+                  <button 
+                    className="course-details-apply-button" 
+                    onClick={() => navigate(`/course/${courseId}/content`)}
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button 
+                    className="course-details-apply-button" 
+                    onClick={() => navigate(`/instructor/grading`)}
+                  >
+                    📝 Grading
+                  </button>
+                </>
+              ) : isEnrolled ? (
               <button className="course-details-continue-button" onClick={() => navigate('/my-learning')}>
                 Continue Learning
               </button>
