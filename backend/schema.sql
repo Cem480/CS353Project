@@ -1566,8 +1566,7 @@ INSERT INTO visual_material (course_id, sec_id, content_id, duration, body)
 -- NOTIFICATION TRIGGER TEST DATA
 
 -- 1. Student enrollment to trigger enrollment notifications
-INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate)
-VALUES ('C0000001', 'U0000001', CURRENT_DATE, 0);
+-- Deleted this enrollment because user did not exist. Added other enrollments later
 
 -- 2. Financial aid application to trigger financial_aid notification
 INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status)
@@ -1949,6 +1948,48 @@ VALUES ('U0000001', 'C0000001', 'CERT0001', '2025-05-13');
 -- Insert comment by student
 INSERT INTO comment (course_id, sec_id, content_id, user_id, text, timestamp)
 VALUES ('C0000001', 'S000001', 'CT000001', 'U0000001', 'Very helpful quiz!', CURRENT_TIMESTAMP);
+
+-- Insert Enrollment Relation Mock Data
+INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate) VALUES
+-- Student 20
+('C0000112', 'U0000020', CURRENT_DATE - INTERVAL '20 days', 100),
+('C0000113', 'U0000020', CURRENT_DATE - INTERVAL '18 days', 90),
+('C0000114', 'U0000020', CURRENT_DATE - INTERVAL '16 days', 0),
+('C0000115', 'U0000020', CURRENT_DATE - INTERVAL '14 days', 65),
+('C0000116', 'U0000020', CURRENT_DATE - INTERVAL '12 days', 0),
+('C0000117', 'U0000020', CURRENT_DATE - INTERVAL '10 days', 100),
+('C0000118', 'U0000020', CURRENT_DATE - INTERVAL '8 days', 100),
+('C0000119', 'U0000020', CURRENT_DATE - INTERVAL '6 days', 25),
+
+-- Student 21
+('C0000112', 'U0000021', CURRENT_DATE - INTERVAL '7 days', 10),
+('C0000113', 'U0000021', CURRENT_DATE - INTERVAL '2 days', 100),
+
+-- Student 22
+('C0000114', 'U0000022', CURRENT_DATE - INTERVAL '12 days', 0),
+('C0000115', 'U0000022', CURRENT_DATE - INTERVAL '3 days', 45),
+
+-- Student 23
+('C0000118', 'U0000023', CURRENT_DATE - INTERVAL '1 day', 75),
+
+-- Student 24
+('C0000117', 'U0000024', CURRENT_DATE - INTERVAL '14 days', 5),
+('C0000118', 'U0000024', CURRENT_DATE - INTERVAL '9 days', 55),
+
+-- Student 25
+('C0000119', 'U0000025', CURRENT_DATE - INTERVAL '20 days', 100),
+('C0000110', 'U0000025', CURRENT_DATE - INTERVAL '15 days', 90),
+
+-- Student 26
+('C0000111', 'U0000026', CURRENT_DATE - INTERVAL '8 days', 40),
+
+-- Student 27
+('C0000112', 'U0000027', CURRENT_DATE - INTERVAL '6 days', 20),
+
+-- Student 28
+('C0000113', 'U0000028', CURRENT_DATE - INTERVAL '4 days', 60);
+
+
 
 -- Insert Financial Aid Application Mock Data
 INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status, evaluator_id)
