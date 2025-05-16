@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../../services/auth';
-import NotificationButton from '../../components/NotificationButton';
 import './ProfilePage.css';
 
 /* ───── helper for nice dates (e.g. 30 Apr 2025) ───── */
@@ -44,7 +43,6 @@ const ProfilePage = () => {
             } catch (e) { setError(e.message); }
             finally { setLoading(false); }
         };
-        
         fetchProfile();
     }, [userId]);
 
@@ -68,7 +66,7 @@ const ProfilePage = () => {
                     <span className="logo-text">LearnHub</span>
                 </div>
                 <div className="header-right">
-                    <NotificationButton className="notification-btn" />
+                    <button className="notification-btn">🔔</button>
                     <button className="profile-icon" onClick={handleLogout}>{full_name[0]}</button>
                 </div>
             </header>
