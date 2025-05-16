@@ -1154,6 +1154,27 @@ AFTER DELETE ON course
 FOR EACH ROW
 EXECUTE FUNCTION decrement_instructor_course_count();
 
+-- Thanks to this trigger an approved financial aid will be reflected to the enrollment
+CREATE OR REPLACE FUNCTION enroll_on_financial_aid_approval()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Only proceed if status is approved
+    IF NEW.status = 'approved' THEN
+        -- Insert into enroll if not already present
+        INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate)
+        VALUES (NEW.course_id, NEW.student_id, CURRENT_DATE, 0)
+        ON CONFLICT (course_id, student_id) DO NOTHING;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_enroll_after_financial_aid_approval
+AFTER INSERT OR UPDATE OF status
+ON apply_financial_aid
+FOR EACH ROW
+EXECUTE FUNCTION enroll_on_financial_aid_approval();
+
 
 -- CASCADING DELETE CONSTRAINTS (if not already set manually)
 -- If possible, modify foreign keys on dependent tables like this:
@@ -1988,7 +2009,6 @@ INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate) VALUES
 
 -- Student 28
 ('C0000113', 'U0000028', CURRENT_DATE - INTERVAL '4 days', 60);
-
 
 
 -- Insert Financial Aid Application Mock Data
