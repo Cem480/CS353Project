@@ -29,4 +29,57 @@
     justify-content: space-between;
     max-width: 300px;
   }
+
+
+  .grading-card-container {
+    display: flex;
+    flex-direction: column; /* ⬅️ Stack vertically */
+    gap: 1rem;
+    align-items: stretch;   /* optional: ensures full width */
+  }
+  
+  .grading-card {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%;  /* ⬅️ Ensures it spans the container width */
+  }  
+  
+  .submission-answers {
+    background-color: #eee;
+    padding: 0.5rem;
+    border-radius: 4px;
+    white-space: pre-wrap;
+  }
+  
+  .show-more-btn {
+    background-color: transparent;
+    color: #007bff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 5px;
+    padding: 0;
+  }
+  
+  .assignment-details,
+  .assessment-details {
+    margin-top: 10px;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+  }
+   
+  .grade-input.invalid {
+    border: 1px solid red;
+    background-color: #fff5f5;
+  }
+  
+  .grade-error-message {
+    color: red;
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
   

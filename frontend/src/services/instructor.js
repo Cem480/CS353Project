@@ -37,3 +37,19 @@ export async function getUngradedSubmissions(instructorId, sort = 'newest', limi
     throw error;
   }
 }
+
+export async function gradeSubmission(courseId, secId, contentId, studentId, grade) {
+  try {
+    const response = await fetch(`${BASE_URL}/api/grade/${courseId}/${secId}/${contentId}/${studentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ grade: parseInt(grade) })
+    });
+
+    return await response.json();
+  } catch (err) {
+    console.error("Error grading submission:", err);
+    return { success: false, message: "Failed to submit grade" };
+  }
+}
