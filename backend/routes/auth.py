@@ -343,3 +343,78 @@ def logout():
         jsonify({"success": True, "message": "Logged out successfully!"}),
         200,
     )
+
+
+@auth_bp.route("/api/delete_user", methods=["POST"])
+def delete_user():
+    if session.get("role") != "admin":
+        return jsonify({"success": False, "message": "Unauthorized access"}), 403
+
+    data = request.json
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return jsonify({"success": False, "message": "User ID is required"}), 400
+
+    conn = connect_project_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('SELECT id FROM "user" WHERE id = %s', (user_id,))
+        if not cursor.fetchone():
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+        cursor.execute('DELETE FROM "user" WHERE id = %s', (user_id,))
+        conn.commit()
+
+        return jsonify({"success": True, "message": "User deleted successfully"}), 200
+
+    except Exception as e:
+        conn.rollback()
+        print("Delete user error:", e)
+        return jsonify({"success": False, "message": "Internal server error"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@auth_bp.route("/api/get_users", methods=["GET"])
+def get_users():
+    if session.get("role") != "admin":
+        return jsonify({"success": False, "message": "Unauthorized access"}), 403
+
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    try:
+        cursor.execute(
+            """
+            SELECT id, first_name, last_name, email, phone_no, role
+            FROM "user"
+            ORDER BY role, last_name
+        """
+        )
+        rows = cursor.fetchall()
+
+        users = [
+            {
+                "id": row["id"],
+                "first_name": row["first_name"],
+                "last_name": row["last_name"],
+                "email": row["email"],
+                "phone_no": row["phone_no"],
+                "role": row["role"],
+            }
+            for row in rows
+        ]
+
+        return jsonify({"success": True, "users": users}), 200
+
+    except Exception as e:
+        print("Get users error:", e)
+        return jsonify({"success": False, "message": "Internal server error"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
