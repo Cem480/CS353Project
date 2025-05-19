@@ -1,12 +1,12 @@
-/* AddSection.css */
+/* AddSectionContent.css */
 
-.add-section-container {
+.add-content-container {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.section-header {
+.content-header {
   display: flex;
   align-items: center;
   margin-bottom: 30px;
@@ -26,7 +26,7 @@
   transform: translateX(-3px);
 }
 
-.section-header h1 {
+.content-header h1 {
   font-size: 1.8rem;
   color: #333;
   margin: 0;
@@ -40,8 +40,8 @@
   margin-bottom: 30px;
 }
 
-.form-title {
-  font-size: 1.4rem;
+.form-container h3 {
+  font-size: 1.3rem;
   margin-bottom: 20px;
   color: #333;
   border-bottom: 1px solid #e0e0e0;
@@ -110,12 +110,6 @@
   margin-left: 2px;
 }
 
-.form-row-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -165,11 +159,6 @@
 @media (max-width: 768px) {
   .form-container {
     padding: 20px;
-  }
-  
-  .form-row-2 {
-    grid-template-columns: 1fr;
-    gap: 15px;
   }
   
   .form-actions {

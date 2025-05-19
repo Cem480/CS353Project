@@ -51,31 +51,33 @@ import subprocess
 
 
 def initialize_tables():
-    db_name = os.getenv("POSTGRES_DB")
-    user = os.getenv("POSTGRES_USER")
-    host = os.getenv("DB_HOST")
-    port = os.getenv("DB_PORT")
-    password = os.getenv("POSTGRES_PASSWORD")  # <-- fetch password from env
+    """
+    Initializes database tables using Python's psycopg2 instead of the psql CLI tool
+    """
     schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
-
-    print("Running schema.sql via psql CLI...")
-    result = subprocess.run(
-        [
-            "psql",
-            f"--host={host}",
-            f"--port={port}",
-            f"--username={user}",
-            f"--dbname={db_name}",
-            "--file",
-            schema_path,
-        ],
-        env={**os.environ, "PGPASSWORD": password},  # <-- inject password here
-    )
-
-    if result.returncode != 0:
-        raise RuntimeError("❌ schema.sql failed to execute via psql")
-    print("✅ Tables initialized via psql")
-
+    
+    # Read the schema.sql file
+    with open(schema_path, 'r') as f:
+        schema_sql = f.read()
+    
+    print("Running schema.sql via Python connection...")
+    
+    # Connect to the project database
+    conn = connect_project_db()
+    conn.autocommit = True
+    cursor = conn.cursor()
+    
+    try:
+        # Execute the SQL commands
+        cursor.execute(schema_sql)
+        print("✅ Tables initialized successfully")
+    except Exception as e:
+        print(f"❌ Error initializing tables: {e}")
+        raise
+    finally:
+        # Close cursor and connection
+        cursor.close()
+        conn.close()
 
 @app.route("/")
 def home():

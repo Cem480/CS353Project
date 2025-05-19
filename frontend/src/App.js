@@ -15,6 +15,8 @@ import InstructorApplicationsPage from './pages/Applications/InstructorApplicati
 import InstructorMainPage from './pages/InstructorsMainPage/InstructorsMainPage';
 import CreateCourse from './pages/CreateCourse/CreateCourse';
 import AddSection from './pages/AddSection/AddSection';
+import AddSectionContent from './pages/AddSection/AddSectionContent';
+import CourseEditor from './pages/AddSection/CourseEditor'; // Import CourseEditor
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import CertificatesPage from './pages/CertificatesPage/CertificatesPage';
 import AdminMainPage from './pages/AdminMainPage/AdminMainPage';
@@ -28,7 +30,6 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import ChangePasswordPage from './pages/ChangePasswordPage/ChangePasswordPage';
 import StudentFinancialAidPage from './pages/StudentFinancialAidPage/StudentFinancialAidPage'
 import AdminUserListPage from './pages/AdminUserListPage/AdminUserListPage';
-
 import { isLoggedIn, getCurrentUser } from './services/auth';
 
 function App() {
@@ -102,15 +103,25 @@ function App() {
           element={<RoleProtectedRoute element={<InstructorMainPage />} allowedRole="instructor" />} />
         <Route path="/create-course"
           element={<RoleProtectedRoute element={<CreateCourse />} allowedRole="instructor" />} />
+        <Route path="/edit-course/:courseId"
+          element={<RoleProtectedRoute element={<CreateCourse />} allowedRole="instructor" />} />
         <Route path="/course/:courseId/add-section"
           element={<RoleProtectedRoute element={<AddSection />} allowedRole="instructor" />} />
+        <Route path="/course/:courseId/edit-section/:sectionId"
+          element={<RoleProtectedRoute element={<AddSection isEditMode={true} />} allowedRole="instructor" />} />
         <Route path="/applications"
           element={<RoleProtectedRoute element={<InstructorApplicationsPage />} allowedRole="instructor" />} />
         <Route path="/instructor/courses"
           element={<RoleProtectedRoute element={<InstructorCourses />} allowedRole="instructor" />} />
         <Route path="/instructor/grading"
           element={<RoleProtectedRoute element={<Grading />} allowedRole="instructor" />} />
-
+          
+        {/* Course Editor and Content Management Routes - Instructor Only */}
+        <Route path="/course/:courseId/content-editor"
+          element={<RoleProtectedRoute element={<CourseEditor />} allowedRole="instructor" />} />
+        <Route path="/course/:courseId/section/:sectionId/add-content"
+          element={<RoleProtectedRoute element={<AddSectionContent />} allowedRole="instructor" />} />
+          
         {/* Admin-only */}
         <Route path="/admin/dashboard"
           element={<RoleProtectedRoute element={<AdminMainPage />} allowedRole="admin" />} />

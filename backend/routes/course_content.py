@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from db import connect_project_db
 
 course_content_bp = Blueprint("course_content_bp", __name__)
@@ -12,7 +12,6 @@ course_content_bp = Blueprint("course_content_bp", __name__)
 @course_content_bp.route("/api/course-content/course/<course_id>/info", methods=["GET"])
 def get_course_content_info(course_id):
     try:
-
         conn = connect_project_db()
         cursor = conn.cursor()
         
@@ -21,16 +20,30 @@ def get_course_content_info(course_id):
         if cursor.fetchone() is None:
             return jsonify({"success": False, "message": "Course not found"}), 404
 
-        # Check if course status is accepted
-        cursor.execute("SELECT 1 FROM course WHERE course_id = %s AND status = 'accepted'", (course_id,))
-        if cursor.fetchone() is None:
-            return jsonify({"success": False, "message": "Course not accepted"}), 404
+        # Get the current user from session
+        current_user_id = session.get('user_id')
         
+        # Check if course status is accepted OR if the current user is the creator
+        cursor.execute("""
+            SELECT status, creator_id FROM course 
+            WHERE course_id = %s
+        """, (course_id,))
+        
+        course_info = cursor.fetchone()
+        if not course_info:
+            return jsonify({"success": False, "message": "Course not found"}), 404
+            
+        status, creator_id = course_info
+        
+        # Allow access if the course is accepted OR if the current user is the creator
+        if status != 'accepted' and (not current_user_id or str(current_user_id) != str(creator_id)):
+            return jsonify({"success": False, "message": "Course not accepted"}), 403
         
         cursor.execute("SELECT title, description FROM course WHERE course_id = %s", (course_id,))
         course = cursor.fetchone()
         if not course:
             return jsonify({"success": False, "message": "Course not found"}), 404
+        
         return jsonify({"title": course[0], "description": course[1]})
     
     except Exception as e:
@@ -107,15 +120,23 @@ def get_course_sections(course_id):
         conn = connect_project_db()
         cursor = conn.cursor()
 
-        # Check if course exists and is accepted
+        # Get the current user from session
+        current_user_id = session.get('user_id')
+        
+        # Check if course exists and get status and creator
         cursor.execute("""
-            SELECT status FROM course WHERE course_id = %s
+            SELECT status, creator_id FROM course WHERE course_id = %s
         """, (course_id,))
-        course = cursor.fetchone()
-        if not course:
+        
+        course_info = cursor.fetchone()
+        if not course_info:
             return jsonify({"success": False, "message": "Course not found"}), 404
-        if course[0] != "accepted":
-            return jsonify({"success": False, "message": "Course is not accepted"}), 403
+            
+        status, creator_id = course_info
+        
+        # Allow access if the course is accepted OR if the current user is the creator
+        if status != "accepted" and (not current_user_id or str(current_user_id) != str(creator_id)):
+            return jsonify({"success": False, "message": "Course not accessible"}), 403
 
         # Retrieve section list
         cursor.execute("""
@@ -138,7 +159,6 @@ def get_course_sections(course_id):
         if conn:
             conn.close()
 
-
 # Content list in a section
 @course_content_bp.route("/api/course-content/course/<course_id>/section/<section_id>/contents", methods=["GET"])
 def get_section_contents(course_id, section_id):
@@ -146,15 +166,23 @@ def get_section_contents(course_id, section_id):
         conn = connect_project_db()
         cursor = conn.cursor()
 
-        # Check if course exists and is accepted
+        # Get the current user from session
+        current_user_id = session.get('user_id')
+        
+        # Check if course exists and get status and creator
         cursor.execute("""
-            SELECT status FROM course WHERE course_id = %s
+            SELECT status, creator_id FROM course WHERE course_id = %s
         """, (course_id,))
-        course = cursor.fetchone()
-        if not course:
+        
+        course_info = cursor.fetchone()
+        if not course_info:
             return jsonify({"success": False, "message": "Course not found"}), 404
-        if course[0] != "accepted":
-            return jsonify({"success": False, "message": "Course is not accepted"}), 403
+            
+        status, creator_id = course_info
+        
+        # Allow access if the course is accepted OR if the current user is the creator
+        if status != "accepted" and (not current_user_id or str(current_user_id) != str(creator_id)):
+            return jsonify({"success": False, "message": "Course not accessible"}), 403
         
         # Check if section exists
         cursor.execute("""
@@ -163,7 +191,6 @@ def get_section_contents(course_id, section_id):
         """, (course_id, section_id))
         if not cursor.fetchone():
             return jsonify({"success": False, "message": "Section not found"}), 404
-
 
         cursor.execute("""
             SELECT
@@ -183,7 +210,6 @@ def get_section_contents(course_id, section_id):
     finally:
         cursor.close()
         conn.close()
-
 
 # find total allocated time and task count of not completed contents in a given section
 @course_content_bp.route("/api/course-content/course/<course_id>/section/<section_id>/incomplete-summary/<student_id>", methods=["GET"])

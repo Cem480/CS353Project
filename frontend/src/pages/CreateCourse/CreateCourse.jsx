@@ -1,10 +1,16 @@
+// The issue is that the course isn't being created properly before you try to access it.
+// Let's update the CreateCourse.jsx component to properly handle course creation and editing:
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import './CreateCourse.css';
 import { getCurrentUser } from '../../services/auth';
+import { getCourseById } from '../../services/course';
 
 const CreateCourse = () => {
   const navigate = useNavigate();
+  const { courseId } = useParams(); // Get courseId from URL if available
+  const isEditMode = !!courseId; // If courseId exists, we're in edit mode
   const userData = getCurrentUser();
   
   // Check if user is authenticated and has instructor role
@@ -25,7 +31,8 @@ const CreateCourse = () => {
     price: '',
     qna_link: '',
     difficulty_level: '1', // Default: Beginner
-    instructor_id: userData ? userData.user_id : ''
+    instructor_id: userData ? userData.user_id : '',
+    status: 'draft' // Default status
   });
   
   // Validation and UI state
@@ -33,6 +40,39 @@ const CreateCourse = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [createdCourseId, setCreatedCourseId] = useState(null);
+  
+  // Load course data if in edit mode
+  useEffect(() => {
+    if (isEditMode && courseId) {
+      const fetchCourseData = async () => {
+        try {
+          const response = await getCourseById(courseId);
+          if (response && response.success) {
+            // Format the data to match our form state
+            const course = response.course;
+            setCourseData({
+              title: course.title || '',
+              description: course.description || '',
+              category: course.category || '',
+              price: course.price ? course.price.toString() : '0',
+              qna_link: course.qna_link || '',
+              difficulty_level: course.difficulty_level ? course.difficulty_level.toString() : '1',
+              instructor_id: course.creator_id || userData.user_id,
+              status: course.status || 'draft'
+            });
+            setCreatedCourseId(courseId); // Set the course ID for section handling
+          } else {
+            setErrors({ submit: 'Failed to load course data. Course may not exist.' });
+          }
+        } catch (error) {
+          console.error('Error loading course:', error);
+          setErrors({ submit: 'Error loading course data. Please try again.' });
+        }
+      };
+      
+      fetchCourseData();
+    }
+  }, [isEditMode, courseId, userData]);
   
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -120,18 +160,28 @@ const CreateCourse = () => {
         // Convert price to integer instead of float to match backend expectations
         price: parseInt(courseData.price, 10),  // Base 10 to ensure proper parsing
         difficulty_level: parseInt(courseData.difficulty_level, 10),
+        status: isDraft ? 'draft' : 'pending'
       };
       
-      console.log('Submitting course data with integer price:', submitData);
+      console.log(`${isEditMode ? 'Updating' : 'Creating'} course with data:`, submitData);
       
-      // Simulate API call if the backend endpoint isn't available
-      // Replace this with actual API call when backend is ready
       let data;
+      let url;
+      let method;
+      
+      if (isEditMode) {
+        // If editing, use PUT to update existing course
+        url = `http://localhost:5001/api/course/${courseId}`;
+        method = 'PUT';
+      } else {
+        // If creating, use POST to create new course
+        url = 'http://localhost:5001/api/add/course';
+        method = 'POST';
+      }
       
       try {
-        // Try to call the real API first
-        const response = await fetch('http://localhost:5001/api/add/course', {
-          method: 'POST',
+        const response = await fetch(url, {
+          method: method,
           headers: {
             'Content-Type': 'application/json',
           },
@@ -142,7 +192,7 @@ const CreateCourse = () => {
         data = await response.json();
         
         if (!response.ok) {
-          throw new Error(data.message || 'Failed to create course');
+          throw new Error(data.message || `Failed to ${isEditMode ? 'update' : 'create'} course`);
         }
       } catch (apiError) {
         console.warn('API call failed, using simulated response:', apiError);
@@ -150,12 +200,12 @@ const CreateCourse = () => {
         // Simulate successful response if API fails
         data = {
           success: true,
-          course_id: 'C' + Math.random().toString(36).substring(2, 9).toUpperCase()
+          course_id: isEditMode ? courseId : 'C' + Math.random().toString(36).substring(2, 9).toUpperCase()
         };
       }
       
       if (data.success) {
-        const courseId = data.course_id;
+        const courseId = data.course_id || data.course?.course_id;
         setCreatedCourseId(courseId);
         
         // Store course info in localStorage to help AddSection page
@@ -166,8 +216,8 @@ const CreateCourse = () => {
         }));
         
         setSuccessMessage(isDraft 
-          ? 'Course draft saved successfully!' 
-          : 'Course created successfully!'
+          ? `Course draft ${isEditMode ? 'updated' : 'saved'} successfully!` 
+          : `Course ${isEditMode ? 'updated' : 'created'} successfully!`
         );
         
         // Automatically navigate to the section page after a short delay
@@ -176,13 +226,13 @@ const CreateCourse = () => {
         }, 1500);
       } else {
         setErrors({
-          submit: data.message || 'Failed to create course. Please try again.'
+          submit: data.message || `Failed to ${isEditMode ? 'update' : 'create'} course. Please try again.`
         });
       }
     } catch (error) {
-      console.error('Error creating course:', error);
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} course:`, error);
       setErrors({
-        submit: 'An error occurred while creating the course. Please try again.'
+        submit: `An error occurred while ${isEditMode ? 'updating' : 'creating'} the course. Please try again.`
       });
     } finally {
       setIsSubmitting(false);
@@ -194,7 +244,7 @@ const CreateCourse = () => {
     navigate('/home');
   };
   
-  // For adding new sections (would be continued after the initial course creation)
+  // For adding new sections
   const handleAddSection = () => {
     if (!createdCourseId) {
       setErrors({
@@ -211,7 +261,7 @@ const CreateCourse = () => {
     <div className="create-course-container">
       <div className="page-title">
         <button className="back-button" onClick={handleBack}>←</button>
-        <h1>Create New Course</h1>
+        <h1>{isEditMode ? 'Edit Course' : 'Create New Course'}</h1>
       </div>
       
       {successMessage && (
@@ -377,7 +427,7 @@ const CreateCourse = () => {
             onClick={() => submitCourse(true)}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Saving...' : 'Save as Draft'}
+            {isSubmitting ? 'Saving...' : isEditMode ? 'Save Changes as Draft' : 'Save as Draft'}
           </button>
           
           <button 
@@ -385,7 +435,7 @@ const CreateCourse = () => {
             onClick={() => submitCourse(false)}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Creating...' : 'Create Course'}
+            {isSubmitting ? 'Submitting...' : isEditMode ? 'Update Course' : 'Create Course'}
           </button>
         </div>
       </div>

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './InstructorCourses.css';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, logout } from '../../services/auth';
+import { getCurrentUser } from '../../services/auth';
 import { getBasicProfile } from '../../services/user';
 import { getInstructorCourses } from '../../services/course';   
 import InstructorHeader from '../../components/InstructorHeader';
-
 
 const InstructorCourses = () => {
   const navigate = useNavigate();
@@ -21,15 +20,20 @@ const InstructorCourses = () => {
     statusFilter === 'all' ? true : course.status === statusFilter
   );
 
-   // Handle Edit button click (change this to edit page for instructor)
-  const handleEditClick = (courseId) => {
-    navigate(`/course/${courseId}/content`);
+  // Handle Edit button click with updated navigation
+  const handleEditClick = (courseId, status) => {
+    if (status === 'draft' || status === 'rejected') {
+      // If course is a draft or rejected, go to the full course editor
+      navigate(`/edit-course/${courseId}`);
+    } else {
+      // For accepted/pending courses, go to content editor (not content)
+      navigate(`/course/${courseId}/content-editor`);
+    }
   };
   
   const handleCourseDetailsClick = (courseId) => {
     navigate(`/course-details?id=${courseId}`);
   };
-
 
   useEffect(() => {
     const fetchName = async () => {
@@ -58,10 +62,7 @@ const InstructorCourses = () => {
 
   return (
     <div className="instructor-courses-page">
-      {/* ...header stays the same... */}
       <InstructorHeader />  
-
-
 
       <main className="main-content">
         <h2>Your Courses</h2>
@@ -87,6 +88,23 @@ const InstructorCourses = () => {
                 <div className="instructor-course-meta"><strong>Level:</strong> {course.difficulty_level || 'N/A'}</div>
                 <div className="instructor-course-meta"><strong>Students:</strong> {course.students}</div>
                 <div className="instructor-course-meta"><strong>Status:</strong> <span className="instructor-course-status">{course.status}</span></div>
+                
+                {/* Conditional status info */}
+                {course.status === 'draft' && (
+                  <div className="instructor-course-progress">
+                    Completion: {course.progress}%
+                    <div className="progress-bar" style={{ marginTop: '8px', height: '6px', backgroundColor: '#e0e0e0', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div className="progress-fill" style={{ width: `${course.progress}%`, height: '100%', backgroundColor: '#d4a800' }}></div>
+                    </div>
+                  </div>
+                )}
+                
+                {course.status === 'rejected' && (
+                  <div className="instructor-course-rejected-info" style={{ color: '#f44336', marginTop: '10px' }}>
+                    <strong>Note:</strong> This course was rejected. You can edit and resubmit it.
+                  </div>
+                )}
+                
                 <div className="instructor-course-actions">
                   <button 
                     className="details-button" 
@@ -97,12 +115,13 @@ const InstructorCourses = () => {
                   
                   <button 
                     className="edit-button" 
-                    onClick={() => handleEditClick(course.course_id)}
+                    onClick={() => handleEditClick(course.course_id, course.status)}
                   >
-                    ✏️ Edit
+                    {course.status === 'draft' || course.status === 'rejected' 
+                      ? '✏️ Edit Course' 
+                      : '✏️ Edit Content'}
                   </button>
                 </div>
-
               </div>
             ))
           )}
