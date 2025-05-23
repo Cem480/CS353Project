@@ -6,30 +6,7 @@ import uuid
 instructor_bp = Blueprint('instructor', __name__)
 
 # 4.1 Instructor Courses Page
-"""
-SQL Statements:
-SELECT c.course_id, c.title, c.description, c.price, c.difficulty_level, c.status,
-       COUNT(DISTINCT e.student_id) as students,
-       CASE 
-           WHEN c.status = 'draft' THEN 
-               COALESCE(
-                   100.0 * (
-                       SELECT COUNT(*)
-                       FROM section_content sc
-                       WHERE sc.section_id IN (
-                           SELECT section_id FROM section WHERE course_id = c.course_id
-                       )
-                   )
-                   / NULLIF((SELECT COUNT(*) FROM section WHERE course_id = c.course_id) * 5, 0),
-               0)
-           ELSE 100
-       END as progress
-FROM course c
-LEFT JOIN enroll e ON c.course_id = e.course_id
-WHERE c.creator_id = @instructorID
-GROUP BY c.course_id
-ORDER BY c.creation_date DESC;
-"""
+
 @instructor_bp.route('/api/instructor/<instructor_id>/courses', methods=['GET'])
 def get_instructor_courses(instructor_id):
     """Get all courses created by a specific instructor"""
@@ -96,32 +73,7 @@ def get_instructor_courses(instructor_id):
         }), 500
 
 # 4.2 Instructor Statistics Page
-"""
-SQL Statements:
--- Query for published course count
-SELECT COUNT(*) 
-FROM course 
-WHERE creator_id = @instructorID AND status = 'published';
 
--- Query for total students
-SELECT COUNT(DISTINCT e.student_id) 
-FROM enroll e
-JOIN course c ON e.course_id = c.course_id
-WHERE c.creator_id = @instructorID;
-
--- Query for average rating
-SELECT COALESCE(AVG(f.rating), 0)
-FROM feedback f
-JOIN course c ON f.course_id = c.course_id
-WHERE c.creator_id = @instructorID;
-
--- Query for monthly revenue (this query may need to be adjusted as there's no direct payment table in schema)
-SELECT COALESCE(SUM(c.price), 0)
-FROM course c
-JOIN enroll e ON c.course_id = e.course_id
-WHERE c.creator_id = @instructorID 
-AND e.enroll_date >= CURRENT_DATE - INTERVAL '30 days';
-"""
 @instructor_bp.route('/api/instructor/<instructor_id>/stats', methods=['GET'])
 def get_instructor_stats(instructor_id):
     """Get statistics for an instructor (published courses, total students, ratings, revenue)"""
@@ -188,30 +140,7 @@ def get_instructor_stats(instructor_id):
         }), 500
 
 # 4.3 View Student Enrollment and Progress
-"""
-SQL Statements:
-SELECT s.id as student_id, 
-       u.first_name, 
-       u.last_name, 
-       e.enroll_date, 
-       e.progress_rate,
-       COUNT(DISTINCT c.content_id) as total_content,
-       COUNT(DISTINCT comp.content_id) as completed_content
-FROM enroll e
-JOIN student s ON e.student_id = s.id
-JOIN "user" u ON s.id = u.id
-JOIN course co ON e.course_id = co.course_id
-LEFT JOIN section sec ON sec.course_id = co.course_id
-LEFT JOIN content c ON c.course_id = sec.course_id AND c.sec_id = sec.sec_id
-LEFT JOIN complete comp ON comp.course_id = c.course_id 
-                        AND comp.sec_id = c.sec_id 
-                        AND comp.content_id = c.content_id 
-                        AND comp.student_id = s.id 
-                        AND comp.is_completed = TRUE
-WHERE co.course_id = @courseID AND co.creator_id = @instructorID
-GROUP BY s.id, u.first_name, u.last_name, e.enroll_date, e.progress_rate
-ORDER BY e.progress_rate DESC, u.last_name, u.first_name;
-"""
+
 @instructor_bp.route('/api/instructor/<instructor_id>/course/<course_id>/students', methods=['GET'])
 def get_course_students(instructor_id, course_id):
     """Get all students enrolled in a specific course with their progress"""
@@ -283,28 +212,7 @@ def get_course_students(instructor_id, course_id):
         }), 500
 
 # 4.4 View Course Feedback/Ratings
-"""
-SQL Statements:
-SELECT f.course_id,
-       f.student_id,
-       u.first_name,
-       u.last_name,
-       f.rating,
-       f.comment,
-       f.feedback_date
-FROM feedback f
-JOIN student s ON f.student_id = s.id
-JOIN "user" u ON s.id = u.id
-JOIN course c ON f.course_id = c.course_id
-WHERE f.course_id = @courseID AND c.creator_id = @instructorID
-ORDER BY f.feedback_date DESC;
 
--- For average rating
-SELECT AVG(f.rating) as avg_rating, COUNT(*) as review_count
-FROM feedback f
-JOIN course c ON f.course_id = c.course_id
-WHERE f.course_id = @courseID AND c.creator_id = @instructorID;
-"""
 @instructor_bp.route('/api/instructor/<instructor_id>/course/<course_id>/feedback', methods=['GET'])
 def get_course_feedback(instructor_id, course_id):
     """Get all feedback for a specific course"""
