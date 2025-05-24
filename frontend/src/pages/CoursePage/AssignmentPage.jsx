@@ -247,26 +247,39 @@ const AssignmentPage = () => {
   
   return (
     <div className="course-page">
-      {/* Header */}
-      <header className="course-page-header">
-        <div className="course-page-logo" onClick={() => navigate('/home')}>
-          <span className="course-page-logo-text">LearnHub</span>
-        </div>
-        <div className="course-page-search-container">
-          <input type="text" placeholder="Search in course" className="course-page-search-input" />
-          <button className="course-page-search-button">Search</button>
-        </div>
-        <div className="course-page-header-right">
-          <div className="course-page-language-selector">
-            <span>English</span>
-            <span className="course-page-dropdown-arrow">▼</span>
-          </div>
-          <div className="course-page-notifications-icon" onClick={() => navigate('/notifications')}>🔔</div>
-          <div className="course-page-profile-icon" onClick={() => navigate('/profile')}>
-            {user.user_id.charAt(0).toUpperCase()}
-          </div>
-        </div>
-      </header>
+      <header className="main-page-header">
+  <div className="main-page-header-left">
+    <div className="main-page-logo">
+      <h1 onClick={() => navigate('/home')} style={{cursor: 'pointer'}}>LearnHub</h1>
+    </div>
+    <div className="main-page-nav-links">
+      <a href="/home">Home</a>
+      <a href="/degrees">Online Degrees</a>
+      <a href="/my-learning" className="active">My Learning</a>
+      <a href="/my-certificates">My Certificates</a>
+      <a href="/student/fapplications">My Fapplications</a>
+    </div>
+  </div>
+  <div className="main-page-header-right">
+    <div className="main-page-search-bar">
+      <input type="text" placeholder="Search in course..." />
+      <button className="main-page-search-button">Search</button>
+    </div>
+    <div 
+      className="notification-button" 
+      onClick={() => navigate('/notifications')} 
+      style={{ cursor: 'pointer' }}
+      title="View notifications"
+    >
+      <span className="notification-icon">🔔</span>
+    </div>
+    <div className="main-page-profile-dropdown">
+      <div className="main-page-profile-icon" onClick={() => navigate('/profile')}>
+        {user.user_id.charAt(0).toUpperCase()}
+      </div>
+    </div>
+  </div>
+</header>
       
       {/* Error Modal */}
       {showErrorModal && (

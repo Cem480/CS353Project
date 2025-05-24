@@ -92,34 +92,39 @@ const CertificatesPage = () => {
 
   return (
     <div className="my-learning-page">
-      {/* Header */}
-      <header className="main-header">
-        <div className="header-left">
-          <div className="logo">
-            <h1>LearnHub</h1>
-          </div>
-          <div className="nav-links">
-            <Link to="/home">Home</Link>
-            <Link to="/degrees">Online Degrees</Link>
-            <Link to="/my-learning">My Learning</Link>
-            <Link to="/my-certificates" className="active">My Certificates</Link>
-          </div>
-        </div>
-        <div className="header-right">
-          <div className="search-bar">
-            <input type="text" placeholder="Search my certificates..." />
-            <button className="search-button1">Search</button>
-          </div>
-          <NotificationButton />
-          <div 
-            className="profile-icon"
-            onClick={() => navigate('/profile')}
-            style={{ cursor: 'pointer' }}
-          >
-            JS
-          </div>
-        </div>
-      </header>
+      <header className="main-page-header">
+  <div className="main-page-header-left">
+    <div className="main-page-logo">
+      <h1>LearnHub</h1>
+    </div>
+    <div className="main-page-nav-links">
+      <Link to="/home">Home</Link>
+      <Link to="/degrees">Online Degrees</Link>
+      <Link to="/my-learning">My Learning</Link>
+      <Link to="/my-certificates" className="active">My Certificates</Link>
+      <Link to="/student/fapplications">My Fapplications</Link>
+    </div>
+  </div>
+  <div className="main-page-header-right">
+    <div className="main-page-search-bar">
+      <input type="text" placeholder="Search my certificates..." />
+      <button className="main-page-search-button">Search</button>
+    </div>
+    <div 
+      className="notification-button" 
+      onClick={() => navigate('/notifications')} 
+      style={{ cursor: 'pointer' }}
+      title="View notifications"
+    >
+      <span className="notification-icon">🔔</span>
+    </div>
+    <div className="main-page-profile-dropdown">
+      <div className="main-page-profile-icon" onClick={() => navigate('/profile')}>
+        JS
+      </div>
+    </div>
+  </div>
+</header>
 
         {/* Main Content */}
         <div className="certificates-page centered-layout">

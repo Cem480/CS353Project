@@ -207,23 +207,36 @@ const CourseDetails = () => {
 
   return (
     <div className="course-details">
-      {/* Header */}
-      <header className="course-details-course-header">
-        <div className="course-details-logo" onClick={() => navigate('/home')}>
-          <span className="course-details-logo-text">LearnHub</span>
-        </div>
-        <div className="course-details-search-container">
-          <input type="text" placeholder="Search in course" className="course-details-search-input" />
-          <button className="course-details-search-button">Search</button>
-        </div>
-        <div className="course-details-header-right">
-          <div className="course-details-language-selector">
-            <span>English</span>
-            <span className="course-details-dropdown-arrow">▼</span>
+      <header className="main-page-header">
+        <div className="main-page-header-left">
+          <div className="main-page-logo">
+            <h1 onClick={() => navigate('/home')} style={{cursor: 'pointer'}}>LearnHub</h1>
           </div>
-          <div className="course-details-notifications-icon">🔔</div>
-          <div className="course-details-profile-icon">
-            {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}
+          <div className="main-page-nav-links">
+            <a href="/home">Home</a>
+            <a href="/degrees" className="active">Online Degrees</a>
+            <a href="/my-learning">My Learning</a>
+            <a href="/my-certificates">My Certificates</a>
+            <a href="/student/fapplications">My Fapplications</a>
+          </div>
+        </div>
+        <div className="main-page-header-right">
+          <div className="main-page-search-bar">
+            <input type="text" placeholder="Search courses..." />
+            <button className="main-page-search-button">Search</button>
+          </div>
+          <div 
+            className="notification-button" 
+            onClick={() => navigate('/notifications')} 
+            style={{ cursor: 'pointer' }}
+            title="View notifications"
+          >
+            <span className="notification-icon">🔔</span>
+          </div>
+          <div className="main-page-profile-dropdown">
+            <div className="main-page-profile-icon">
+              {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}
+            </div>
           </div>
         </div>
       </header>

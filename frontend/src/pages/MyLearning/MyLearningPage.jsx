@@ -80,28 +80,36 @@ const MyLearningPage = () => {
 
   return (
     <div className="my-learning-page">
-      <header className="main-header">
-        <div className="header-left">
-          <div className="logo"><h1>LearnHub</h1></div>
-          <div className="nav-links">
+      <header className="main-page-header">
+        <div className="main-page-header-left">
+          <div className="main-page-logo">
+            <h1>LearnHub</h1>
+          </div>
+          <div className="main-page-nav-links">
             <Link to="/home">Home</Link>
             <Link to="/degrees">Online Degrees</Link>
             <Link to="/my-learning" className="active">My Learning</Link>
             <Link to="/my-certificates">My Certificates</Link>
+            <Link to="/student/fapplications">My Fapplications</Link>
           </div>
         </div>
-        <div className="header-right">
-          <div className="search-bar">
+        <div className="main-page-header-right">
+          <div className="main-page-search-bar">
             <input type="text" placeholder="Search my courses..." />
-            <button className="search-button1">Search</button>
+            <button className="main-page-search-button">Search</button>
           </div>
-          <NotificationButton />
           <div 
-            className="profile-icon"
-            onClick={() => navigate('/profile')}
+            className="notification-button" 
+            onClick={() => navigate('/notifications')} 
             style={{ cursor: 'pointer' }}
+            title="View notifications"
           >
-            {user.user_id.charAt(0).toUpperCase()}
+            <span className="notification-icon">🔔</span>
+          </div>
+          <div className="main-page-profile-dropdown">
+            <div className="main-page-profile-icon" onClick={() => navigate('/profile')}>
+              {user.user_id.charAt(0).toUpperCase()}
+            </div>
           </div>
         </div>
       </header>
