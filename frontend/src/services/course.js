@@ -287,33 +287,6 @@ export async function getContentDetail(courseId, sectionId, contentId) {
 }
 
 /**
- * Mark content as completed
- * IMPORTANT: Make sure contentId is properly passed!
- * @param {string} courseId - The course ID
- * @param {string} sectionId - The section ID
- * @param {string} contentId - The content ID
- * @param {string} studentId - The student ID
- * @returns {Promise<Object>} - Result
- */
-export async function markContentCompleted(courseId, sectionId, contentId, studentId) {
-  console.log('Marking content as completed:', {
-    courseId,
-    sectionId,
-    contentId, // Ensure this is properly defined
-    studentId
-  });
-  
-  if (!contentId) {
-    throw new Error('Content ID is required');
-  }
-  
-  return apiRequest(`${BASE_URL}/api/complete/${courseId}/${sectionId}/${contentId}/${studentId}`, {
-    method: 'POST',
-    body: JSON.stringify({ is_completed: true })
-  });
-}
-
-/**
  * Submit assignment file
  * @param {string} courseId - The course ID
  * @param {string} sectionId - The section ID
@@ -342,6 +315,14 @@ export async function submitAssignment(courseId, sectionId, contentId, studentId
  * @returns {Promise<Object>} - Result
  */
 export async function submitAssessment(courseId, sectionId, contentId, studentId, answers) {
+  console.log('Submitting assessment:', {
+    courseId,
+    sectionId,
+    contentId,
+    studentId,
+    answers
+  });
+  
   return apiRequest(`${BASE_URL}/api/submit/${courseId}/${sectionId}/${contentId}/${studentId}`, {
     method: 'POST',
     body: JSON.stringify({ answers })
@@ -384,34 +365,132 @@ export async function addContentComment(courseId, sectionId, contentId, userId, 
 }
 
 /**
- * Get student's completion status for a course
+ * Get student's completion status for a course - UPDATED VERSION
  * @param {string} courseId - The course ID
  * @param {string} studentId - The student ID 
  * @returns {Promise<Object>} - Completion status
  */
-export async function getCompletionStatus(courseId, studentId) {
+// Update your course.js - remove the getCompletionStatus function since the endpoint doesn't exist
+// and update the existing functions to work properly
+
+/**
+ * Get student's completion status for a course - SIMPLIFIED VERSION
+ * Uses existing grades API only
+ * @param {string} courseId - The course ID
+ * @param {string} studentId - The student ID 
+ * @returns {Promise<Object>} - Completion status
+ */
+export async function getCompletionStatusFromGrades(courseId, studentId) {
   try {
-    const response = await fetch(`${BASE_URL}/api/course/${courseId}/completion/${studentId}`, {
+    const response = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/grades/${studentId}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include'
     });
     
-    // If API doesn't exist yet
-    if (response.status === 404) {
-      return { completedItems: [] };
+    if (!response.ok) {
+      console.warn('Could not fetch grades for completion status');
+      return { completedItems: [], totalCompleted: 0 };
     }
+    
+    const gradesData = await response.json();
+    
+    // Convert grades data to completion format
+    const completedItems = gradesData
+      .filter(item => item.grade !== null)
+      .map(item => ({
+        section_id: item.section_id,
+        content_id: item.content_id,
+        is_completed: true,
+        grade: item.grade,
+        content_title: item.content_title,
+        section_title: item.section_title
+      }));
+    
+    return {
+      success: true,
+      completedItems,
+      totalCompleted: completedItems.length
+    };
+  } catch (error) {
+    console.error(`Error fetching completion status from grades:`, error);
+    return { completedItems: [], totalCompleted: 0 };
+  }
+}
+
+/**
+ * Mark content as completed - WORKING VERSION
+ * @param {string} courseId - The course ID
+ * @param {string} sectionId - The section ID
+ * @param {string} contentId - The content ID
+ * @param {string} studentId - The student ID
+ * @returns {Promise<Object>} - Result
+ */
+export async function markContentCompleted(courseId, sectionId, contentId, studentId) {
+  console.log('Marking content as completed:', {
+    courseId,
+    sectionId,
+    contentId,
+    studentId
+  });
+  
+  if (!contentId) {
+    throw new Error('Content ID is required');
+  }
+  
+  try {
+    const response = await fetch(`${BASE_URL}/api/complete/${courseId}/${sectionId}/${contentId}/${studentId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ is_completed: true })
+    });
     
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to fetch completion status');
+      throw new Error(data.message || 'Failed to mark content as completed');
     }
     
+    console.log('Content marked as completed successfully:', data);
     return data;
   } catch (error) {
-    console.error(`Error fetching completion status:`, error);
-    // Return empty object if API fails
-    return { completedItems: [] };
+    console.error('Error marking content as completed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if content is completed by looking at grades
+ * @param {string} courseId - The course ID
+ * @param {string} sectionId - The section ID
+ * @param {string} contentId - The content ID
+ * @param {string} studentId - The student ID
+ * @returns {Promise<Boolean>} - Is completed
+ */
+export async function checkContentCompleted(courseId, sectionId, contentId, studentId) {
+  try {
+    const gradesResponse = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/grades/${studentId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    
+    if (!gradesResponse.ok) {
+      return false;
+    }
+    
+    const grades = await gradesResponse.json();
+    
+    // Check if this specific content has a grade (meaning it's completed)
+    const contentGrade = grades.find(item => 
+      String(item.section_id) === String(sectionId) && 
+      String(item.content_id) === String(contentId)
+    );
+    
+    return contentGrade && contentGrade.grade !== null;
+  } catch (error) {
+    console.error('Error checking content completion:', error);
+    return false;
   }
 }

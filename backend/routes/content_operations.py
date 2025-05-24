@@ -3,7 +3,6 @@ from db import connect_project_db
 import psycopg2.extras
 from werkzeug.utils import secure_filename
 import os, json
-
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -213,6 +212,159 @@ def get_content_detail(course_id, sec_id, content_id):
             content_info["questions"] = [dict(q) for q in questions]
 
         return jsonify({"success": True, "content": content_info}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+completion_bp = Blueprint("completion", __name__)
+
+@completion_bp.route("/api/course/<course_id>/completion/<student_id>", methods=["GET"])
+def get_completion_status(course_id, student_id):
+    """Get completion status for a student in a course"""
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    try:
+        # Check if course exists and is accepted
+        cursor.execute("SELECT status FROM course WHERE course_id = %s", (course_id,))
+        course = cursor.fetchone()
+        if not course:
+            return jsonify({"success": False, "message": "Course not found"}), 404
+        if course["status"] != "accepted":
+            return jsonify({"success": False, "message": "Course is not accepted"}), 403
+
+        # Check if student exists
+        cursor.execute("SELECT 1 FROM student WHERE id = %s", (student_id,))
+        if not cursor.fetchone():
+            return jsonify({"success": False, "message": "Student not found"}), 404
+
+        # Check if student is enrolled
+        cursor.execute("""
+            SELECT 1 FROM enroll WHERE course_id = %s AND student_id = %s
+        """, (course_id, student_id))
+        if not cursor.fetchone():
+            return jsonify({"success": False, "message": "Student is not enrolled in this course"}), 403
+
+        # Get completion status from complete table
+        cursor.execute("""
+            SELECT 
+                comp.course_id,
+                comp.sec_id as section_id,
+                comp.content_id,
+                comp.is_completed,
+                c.title as content_title,
+                s.title as section_title
+            FROM complete comp
+            JOIN content c ON (comp.course_id, comp.sec_id, comp.content_id) = (c.course_id, c.sec_id, c.content_id)
+            JOIN section s ON (comp.course_id, comp.sec_id) = (s.course_id, s.sec_id)
+            WHERE comp.course_id = %s 
+              AND comp.student_id = %s 
+              AND comp.is_completed = TRUE
+            ORDER BY s.order_number, c.order_number
+        """, (course_id, student_id))
+        
+        completed_items = []
+        for row in cursor.fetchall():
+            completed_items.append(dict(row))
+
+        # Also get submitted assignments/assessments that have grades
+        cursor.execute("""
+            SELECT 
+                s.course_id,
+                s.sec_id as section_id,
+                s.content_id,
+                s.grade,
+                c.title as content_title,
+                sec.title as section_title,
+                TRUE as is_completed
+            FROM submit s
+            JOIN content c ON (s.course_id, s.sec_id, s.content_id) = (c.course_id, c.sec_id, c.content_id)
+            JOIN section sec ON (s.course_id, s.sec_id) = (sec.course_id, sec.sec_id)
+            WHERE s.course_id = %s 
+              AND s.student_id = %s 
+              AND s.grade IS NOT NULL
+            ORDER BY sec.order_number, c.order_number
+        """, (course_id, student_id))
+        
+        graded_items = []
+        for row in cursor.fetchall():
+            graded_items.append(dict(row))
+
+        # Combine both types of completed items
+        all_completed = completed_items + graded_items
+        
+        # Remove duplicates based on section_id and content_id
+        unique_completed = []
+        seen = set()
+        for item in all_completed:
+            key = (item['section_id'], item['content_id'])
+            if key not in seen:
+                seen.add(key)
+                unique_completed.append(item)
+
+        return jsonify({
+            "success": True,
+            "completedItems": unique_completed,
+            "totalCompleted": len(unique_completed)
+        }), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@completion_bp.route("/api/course/<course_id>/all-content/<student_id>", methods=["GET"])
+def get_all_content_with_status(course_id, student_id):
+    """Get all content in a course with completion status"""
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    try:
+        # Get all content in the course with completion status
+        cursor.execute("""
+            SELECT 
+                c.course_id,
+                c.sec_id as section_id,
+                c.content_id,
+                c.title as content_title,
+                c.content_type,
+                c.allocated_time,
+                s.title as section_title,
+                s.order_number as section_order,
+                c.order_number as content_order,
+                CASE 
+                    WHEN comp.is_completed = TRUE THEN TRUE
+                    WHEN sub.grade IS NOT NULL THEN TRUE
+                    ELSE FALSE
+                END as is_completed,
+                sub.grade
+            FROM content c
+            JOIN section s ON (c.course_id, c.sec_id) = (s.course_id, s.sec_id)
+            LEFT JOIN complete comp ON (c.course_id, c.sec_id, c.content_id) = (comp.course_id, comp.sec_id, comp.content_id)
+                AND comp.student_id = %s AND comp.is_completed = TRUE
+            LEFT JOIN submit sub ON (c.course_id, c.sec_id, c.content_id) = (sub.course_id, sub.sec_id, sub.content_id)
+                AND sub.student_id = %s
+            WHERE c.course_id = %s
+            ORDER BY s.order_number, c.order_number
+        """, (student_id, student_id, course_id))
+        
+        content_items = []
+        for row in cursor.fetchall():
+            content_items.append(dict(row))
+
+        return jsonify({
+            "success": True,
+            "contentItems": content_items
+        }), 200
 
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500

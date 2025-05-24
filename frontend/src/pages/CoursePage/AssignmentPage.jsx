@@ -57,6 +57,8 @@ const AssignmentPage = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [courseTitle, setCourseTitle] = useState('');
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submissionFile, setSubmissionFile] = useState(null);
 
   // Load assignment data
   useEffect(() => {
@@ -73,12 +75,38 @@ const AssignmentPage = () => {
           setAssignment(response.content);
           setCourseTitle(response.content.course_title || 'Course Title');
           
-          // Check if already completed
+          // Check if already completed or submitted
           if (response.content.is_completed) {
             setIsCompleted(true);
           }
         } else {
           throw new Error('Failed to fetch assignment details');
+        }
+        
+        // Check completion status from grades API
+        try {
+          const gradesResponse = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/grades/${user.user_id}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+          });
+          
+          if (gradesResponse.ok) {
+            const grades = await gradesResponse.json();
+            const assignmentGrade = grades.find(grade => 
+              grade.section_id === sectionId && 
+              grade.content_id === contentId
+            );
+            
+            if (assignmentGrade) {
+              if (assignmentGrade.grade !== null) {
+                setIsCompleted(true);
+                setIsSubmitted(true);
+              }
+            }
+          }
+        } catch (err) {
+          console.log('Could not fetch completion status:', err);
         }
         
         // Try to fetch comments
@@ -98,7 +126,7 @@ const AssignmentPage = () => {
     };
     
     loadAssignment();
-  }, [courseId, sectionId, contentId]);
+  }, [courseId, sectionId, contentId, user.user_id]);
   
   // Handle file selection
   const handleFileChange = (event) => {
@@ -123,11 +151,13 @@ const AssignmentPage = () => {
       // Mark as completed
       await markContentCompleted(courseId, sectionId, contentId, user.user_id);
       setIsCompleted(true);
+      setIsSubmitted(true);
       
       // Show success message
       alert('Assignment submitted successfully!');
       
-      // Reset file selection
+      // Reset file selection but keep the submitted file info
+      setSubmissionFile(selectedFile);
       setSelectedFile(null);
     } catch (err) {
       console.error('Error submitting assignment:', err);
@@ -307,34 +337,57 @@ const AssignmentPage = () => {
                   <p><strong>Due Date:</strong> {new Date(assignment.end_date).toLocaleDateString()}</p>
                 </div>
               )}
+              
+              {assignment?.assignment_file_url && (
+                <div className="course-assignment-dates">
+                  <p>
+                    <strong>Assignment File:</strong>{" "}
+                    <a href={`${BASE_URL}${assignment.assignment_file_url}`} download>
+                      Download Assignment File
+                    </a>
+                  </p>
+                </div>
+              )}
             </div>
             
             {/* Assignment upload form */}
-            <form className="course-assignment-form" onSubmit={handleSubmit}>
-              <div className="course-assignment-file-input">
-                <label className="course-assignment-file-label" htmlFor="assignment-file">
-                  Choose File
-                </label>
-                <input 
-                  type="file" 
-                  id="assignment-file" 
-                  onChange={handleFileChange} 
-                />
-                {selectedFile && (
-                  <div className="course-assignment-file-name">
-                    Selected file: {selectedFile.name}
-                  </div>
-                )}
+            {!isSubmitted ? (
+              <form className="course-assignment-form" onSubmit={handleSubmit}>
+                <div className="course-assignment-file-input">
+                  <label className="course-assignment-file-label" htmlFor="assignment-file">
+                    Choose File
+                  </label>
+                  <input 
+                    type="file" 
+                    id="assignment-file" 
+                    onChange={handleFileChange} 
+                  />
+                  {selectedFile && (
+                    <div className="course-assignment-file-name">
+                      Selected file: {selectedFile.name}
+                    </div>
+                  )}
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className="course-assignment-submit-button"
+                  disabled={isCompleted}
+                >
+                  Submit Assignment
+                </button>
+              </form>
+            ) : (
+              <div className="course-assignment-submitted">
+                <div className="course-assignment-submitted-info">
+                  <h3>✅ Assignment Submitted</h3>
+                  <p>Your assignment has been submitted successfully and is pending grading.</p>
+                  {submissionFile && (
+                    <p><strong>Submitted file:</strong> {submissionFile.name}</p>
+                  )}
+                </div>
               </div>
-              
-              <button 
-                type="submit" 
-                className="course-assignment-submit-button"
-                disabled={isCompleted}
-              >
-                Submit Assignment
-              </button>
-            </form>
+            )}
             
             {/* Comments section */}
             <div className="course-assignment-comments">
@@ -379,8 +432,8 @@ const AssignmentPage = () => {
               </div>
             </div>
             
-            {/* Mark as completed without submission - only show if not already completed */}
-            {!isCompleted && (
+            {/* Mark as completed without submission - only show if not already completed and not submitted */}
+            {!isCompleted && !isSubmitted && (
               <button 
                 className="course-assignment-mark-completed"
                 onClick={handleMarkAsCompleted}
