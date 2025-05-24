@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './CourseDetails.css';
 import { getCurrentUser } from '../../services/auth';
 import { enrollInCourse, checkEnrollment } from '../../services/student';
+import { submitFinancialAidApplication } from '../../services/financial_aid';
 
 import { 
   getCourseInfo, 
@@ -125,10 +126,34 @@ const CourseDetails = () => {
     setShowFinancialAid(!showFinancialAid);
   };
 
-  const handleSubmitFinancialAid = (e) => {
+  const handleSubmitFinancialAid = async (e) => {
     e.preventDefault();
-    alert("Financial aid application submitted successfully!");
-    setShowFinancialAid(false);
+    
+    // Get form data
+    const formData = new FormData(e.target);
+    const income = formData.get('income');
+    const statement = formData.get('reason');
+    
+    if (!income || !statement) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+    
+    try {
+      const result = await submitFinancialAidApplication(courseId, userData.user_id, {
+        income: parseFloat(income),
+        statement: statement
+      });
+      
+      if (result.success) {
+        alert("Financial aid application submitted successfully!");
+        setShowFinancialAid(false);
+      } else {
+        alert(`Failed to submit application: ${result.message}`);
+      }
+    } catch (err) {
+      alert(`Error submitting application: ${err.message}`);
+    }
   };
 
   const handleGoBack = () => {
@@ -404,12 +429,12 @@ const CourseDetails = () => {
               <form onSubmit={handleSubmitFinancialAid}>
                 <div className="course-details-form-group">
                   <label htmlFor="income">Annual Income (USD)</label>
-                  <input type="number" id="income" required />
+                  <input type="number" id="income" name="income" required />
                 </div>
                 
                 <div className="course-details-form-group">
                   <label htmlFor="reason">Why are you applying for financial aid?</label>
-                  <textarea id="reason" rows="4" required></textarea>
+                  <textarea id="reason" name="reason" rows="4" required></textarea>
                 </div>
                 
                 <button type="submit" className="course-details-submit-aid-button">Submit Application</button>

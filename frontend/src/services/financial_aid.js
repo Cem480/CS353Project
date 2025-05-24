@@ -12,7 +12,23 @@ const BASE_URL = 'http://localhost:5001';
       throw err;
     }
   }
-  
+  export async function submitFinancialAidApplication(courseId, studentId, applicationData) {
+  try {
+    const response = await fetch(`${BASE_URL}/api/financial_aid/${courseId}/${studentId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        income: applicationData.income,
+        statement: applicationData.statement
+      })
+    });
+    return await response.json();
+  } catch (err) {
+    console.error("Failed to submit financial aid application:", err);
+    throw err;
+  }
+}
   export async function getFinancialAidApplications(instructorId) {
     try {
       const response = await fetch(`${BASE_URL}/api/instructor/${instructorId}/financial_aid_applications`, {
