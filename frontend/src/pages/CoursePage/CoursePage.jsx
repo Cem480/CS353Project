@@ -811,13 +811,25 @@ const CoursePage = () => {
                 </div>
               ) : activeContent.content_type === 'document' ? (
                 <div className="course-page-document-container">
-                  {activeContent.document_url ? (
-                    <iframe
-                      src={`${BASE_URL}${activeContent.document_url}`}
-                      width="100%"
-                      height="500"
-                      title="Document viewer"
-                    ></iframe>
+                  {activeContent.document_view_url ? (
+                    <>
+                      <iframe
+                        src={`${BASE_URL}${activeContent.document_view_url}`}
+                        width="100%"
+                        height="500"
+                        title="Document viewer"
+                      ></iframe>
+                      <div style={{ marginTop: '10px' }}>
+                        <a
+                          href={`${BASE_URL}${activeContent.document_download_url}`}
+                          download
+                          className="course-page-download-link"
+                        >
+                          📥 Download this document
+                        </a>
+                      </div>
+                    </>
+                  
                   ) : (
                     <div className="course-page-placeholder">
                       <span className="course-page-placeholder-icon">📄</span>
