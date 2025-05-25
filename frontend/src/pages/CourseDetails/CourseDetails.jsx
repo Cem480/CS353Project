@@ -95,7 +95,7 @@ const CourseDetails = () => {
         if (userData.role === 'student') {
           try {
             const applied = await hasStudentAppliedForAid(courseId, userData.user_id);
-            setHasAppliedForAid(applied);
+            setHasAppliedForAid(applied.hasApplied);
             console.log("Already applied for aid?", applied);
           } catch (err) {
             console.error('Error checking financial aid application status:', err);
