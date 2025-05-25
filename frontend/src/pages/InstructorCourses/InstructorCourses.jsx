@@ -122,14 +122,7 @@ const InstructorCourses = () => {
                 )}
                 
                 <div className="instructor-course-actions">
-                  <button 
-                    className="details-button" 
-                    onClick={() => handleCourseDetailsClick(course.course_id)}
-                  >
-                    Course Details
-                  </button>
-                  
-                  {/* Conditionally render edit button - hide for rejected courses */}
+                  {/* Only show edit button for non-rejected courses */}
                   {shouldShowEditButton(course.status) && (
                     <button 
                       className="edit-button" 
@@ -142,14 +135,14 @@ const InstructorCourses = () => {
                   {/* Show a different message for rejected courses */}
                   {course.status === 'rejected' && (
                     <div className="rejected-course-message" style={{ 
-                      flex: 1, 
+                      width: '100%', 
                       textAlign: 'center', 
                       color: '#f44336', 
                       fontWeight: '500',
                       fontStyle: 'italic',
                       padding: '10px'
                     }}>
-                      Editing not available for rejected courses
+                      No actions available for rejected courses
                     </div>
                   )}
                 </div>
