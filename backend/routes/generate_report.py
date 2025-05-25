@@ -872,6 +872,12 @@ def student_general_report():
 @report_bp.route("/api/report/student/ranged", methods=["GET"])
 def student_ranged_report():
     admin_id = (request.args.get("admin_id") or "").strip()
+    print(
+        "[INFO] Received student_ranged report request from admin_id:",
+        admin_id,
+        flush=True,
+    )
+
     if not admin_id:
         return jsonify({"success": False, "message": "missing admin_id"}), 400
     if len(admin_id) > 8:
@@ -879,6 +885,8 @@ def student_ranged_report():
 
     start_raw = request.args.get("start")
     end_raw = request.args.get("end") or start_raw
+    print("[INFO] Raw date range:", start_raw, "to", end_raw, flush=True)
+
     if not start_raw:
         return jsonify({"success": False, "message": "missing start"}), 400
 
@@ -886,18 +894,27 @@ def student_ranged_report():
     if edt < sdt:
         return jsonify({"success": False, "message": "end < start"}), 400
 
+    print("[INFO] Parsed months: start =", sdt, "end =", edt, flush=True)
+
     months_needed = []
     cur_m = sdt
     while cur_m <= edt:
         months_needed.append(cur_m)
         cur_m = (cur_m + dt.timedelta(days=32)).replace(day=1)
 
+    print(
+        "[INFO] Months needed:",
+        [m.strftime("%Y-%m") for m in months_needed],
+        flush=True,
+    )
+
     conn = connect_project_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     try:
-        # 1) Insert or get parent report
         parent_id = new_report_id("SR")
+        print("[INFO] Generated parent report ID:", parent_id, flush=True)
+
         parent_upsert = """
         WITH ins AS (
             INSERT INTO report (
@@ -931,14 +948,13 @@ def student_ranged_report():
             ),
         )
         parent_id = cur.fetchone()["report_id"]
+        print("[INFO] Upserted parent report ID:", parent_id, flush=True)
 
-        # Link admin to parent report
         cur.execute(
             "INSERT INTO admin_report (admin_id, report_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
             (admin_id, parent_id),
         )
 
-        # 2) Load cached children
         cur.execute(
             """
             SELECT r.time_range_start AS month_start, sr.*
@@ -949,14 +965,19 @@ def student_ranged_report():
             (parent_id,),
         )
         cached = {r["month_start"]: r for r in cur.fetchall()}
+        print(f"[INFO] Loaded {len(cached)} cached monthly reports", flush=True)
 
         month_rows = []
         for m in months_needed:
             if m in cached:
+                print(
+                    f"[SKIP] Using cached report for {m.strftime('%Y-%m')}", flush=True
+                )
                 month_rows.append(cached[m])
                 continue
 
-            # a) Compute fresh metrics
+            print(f"[PROCESS] Creating report for {m.strftime('%Y-%m')}", flush=True)
+
             cur.execute(STUDENT_RANGE_SQL, (m, m) * 6)
             one = cur.fetchone()
             one["active_student_count"] = one.pop("active_students")
@@ -964,7 +985,6 @@ def student_ranged_report():
             cur.execute(STUDENT_RANGE_TOP_SQL, (m, m))
             tops = cur.fetchall()
 
-            # b) Insert or get child report
             child_id = new_report_id("SR")
             cur.execute(
                 """
@@ -1001,13 +1021,25 @@ def student_ranged_report():
             )
             child_id = cur.fetchone()["report_id"]
 
-            # Link admin to child report
             cur.execute(
                 "INSERT INTO admin_report (admin_id, report_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                 (admin_id, child_id),
             )
 
-            # c) Insert metrics
+            print(
+                "\n--- Inserting student_report for",
+                m.strftime("%Y-%m"),
+                "---",
+                flush=True,
+            )
+            print("Report ID:", child_id, flush=True)
+            print("Metrics:", one, flush=True)
+            print(
+                "Top Students:",
+                [tops[i]["id"] if i < len(tops) else None for i in range(3)],
+                flush=True,
+            )
+
             cur.execute(
                 """
                 INSERT INTO student_report (
@@ -1044,11 +1076,16 @@ def student_ranged_report():
             one["report_id"] = child_id
             month_rows.append(one)
 
-        # 4) Top-3 overall
         cur.execute(STUDENT_RANGE_TOP_SQL, (sdt, edt))
         overall_top = cur.fetchall()
+        print(
+            f"[INFO] Final top students in range: {[s['id'] for s in overall_top]}",
+            flush=True,
+        )
 
         conn.commit()
+
+        print("[SUCCESS] student_ranged report completed.\n", flush=True)
 
         return (
             jsonify(
@@ -1071,7 +1108,7 @@ def student_ranged_report():
 
     except Exception as e:
         conn.rollback()
-        print(f"[STUDENT RANGED ERROR] {e}")
+        print(f"[ERROR] student_ranged_report failed: {e}", flush=True)
         return jsonify({"success": False, "message": str(e)}), 500
 
     finally:
@@ -1656,6 +1693,7 @@ def instructor_ranged_report() -> tuple:
         )
         SELECT report_id FROM chosen;
         """
+
         cur.execute(
             parent_upsert_sql,
             {
@@ -1816,16 +1854,16 @@ def get_student_report(rid: str):
             overall_top = cur.fetchall()
 
             # c) pull last-month snapshot for summary
-            summary = monthly[-1] if monthly else {}
+            summary = next(
+                (row for row in reversed(monthly) if row.get("total_students", 0) > 0),
+                monthly[-1] if monthly else {},
+            )
+
             ranged_summary = {
                 "total_students": summary.get("total_students"),
                 "active_student_count": summary.get("active_student_count"),
-                "avg_enrollments_per_student": summary.get(
-                    "avg_enrollments_per_student"
-                ),
-                "avg_certificate_per_student": summary.get(
-                    "avg_certificate_per_student"
-                ),
+                "avg_enrollments_per_student": summary.get("avg_enroll_per_student"),
+                "avg_certificate_per_student": summary.get("avg_cert_per_student"),
                 "avg_completion_rate": summary.get("avg_completion_rate"),
                 "avg_age": summary.get("avg_age"),
                 "youngest_age": summary.get("youngest_age"),
@@ -2187,6 +2225,9 @@ def get_course_report(rid: str):
                             "price": comp_details.get("price"),
                             "instructor_name": comp_details.get("instructor_name"),
                         },
+                        "most_completed_count": r.get(
+                            "most_completed_count"
+                        ),  # ✅ Add this
                     }
                 )
 

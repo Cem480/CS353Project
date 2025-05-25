@@ -1,0 +1,154 @@
+\documentclass[10pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage[T1]{fontenc}
+
+\title{Lisp \& Scheme Lists: Cheat Sheet \& Edge Cases}
+\author{ }
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Creating Lists}
+
+\subsection*{Common Lisp}
+\begin{itemize}
+  \item \textbf{Quoting}
+\begin{lstlisting}[language=Lisp]
+'(a b c)    ; => (A B C)
+'()         ; => NIL
+'(())       ; => (NIL)
+\end{lstlisting}
+  \item \textbf{LIST function}
+\begin{lstlisting}[language=Lisp]
+(list 'a 'b 'c)  ; => (A B C)
+(list)           ; => NIL
+(list '())       ; => (NIL)
+\end{lstlisting}
+  \item \textbf{CONS}
+\begin{lstlisting}[language=Lisp]
+(cons 'a '())    ; => (A)
+(cons 'a '(b c)) ; => (A B C)
+(cons 'a 'b)     ; => (A . B)
+\end{lstlisting}
+  \item \textbf{MAKE-LIST}
+\begin{lstlisting}[language=Lisp]
+(make-list 3 :initial-element 'x) ; => (X X X)
+(make-list 0)                     ; => NIL
+\end{lstlisting}
+\end{itemize}
+
+\subsection*{Scheme}
+\begin{itemize}
+  \item \textbf{Quoting}
+\begin{lstlisting}[language=Lisp]
+'(a b c)  ; => (a b c)
+'()       ; => ()
+'(())     ; => (())
+\end{lstlisting}
+  \item \textbf{LIST function}
+\begin{lstlisting}[language=Lisp]
+(list 'a 'b 'c)  ; => (a b c)
+(list)           ; => ()
+(list '())       ; => (())
+\end{lstlisting}
+  \item \textbf{CONS}
+\begin{lstlisting}[language=Lisp]
+(cons 'a '())    ; => (a)
+(cons 'a '(b c)) ; => (a b c)
+(cons 'a 'b)     ; => (a . b)
+\end{lstlisting}
+\end{itemize}
+
+\section{Basic Operations}
+
+\subsection*{\texttt{car}, \texttt{cdr} and variants}
+\begin{lstlisting}[language=Lisp]
+(car '(1 2 3))  ; => 1
+(cdr '(1 2 3))  ; => (2 3)
+
+; Edge case:
+(car '())       ; => NIL in CL, error in Scheme
+\end{lstlisting}
+
+\subsection*{\texttt{append}}
+\begin{lstlisting}[language=Lisp]
+(append '(1 2) '(3 4)) ; => (1 2 3 4)
+(append '(1 2) '())     ; => (1 2)
+(append '() '(3 4))     ; => (3 4)
+\end{lstlisting}
+
+\subsection*{\texttt{reverse}}
+\begin{lstlisting}[language=Lisp]
+(reverse '(1 2 3)) ; => (3 2 1)
+(reverse '())      ; => NIL or ()
+\end{lstlisting}
+
+\subsection*{\texttt{length}}
+\begin{lstlisting}[language=Lisp]
+(length '(1 2 3)) ; => 3
+(length '())      ; => 0
+\end{lstlisting}
+\textbf{Improper lists cause error:} \texttt{(length '(1 2 . 3))}
+
+\section{Destructive / Mutating Operations}
+\subsection*{Common Lisp}
+\begin{itemize}
+  \item \texttt{setf (car ...)}, \texttt{setf (cdr ...)}:
+\begin{lstlisting}[language=Lisp]
+(defvar *lst* (list 1 2 3))
+(setf (car *lst*) 10)    ; => *lst* is now (10 2 3)
+(setf (cdr *lst*) '(20)) ; => *lst* is now (10 20)
+\end{lstlisting}
+  \item \texttt{nreverse}
+\begin{lstlisting}[language=Lisp]
+(defvar *lst2* (list 'a 'b 'c))
+(nreverse *lst2*)  ; => (C B A)
+; *lst2* is destroyed or changed in structure
+\end{lstlisting}
+\end{itemize}
+
+\subsection*{Scheme}
+\begin{itemize}
+  \item \texttt{set-car!}, \texttt{set-cdr!}:
+\begin{lstlisting}[language=Lisp]
+(define lst (list 1 2 3))
+(set-car! lst 10)       ; => (10 2 3)
+(set-cdr! lst '(20 30)) ; => (10 20 30)
+\end{lstlisting}
+\end{itemize}
+
+\section{Equality Predicates}
+\subsection*{Common Lisp}
+\begin{lstlisting}[language=Lisp]
+(eq '() '())                ; => T
+(eq (list 1 2) (list 1 2))  ; => NIL
+(equal (list 1 2) (list 1 2)) ; => T
+\end{lstlisting}
+
+\subsection*{Scheme}
+\begin{lstlisting}[language=Lisp]
+(eq? '() '())            ; => #t
+(equal? '(1 2) '(1 2))   ; => #t
+(eq? 100 100)            ; => #f or #t depending on implementation
+\end{lstlisting}
+
+\section{Improper Lists \& Dotted Pairs}
+\begin{lstlisting}[language=Lisp]
+'(1 . 2)       ; => (1 . 2)
+(car '(1 . 2)) ; => 1
+(cdr '(1 . 2)) ; => 2
+\end{lstlisting}
+\textbf{Many functions like \texttt{length} or \texttt{reverse} fail on improper lists.}
+
+\section{Surprising or Tricky Points}
+\begin{itemize}
+  \item \textbf{Empty list vs. NIL (CL):} They are the same object.
+  \item \textbf{Quoted list immutability:} Attempting to modify a quoted list can fail.
+  \item \textbf{Shared tails:} \texttt{(cons x (cdr y))} can lead to surprising side effects.
+  \item \textbf{Scheme \texttt{append} error:} \texttt{(append '(1 2 . 3) '(4))} is typically an error (first arg not a proper list).
+\end{itemize}
+
+\end{document}
