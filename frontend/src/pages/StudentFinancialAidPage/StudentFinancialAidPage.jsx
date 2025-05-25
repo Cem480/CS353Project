@@ -86,7 +86,7 @@ const MyFinancialAidApplicationsPage = () => {
               <div className="financial-aid-card" key={`${app.courseId}-${app.applicationDate}`}>
                 <div className="financial-aid-info">
                   <h3 className="financial-aid-title">{app.courseTitle}</h3>
-                  <p className="financial-aid-instructor">Instructor: {app.evaluatorName || '—'}</p>
+                  <p className="financial-aid-instructor">Evaluator: {app.evaluatorName || '—'}</p>
                   <div className="financial-aid-meta">Status: {app.status.charAt(0).toUpperCase() + app.status.slice(1)}</div>
                   <div className="financial-aid-meta">Income: ${app.income.toLocaleString()}</div>
                   <div className="financial-aid-meta">Applied on: {new Date(app.applicationDate).toLocaleDateString()}</div>
