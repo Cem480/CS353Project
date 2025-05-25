@@ -22,17 +22,33 @@ const InstructorCourses = () => {
 
   // Handle Edit button click with updated navigation
   const handleEditClick = (courseId, status) => {
-    if (status === 'draft' || status === 'rejected') {
-      // If course is a draft or rejected, go to the full course editor
+    if (status === 'draft') {
+      // If course is a draft, go to the full course editor
       navigate(`/edit-course/${courseId}`);
-    } else {
-      // For accepted/pending courses, go to content editor (not content)
+    } else if (status === 'accepted' || status === 'pending') {
+      // For accepted/pending courses, go to content editor
       navigate(`/course/${courseId}/content-editor`);
     }
+    // Note: Rejected courses don't have edit functionality
   };
   
   const handleCourseDetailsClick = (courseId) => {
     navigate(`/course-details?id=${courseId}`);
+  };
+
+  // Function to determine if edit button should be shown
+  const shouldShowEditButton = (status) => {
+    return status !== 'rejected';
+  };
+
+  // Function to get edit button text based on status
+  const getEditButtonText = (status) => {
+    if (status === 'draft') {
+      return '✏️ Edit Course';
+    } else if (status === 'accepted' || status === 'pending') {
+      return '✏️ Edit Content';
+    }
+    return '';
   };
 
   useEffect(() => {
@@ -100,8 +116,8 @@ const InstructorCourses = () => {
                 )}
                 
                 {course.status === 'rejected' && (
-                  <div className="instructor-course-rejected-info" style={{ color: '#f44336', marginTop: '10px' }}>
-                    <strong>Note:</strong> This course was rejected. You can edit and resubmit it.
+                  <div className="instructor-course-rejected-info" style={{ color: '#f44336', marginTop: '10px', padding: '10px', backgroundColor: '#ffebee', borderRadius: '4px', border: '1px solid #ffcdd2' }}>
+                    <strong>⚠️ Course Rejected:</strong> This course was rejected during review. Please contact support for more information or create a new course.
                   </div>
                 )}
                 
@@ -113,14 +129,29 @@ const InstructorCourses = () => {
                     Course Details
                   </button>
                   
-                  <button 
-                    className="edit-button" 
-                    onClick={() => handleEditClick(course.course_id, course.status)}
-                  >
-                    {course.status === 'draft' || course.status === 'rejected' 
-                      ? '✏️ Edit Course' 
-                      : '✏️ Edit Content'}
-                  </button>
+                  {/* Conditionally render edit button - hide for rejected courses */}
+                  {shouldShowEditButton(course.status) && (
+                    <button 
+                      className="edit-button" 
+                      onClick={() => handleEditClick(course.course_id, course.status)}
+                    >
+                      {getEditButtonText(course.status)}
+                    </button>
+                  )}
+                  
+                  {/* Show a different message for rejected courses */}
+                  {course.status === 'rejected' && (
+                    <div className="rejected-course-message" style={{ 
+                      flex: 1, 
+                      textAlign: 'center', 
+                      color: '#f44336', 
+                      fontWeight: '500',
+                      fontStyle: 'italic',
+                      padding: '10px'
+                    }}>
+                      Editing not available for rejected courses
+                    </div>
+                  )}
                 </div>
               </div>
             ))

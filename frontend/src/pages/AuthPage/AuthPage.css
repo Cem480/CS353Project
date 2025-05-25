@@ -120,6 +120,47 @@ body {
   color: #aaa;
 }
 
+/* Validation Error Styles */
+.form-input.error {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+.validation-error {
+  color: #dc3545;
+  font-size: 0.75rem;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.validation-error::before {
+  content: "⚠";
+  font-size: 0.8rem;
+}
+
+.form-input.valid {
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+}
+
+.validation-success {
+  color: #28a745;
+  font-size: 0.75rem;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.validation-success::before {
+  content: "✓";
+  font-size: 0.8rem;
+}
+
 /* Form Actions */
 .form-actions {
   display: flex;
@@ -157,6 +198,11 @@ body {
 
 .submit-button:hover {
   background-color: #0f7856;
+}
+
+.submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 /* Auth Switch */
@@ -210,6 +256,72 @@ body {
   text-decoration: underline;
 }
 
+/* Error Message */
+.error-message {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin: 10px 20px 0;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-message::before {
+  content: "⚠";
+  font-size: 1rem;
+  color: #721c24;
+}
+
+/* Success Message */
+.success-message {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin: 10px 20px 0;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.success-message::before {
+  content: "✓";
+  font-size: 1rem;
+  color: #155724;
+}
+
+/* Phone Number Formatting Hint */
+.phone-hint {
+  font-size: 0.7rem;
+  color: #666;
+  margin-top: 3px;
+  font-style: italic;
+}
+
+/* Password Strength Indicator */
+.password-strength {
+  margin-top: 5px;
+  font-size: 0.75rem;
+}
+
+.password-strength.weak {
+  color: #dc3545;
+}
+
+.password-strength.medium {
+  color: #ffc107;
+}
+
+.password-strength.strong {
+  color: #28a745;
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .auth-form-container {
@@ -218,6 +330,15 @@ body {
 
   .logo-title {
     font-size: 2rem;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .validation-error,
+  .validation-success {
+    font-size: 0.7rem;
   }
 }
 
