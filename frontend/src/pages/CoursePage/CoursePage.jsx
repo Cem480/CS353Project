@@ -158,11 +158,25 @@ const mergeCompletionStatus = (sectionsData, completionData) => {
     const updatedContents = section.contents.map(content => {
       const completionContent = completionSection.contents.find(cc => cc.content_id === content.id);
 
+      // ------------------
+      let isCompleted = false;
+
+      if (completionContent) {
+        const isGradedTask = content.content_type === 'task' &&
+          (content.task_type === 'assignment' || content.task_type === 'assessment');
+
+        if (isGradedTask) {
+          isCompleted = completionContent.grade !== null;
+        } else {
+          isCompleted = completionContent.is_complete_or_graded;
+        }
+      }
+
       return {
         ...content,
-        isCompleted: completionContent ? completionContent.is_complete_or_graded : false,
+        isCompleted,
         grade: completionContent ? completionContent.grade : null
-      };
+      };      
     });
 
     return {
@@ -1164,10 +1178,6 @@ const CoursePage = () => {
             </p>
 
             {/* Enhanced progress display */}
-            <div className="course-page-progress-circle">
-              <div className="progress-percentage">{progressPercentage}%</div>
-            </div>
-
             <div className="course-page-progress-stats">
               <div className="course-page-progress-stat">
                 <div className="course-page-progress-number">{completedItems}</div>

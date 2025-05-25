@@ -152,8 +152,8 @@ const AssignmentPage = () => {
       await submitAssignment(courseId, sectionId, contentId, user.user_id, selectedFile);
 
       // Mark as completed
-      await markContentCompleted(courseId, sectionId, contentId, user.user_id);
-      setIsCompleted(true);
+      // await markContentCompleted(courseId, sectionId, contentId, user.user_id);
+      // setIsCompleted(true);
       setIsSubmitted(true);
 
       // Show success message
@@ -429,10 +429,18 @@ const AssignmentPage = () => {
             )}
 
             {isSubmitted && !isCompleted && (
-              <div className="course-assignment-pending-note">
-                🕒 Your assignment has been submitted and is awaiting grading.
+              <div className="course-assignment-submitted-info">
+                <h3>✅ Assignment Submitted</h3>
+                <p>
+                  Your assignment has been submitted successfully.<br />
+                  <strong>It will be marked as completed after an instructor grades it.</strong>
+                </p>
+                {submissionFile && (
+                  <p><strong>Submitted file:</strong> {submissionFile.name}</p>
+                )}
               </div>
             )}
+
 
           </div>
         </main>

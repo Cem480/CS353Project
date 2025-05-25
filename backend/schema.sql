@@ -742,6 +742,39 @@ BEFORE INSERT ON section
 FOR EACH ROW
 EXECUTE FUNCTION shift_section_order_numbers();
 
+-- Triggers for completion after grading
+CREATE OR REPLACE FUNCTION mark_completion_on_grade()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only run logic if grade is newly set and is NOT NULL
+  IF NEW.grade IS NOT NULL AND (OLD.grade IS NULL OR OLD.grade IS DISTINCT FROM NEW.grade) THEN
+
+    -- Try to update existing row
+    UPDATE complete
+    SET is_completed = TRUE
+    WHERE course_id = NEW.course_id
+      AND sec_id = NEW.sec_id
+      AND content_id = NEW.content_id
+      AND student_id = NEW.student_id;
+
+    -- If no row was updated, insert a new one
+    IF NOT FOUND THEN
+      INSERT INTO complete (course_id, sec_id, content_id, student_id, is_completed)
+      VALUES (NEW.course_id, NEW.sec_id, NEW.content_id, NEW.student_id, TRUE)
+      ON CONFLICT (course_id, sec_id, content_id, student_id)
+      DO UPDATE SET is_completed = TRUE;
+    END IF;
+
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_mark_completion_on_grade
+AFTER UPDATE OF grade ON submit
+FOR EACH ROW
+EXECUTE FUNCTION mark_completion_on_grade();
 
 
 -- NOTIFICATION TRIGGERS
