@@ -787,7 +787,7 @@ def student_general_report():
             active_student_count,
             most_common_major, most_common_major_count,
             avg_age, youngest_age, oldest_age,
-            monthly_reg_count,
+           registration_count,
             top1_id, top2_id, top3_id
         )
         SELECT
@@ -1017,7 +1017,7 @@ def student_ranged_report():
                     active_student_count,
                     most_common_major, most_common_major_count,
                     avg_age, youngest_age, oldest_age,
-                    monthly_reg_count,
+                    registration_count,
                     top1_id, top2_id, top3_id
                 )
                 VALUES (

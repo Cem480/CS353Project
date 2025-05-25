@@ -115,13 +115,13 @@ function App() {
           element={<RoleProtectedRoute element={<InstructorCourses />} allowedRole="instructor" />} />
         <Route path="/instructor/grading"
           element={<RoleProtectedRoute element={<Grading />} allowedRole="instructor" />} />
-          
+
         {/* Course Editor and Content Management Routes - Instructor Only */}
         <Route path="/course/:courseId/content-editor"
           element={<RoleProtectedRoute element={<CourseEditor />} allowedRole="instructor" />} />
         <Route path="/course/:courseId/section/:sectionId/add-content"
           element={<RoleProtectedRoute element={<AddSectionContent />} allowedRole="instructor" />} />
-          
+
         {/* Admin-only */}
         <Route path="/admin/dashboard"
           element={<RoleProtectedRoute element={<AdminMainPage />} allowedRole="admin" />} />
@@ -133,7 +133,11 @@ function App() {
           element={<RoleProtectedRoute element={<GenerateReportPage />} allowedRole="admin" />} />
         <Route path="/admin/reports/:reportType/:reportId"
           element={<RoleProtectedRoute element={<ReportResultsPage />} allowedRole="admin" />} />
-        <Route path="/admin/users" element={<AdminUserListPage />} />
+        <Route
+          path="/admin/users"
+          element={<RoleProtectedRoute element={<AdminUserListPage />} allowedRole="admin" />}
+        />
+
 
         {/* Fallbacks */}
         <Route path="/" element={<Navigate to="/login" replace />} />

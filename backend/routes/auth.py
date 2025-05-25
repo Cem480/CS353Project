@@ -199,6 +199,7 @@ def login():
                     "message": "Login successful",
                     "user_id": user["id"],
                     "role": user["role"],
+                    "first_name": user["first_name"],
                 }
             ),
             200,

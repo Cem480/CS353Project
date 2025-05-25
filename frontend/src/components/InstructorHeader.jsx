@@ -29,10 +29,10 @@ const InstructorHeader = () => {
       fetchNotificationCount();
     }
   }, [userData?.user_id]);
-  
+
   const fetchNotificationCount = async () => {
     if (!userData?.user_id) return;
-    
+
     try {
       const response = await notificationService.getNotificationStats(userData.user_id);
       if (response.success) {
@@ -48,6 +48,8 @@ const InstructorHeader = () => {
     logout();
     navigate('/login');
   };
+
+  const firstName = userData?.first_name ?? 'Instructor';
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -66,10 +68,10 @@ const InstructorHeader = () => {
           <h1>LearnHub</h1>
         </div>
         <div className="nav-links">
-            <a href="/home" className={location.pathname === '/home' ? 'active' : ''}>Dashboard</a>
-            <a href="/instructor/courses" className={location.pathname === '/instructor/courses' ? 'active' : ''}>My Courses</a>
-            <a href="/instructor/grading" className={location.pathname === '/instructor/grading' ? 'active' : ''}>Grading</a>
-            <a href="/applications" className={location.pathname === '/applications' ? 'active' : ''}>Financial Aid</a>
+          <a href="/home" className={location.pathname === '/home' ? 'active' : ''}>Dashboard</a>
+          <a href="/instructor/courses" className={location.pathname === '/instructor/courses' ? 'active' : ''}>My Courses</a>
+          <a href="/instructor/grading" className={location.pathname === '/instructor/grading' ? 'active' : ''}>Grading</a>
+          <a href="/applications" className={location.pathname === '/applications' ? 'active' : ''}>Financial Aid</a>
         </div>
       </div>
       <div className="header-right">
@@ -89,7 +91,7 @@ const InstructorHeader = () => {
                   {userData ? userData.user_id.charAt(0).toUpperCase() : 'I'}
                 </div>
                 <div className="profile-details">
-                  <div className="profile-name">{userName}</div>
+                  <div className="profile-name">{firstName}</div>
                   <div className="profile-role">{userData?.role || 'instructor'}</div>
                 </div>
               </div>

@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { getCurrentUser } from '../../services/auth';
 import './ReportResultsPage.css';
+import AdminHeader from '../../components/AdminHeader';
 
 /* ──────────────────────────────────────────────────────────────────────────── */
 const COLORS = ['var(--primary-color)', 'var(--accent-color)'];
@@ -65,6 +66,7 @@ export default function ReportResultsPage() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        sessionStorage.removeItem('cameFrom');
         if (!userId) return;
         setLoading(true);
         setError(null);
@@ -128,41 +130,45 @@ export default function ReportResultsPage() {
         : [];
 
     return (
-        <div className="report-page">
-            <div className="page-title">
-                <h2>
-                    {reportType === 'student' ? 'Student'
-                        : reportType === 'instructor' ? 'Instructor'
-                            : 'Course'} Report
-                </h2>
-                {report.range && <p>{report.range.start} → {report.range.end}</p>}
+        <div className="admin-main-page">
+            <AdminHeader />
+            <div className="report-page">
+                <div className="page-title">
+                    <h2>
+                        {reportType === 'student' ? 'Student'
+                            : reportType === 'instructor' ? 'Instructor'
+                                : 'Course'} Report
+                    </h2>
+                    {report.range && <p>{report.range.start} → {report.range.end}</p>}
+                </div>
+
+                {/* ──────────────── STUDENT / INSTRUCTOR U I ──────────────── */}
+                {(reportType === 'student' || isInstructor) && (
+                    <StudentInstructorUI
+                        report={report}
+                        regSeries={regSeries}
+                        isInstructor={isInstructor}
+                        instrSource={instrSource}
+                    />
+                )}
+
+                {/* ====================== COURSE GENERAL ======================== */}
+                {isCourse && !isCourseRanged && (
+                    <CourseGeneralUI
+                        report={report}
+                        pieData={pieData}
+                        enrollBarData={enrollBarData}
+                        createdLine={createdLine}
+                    />
+                )}
+
+                {/* ====================== COURSE RANGED ========================= */}
+                {isCourseRanged && (
+                    <CourseRangedUI report={report} />
+                )}
             </div>
-
-            {/* ──────────────── STUDENT / INSTRUCTOR U I ──────────────── */}
-            {(reportType === 'student' || isInstructor) && (
-                <StudentInstructorUI
-                    report={report}
-                    regSeries={regSeries}
-                    isInstructor={isInstructor}
-                    instrSource={instrSource}
-                />
-            )}
-
-            {/* ====================== COURSE GENERAL ======================== */}
-            {isCourse && !isCourseRanged && (
-                <CourseGeneralUI
-                    report={report}
-                    pieData={pieData}
-                    enrollBarData={enrollBarData}
-                    createdLine={createdLine}
-                />
-            )}
-
-            {/* ====================== COURSE RANGED ========================= */}
-            {isCourseRanged && (
-                <CourseRangedUI report={report} />
-            )}
         </div>
+
     );
 }
 

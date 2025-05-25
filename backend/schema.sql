@@ -340,7 +340,7 @@ CREATE TABLE student_report (
     youngest_age                   INTEGER      CHECK (youngest_age              >= 0),
     oldest_age                     INTEGER      CHECK (oldest_age                >= 0),
 
-    monthly_reg_count              INTEGER      CHECK (monthly_reg_count         >= 0),
+    registration_count              INTEGER      CHECK (registration_count         >= 0),
 
     top1_id  VARCHAR(8),
     top2_id  VARCHAR(8),
@@ -390,28 +390,43 @@ CREATE INDEX idx_instructor_report_highlights
 
 
 CREATE TABLE course_report (
-    report_id           char(10) PRIMARY KEY
-        REFERENCES report(report_id) ON DELETE CASCADE,
-
+    report_id VARCHAR(8),
+    
     -- fixed numeric columns we always want
-    total_courses               integer,
-    free_course_count           integer,
-    paid_course_count           integer,
-    avg_enroll_per_course       numeric(10,2),
-    total_revenue               numeric(14,2),
-    avg_completion_rate         numeric(6,2),
+    total_courses               INTEGER,
+    free_course_count           INTEGER,
+    paid_course_count           INTEGER,
+    avg_enroll_per_course       NUMERIC(10,2),
+    total_revenue               NUMERIC(14,2),
+    avg_completion_rate         NUMERIC(6,2),
 
     -- the four “promoted” fields
-    free_enroll_count           integer,
-    paid_enroll_count           integer,
-    most_completed_course_id    varchar(10),
-    most_completed_count        integer,
-    most_popular_course_id      varchar(10),
-    most_popular_enrollment_count integer,
-    popular_payment_type        text,
+    free_enroll_count           INTEGER,
+    paid_enroll_count           INTEGER,
+    most_completed_course_id    VARCHAR(8),
+    most_completed_count        INTEGER,
+    most_popular_course_id      VARCHAR(8),
+    most_popular_enrollment_count INTEGER,
+    popular_payment_type        TEXT,
 
     -- catch-all JSON for everything else
-    ext_stats                   jsonb DEFAULT '{}'::jsonb
+    ext_stats                   JSONB DEFAULT '{}'::jsonb,
+
+    PRIMARY KEY (report_id),
+    FOREIGN KEY (report_id) REFERENCES report(report_id) ON DELETE CASCADE,
+    FOREIGN KEY (most_completed_course_id) REFERENCES course(course_id) ON DELETE SET NULL,
+    FOREIGN KEY (most_popular_course_id) REFERENCES course(course_id) ON DELETE SET NULL,
+    CHECK (total_courses >= 0),
+    CHECK (free_course_count >= 0),
+    CHECK (paid_course_count >= 0),
+    CHECK (avg_enroll_per_course >= 0),
+    CHECK (total_revenue >= 0),
+    CHECK (avg_completion_rate BETWEEN 0 AND 100),
+    CHECK (free_enroll_count >= 0),
+    CHECK (paid_enroll_count >= 0),
+    CHECK (most_completed_count >= 0),
+    CHECK (most_popular_enrollment_count >= 0),
+    CHECK (popular_payment_type IN ('free', 'paid'))
 );
 
 -- handy composite index for the two highlight columns
@@ -430,6 +445,7 @@ CREATE TABLE admin_report (
     FOREIGN KEY (admin_id) REFERENCES admin(id) ON DELETE CASCADE,
     FOREIGN KEY (report_id) REFERENCES report(report_id) ON DELETE CASCADE
 );
+
 -- VIEWS
 -- User with computed age
 CREATE VIEW user_with_age AS
