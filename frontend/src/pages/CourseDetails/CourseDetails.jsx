@@ -383,7 +383,7 @@ const CourseDetails = () => {
                   {course.is_free ? 'Enroll Now' : 'Continue with Payment'}
                 </button>
 
-                {!hasAppliedForAid && (
+                {!hasAppliedForAid && !course.is_free && (
                   <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
                     Financial Aid Available
                   </button>
