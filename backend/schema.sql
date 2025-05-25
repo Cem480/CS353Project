@@ -752,8 +752,8 @@ RETURNS TRIGGER AS $$
 DECLARE
     notify_id VARCHAR(8);
 BEGIN
-    -- Only trigger if status has changed
-    IF OLD.status = NEW.status THEN
+    -- For UPDATE operations, only trigger if status has changed
+    IF TG_OP = 'UPDATE' AND OLD.status = NEW.status THEN
         RETURN NEW;
     END IF;
     
@@ -779,7 +779,7 @@ BEGIN
         INSERT INTO receive (notification_id, id)
         VALUES (notify_id, NEW.creator_id);
         
-    ELSIF NEW.status = 'pending' AND OLD.status = 'draft' THEN
+    ELSIF NEW.status = 'pending' THEN
         -- Create notification for admin users about a new course needing review
         INSERT INTO notification (notification_id, type, entity_type, entity_id, message)
         VALUES (notify_id, 'course_pending_review', 'course', NEW.course_id, 
@@ -797,7 +797,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_course_status_notification
-AFTER UPDATE OF status ON course
+AFTER INSERT OR UPDATE OF status ON course
 FOR EACH ROW
 EXECUTE FUNCTION generate_course_status_notification();
 
