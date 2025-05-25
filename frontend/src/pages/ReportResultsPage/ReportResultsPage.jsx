@@ -12,22 +12,12 @@ import { getCurrentUser } from '../../services/auth';
 import './ReportResultsPage.css';
 import AdminHeader from '../../components/AdminHeader';
 
-/* ──────────────────────────────────────────────────────────────────────────── */
 const COLORS = ['var(--primary-color)', 'var(--accent-color)'];
 
 const Metric = ({ label, value }) => (
     <div className="metric-card">
         <strong>{label}</strong>
         <p>{value}</p>
-    </div>
-);
-
-const Highlight = ({ title, lines }) => (
-    <div className="info-card">
-        <h4>{title}</h4>
-        {lines.map(([k, v]) => (
-            <p key={k}><strong>{k}:</strong> {v}</p>
-        ))}
     </div>
 );
 
@@ -56,7 +46,210 @@ const ChartBlock = ({ title, type, data, dataKey, xKey = 'month' }) => (
     </section>
 );
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
+function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSource = {} }) {
+    const monthlyStats = report.monthly_stats || [];
+
+    const monthlyLine = (key) => monthlyStats.map(m => ({
+        month: m.month_start?.slice(0, 7) || m.month || '',
+        value: m[key] != null ? Number(m[key]) : null
+    }));
+
+    return (
+        <>
+            <ChartBlock title="Monthly Registrations" type="line" data={regSeries} dataKey="count" />
+            {!isInstructor && monthlyStats.length > 0 && (
+                <>
+                    <ChartBlock
+                        title="Monthly Active Students"
+                        type="line"
+                        data={monthlyStats.map(m => ({
+                            month: m.month_start?.slice(0, 7),
+                            value: Number(m.active_student_count ?? 0)
+                        }))}
+                        dataKey="value"
+                        xKey="month"
+                    />
+
+                    <ChartBlock
+                        title="Average Completion Rate per Month"
+                        type="bar"
+                        data={monthlyStats.map(m => ({
+                            month: m.month_start?.slice(0, 7),
+                            value: Number(m.avg_completion_rate ?? 0)
+                        }))}
+                        dataKey="value"
+                        xKey="month"
+                    />
+
+                    <ChartBlock
+                        title="Average Enrollments per Student"
+                        type="line"
+                        data={monthlyStats.map(m => ({
+                            month: m.month_start?.slice(0, 7),
+                            value: Number(m.avg_enrollments_per_student ?? 0)
+                        }))}
+                        dataKey="value"
+                        xKey="month"
+                    />
+
+                    <ChartBlock
+                        title="Total Students"
+                        type="bar"
+                        data={monthlyStats.map(m => ({
+                            month: m.month_start?.slice(0, 7),
+                            value: Number(m.total_students ?? 0)
+                        }))}
+                        dataKey="value"
+                        xKey="month"
+                    />
+                </>
+            )}
+            {!isInstructor && monthlyStats.length > 0 && (
+                <section className="snapshot-section">
+                    <h3>Most Common Major – by Month</h3>
+                    <div className="metrics-grid">
+                        {monthlyStats.map((m, idx) => (
+                            <Metric
+                                key={m.month_start}
+                                label={m.month_start?.slice(0, 7)}
+                                value={
+                                    m.most_common_major
+                                        ? `${m.most_common_major} (${m.most_common_major_count})`
+                                        : '—'
+                                }
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
+
+
+
+            {isInstructor && monthlyStats.length > 0 && (
+                <>
+                    <ChartBlock title="Avg Courses per Instructor" type="line" data={monthlyLine('avg_courses_per_instructor')} dataKey="value" />
+                    <ChartBlock title="Free-Course Instructors" type="bar" data={monthlyLine('instructors_with_free_course')} dataKey="value" />
+                    <ChartBlock title="Paid-Course Instructors" type="bar" data={monthlyLine('instructors_with_paid_course')} dataKey="value" />
+                    <ChartBlock title="Total Instructors" type="line" data={monthlyLine('total_instructors')} dataKey="value" />
+                </>
+            )}
+
+            <section className="cards-section">
+                <h3>{report.top_students ? 'Top 3 Students' : 'Top 3 Instructors'}</h3>
+                <div className="cards-grid">
+                    {(report.top_students || report.top_instructors).map((item, idx) => (
+                        <div className="info-card" key={item.id}>
+                            <div className="rank-badge">{idx + 1}</div>
+                            <div>
+                                <h4>{item.full_name}</h4>
+                                {('major' in item) && <p><strong>Major:</strong> {item.major}</p>}
+                                {('rating' in item) && <p><strong>Rating:</strong> {item.rating}</p>}
+                                {('achievement_score' in item) && <p><strong>Score:</strong> {item.achievement_score}</p>}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {(
+                // Show summary section only for general student report or any instructor report
+                (!isInstructor && !Array.isArray(report.monthly_stats)) ||
+                isInstructor
+            ) && (
+                    <section className="snapshot-section">
+                        <h3>Summary Metrics</h3>
+                        <div className="metrics-grid">
+
+                            {/* ───── GENERAL STUDENT REPORT ───── */}
+                            {!isInstructor && !Array.isArray(report.monthly_stats) && (
+                                <>
+                                    <Metric label="Total Students" value={report.total_students} />
+                                    <Metric label="Active Students" value={report.active_student_count} />
+                                    <Metric label="Average Enrollment Per Student" value={report.avg_enrollments_per_student} />
+                                    <Metric label="Average Certificates" value={report.avg_certificate_per_student} />
+                                    <Metric label="Average Completion Rate" value={`${report.avg_completion_rate}%`} />
+                                    <Metric label="Average Age" value={report.avg_age ?? '—'} />
+                                    {(report.youngest_age != null && report.oldest_age != null) && (
+                                        <Metric label="Age Range" value={`${report.youngest_age} – ${report.oldest_age}`} />
+                                    )}
+                                    <Metric label="Most Common Major" value={`${report.most_common_major} (${report.most_common_major_count})`} />
+                                </>
+                            )}
+
+                            {/* ───── GENERAL INSTRUCTOR REPORT ───── */}
+                            {isInstructor && !Array.isArray(report.monthly_stats) && (
+                                <>
+                                    {instrSource.total_instructors != null && (
+                                        <Metric label="Total Instructors" value={instrSource.total_instructors} />
+                                    )}
+                                    {instrSource.instructors_with_free_course != null && (
+                                        <Metric label="Free-Course Instructors" value={instrSource.instructors_with_free_course} />
+                                    )}
+                                    {instrSource.instructors_with_paid_course != null && (
+                                        <Metric label="Paid-Course Instructors" value={instrSource.instructors_with_paid_course} />
+                                    )}
+                                    {instrSource.avg_courses_per_instructor != null && (
+                                        <Metric label="Avg Courses / Instructor" value={instrSource.avg_courses_per_instructor} />
+                                    )}
+                                </>
+                            )}
+
+                            {/* ───── SHARED INSTRUCTOR INFO ───── */}
+                            {isInstructor && (
+                                <>
+                                    {instrSource.avg_age != null && (
+                                        <Metric label="Avg Age" value={instrSource.avg_age} />
+                                    )}
+                                    {(instrSource.youngest_age != null && instrSource.oldest_age != null) && (
+                                        <Metric label="Age Range" value={`${instrSource.youngest_age} – ${instrSource.oldest_age}`} />
+                                    )}
+                                </>
+                            )}
+
+                        </div>
+                    </section>
+                )}
+
+            {isInstructor && (
+                <section className="cards-section">
+                    <h3>Highlights</h3>
+                    {(() => {
+                        const active = report?.most_active_instructor;
+                        const popular = report?.most_popular_instructor;
+
+                        const hasActive = active?.full_name && active?.total_courses != null;
+                        const hasPopular = popular?.full_name && popular?.total_enrollments != null;
+
+                        if (!hasActive && !hasPopular) {
+                            return <p style={{ marginLeft: '1rem' }}>No instructors found.</p>;
+                        }
+
+                        return (
+                            <div className="monthly-highlight-list">
+                                {hasActive && (
+                                    <div className="monthly-highlight-card">
+                                        <h4>Most Active Instructor</h4>
+                                        <p><strong>Name:</strong> {active.full_name}</p>
+                                        <p><strong>Courses:</strong> {active.total_courses}</p>
+                                    </div>
+                                )}
+                                {hasPopular && (
+                                    <div className="monthly-highlight-card">
+                                        <h4>Most Popular Instructor</h4>
+                                        <p><strong>Name:</strong> {popular.full_name}</p>
+                                        <p><strong>Enrollments:</strong> {popular.total_enrollments}</p>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
+                </section>
+            )}
+        </>
+    );
+}
+
+/* ========================================================================= */
 export default function ReportResultsPage() {
     const { reportType, reportId } = useParams();
     const userId = getCurrentUser()?.user_id;
@@ -90,10 +283,8 @@ export default function ReportResultsPage() {
     if (error) return <div className="report-page"><p className="error">{error}</p></div>;
     if (!report) return null;
 
-    // helpers
     const objToSeries = obj => Object.entries(obj || {}).map(([m, v]) => ({ month: m, count: Number(v) }));
 
-    // registration series (student or instructor)
     let regSeries = [];
     if (report.monthly_registrations) {
         regSeries = objToSeries(report.monthly_registrations);
@@ -110,12 +301,8 @@ export default function ReportResultsPage() {
     const lastInstr = (isInstructor && Array.isArray(report.monthly_stats) && report.monthly_stats.length)
         ? report.monthly_stats.at(-1)
         : null;
-    // if ranged → use lastInstr, else use report summary
-    const instrSource = isInstructor
-        ? (lastInstr ?? report)
-        : {};
+    const instrSource = isInstructor ? (lastInstr ?? report) : {};
 
-    // course-general pie & bars & line
     const pieData = isCourse && !isCourseRanged ? [
         { name: 'Free', value: report.free_course_count },
         { name: 'Paid', value: report.paid_course_count },
@@ -141,7 +328,6 @@ export default function ReportResultsPage() {
                     {report.range && <p>{report.range.start} → {report.range.end}</p>}
                 </div>
 
-                {/* ──────────────── STUDENT / INSTRUCTOR U I ──────────────── */}
                 {(reportType === 'student' || isInstructor) && (
                     <StudentInstructorUI
                         report={report}
@@ -151,7 +337,6 @@ export default function ReportResultsPage() {
                     />
                 )}
 
-                {/* ====================== COURSE GENERAL ======================== */}
                 {isCourse && !isCourseRanged && (
                     <CourseGeneralUI
                         report={report}
@@ -161,151 +346,15 @@ export default function ReportResultsPage() {
                     />
                 )}
 
-                {/* ====================== COURSE RANGED ========================= */}
                 {isCourseRanged && (
                     <CourseRangedUI report={report} />
                 )}
             </div>
         </div>
-
     );
 }
 
-/* ════════════════════════════════════════════════════════════════════════ */
-function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSource = {} }) {
-    return (
-        <>
-            <ChartBlock title="Monthly Registrations" type="line" data={regSeries} dataKey="count" />
 
-            <section className="cards-section">
-                <h3>{report.top_students ? 'Top 3 Students' : 'Top 3 Instructors'}</h3>
-                <div className="cards-grid">
-                    {(report.top_students || report.top_instructors).map((item, idx) => (
-                        <div className="info-card" key={item.id}>
-                            <div className="rank-badge">{idx + 1}</div>
-                            <div>
-                                <h4>{item.full_name}</h4>
-                                {('major' in item) && <p><strong>Major:</strong> {item.major}</p>}
-                                {('rating' in item) && <p><strong>Rating:</strong> {item.rating}</p>}
-                                {('achievement_score' in item) && <p><strong>Score:</strong> {item.achievement_score}</p>}
-                            </div>
-                        </div>
-                    ))}
-
-                </div>
-            </section>
-
-            <section className="snapshot-section">
-                <h3>Summary Metrics</h3>
-                <div className="metrics-grid">
-
-                    {/* Student-related metrics */}
-                    {'total_students' in report && (
-                        <>
-                            {report.total_students != null && (
-                                <Metric label="Total Students" value={report.total_students} />
-                            )}
-                            {report.active_student_count != null && (
-                                <Metric label="Active Students" value={report.active_student_count} />
-                            )}
-                            {report.avg_enrollments_per_student != null && (
-                                <Metric label="Average Enrollment Per Student" value={report.avg_enrollments_per_student} />
-                            )}
-                            {report.avg_certificate_per_student != null && (
-                                <Metric label="Average Certificates" value={report.avg_certificate_per_student} />
-                            )}
-                            {report.avg_completion_rate != null && (
-                                <Metric label="Average Completion Rate" value={`${report.avg_completion_rate}%`} />
-                            )}
-                            {report.avg_age != null && (
-                                <Metric label="Average Age" value={report.avg_age} />
-                            )}
-                            {(report.youngest_age != null && report.oldest_age != null) && (
-                                <Metric label="Age Range" value={`${report.youngest_age} – ${report.oldest_age}`} />
-                            )}
-                            {(report.most_common_major && report.most_common_major_count != null) && (
-                                <Metric label="Most Common Major" value={`${report.most_common_major} (${report.most_common_major_count})`} />
-                            )}
-                        </>
-                    )}
-
-                    {/* Instructor-only metrics */}
-                    {isInstructor && (
-                        <>
-                            {instrSource.total_instructors != null && (
-                                <Metric label="Total Instructors" value={instrSource.total_instructors} />
-                            )}
-                            {instrSource.instructors_with_free_course != null && (
-                                <Metric label="Free-Course Instructors" value={instrSource.instructors_with_free_course} />
-                            )}
-                            {instrSource.instructors_with_paid_course != null && (
-                                <Metric label="Paid-Course Instructors" value={instrSource.instructors_with_paid_course} />
-                            )}
-                            {instrSource.avg_courses_per_instructor != null && (
-                                <Metric label="Avg Courses / Instructor" value={instrSource.avg_courses_per_instructor} />
-                            )}
-                            {instrSource.avg_age != null && (
-                                <Metric label="Avg Age" value={instrSource.avg_age} />
-                            )}
-                            {(instrSource.youngest_age != null && instrSource.oldest_age != null) && (
-                                <Metric label="Age Range" value={`${instrSource.youngest_age} – ${instrSource.oldest_age}`} />
-                            )}
-                        </>
-                    )}
-
-                </div>
-            </section>
-
-
-            {isInstructor && (
-                <section className="cards-section">
-                    <h3>Highlights</h3>
-
-                    {/* Logic flags */}
-                    {(() => {
-                        const active = report?.most_active_instructor;
-                        const popular = report?.most_popular_instructor;
-
-                        const hasActive =
-                            active?.full_name &&
-                            active?.total_courses != null;
-
-                        const hasPopular =
-                            popular?.full_name &&
-                            popular?.total_enrollments != null;
-
-                        if (!hasActive && !hasPopular) {
-                            return <p style={{ marginLeft: '1rem' }}>No instructors found.</p>;
-                        }
-
-                        return (
-                            <div className="monthly-highlight-list">
-                                {hasActive && (
-                                    <div className="monthly-highlight-card">
-                                        <h4>Most Active Instructor</h4>
-                                        <p><strong>Name:</strong> {active.full_name}</p>
-                                        <p><strong>Courses:</strong> {active.total_courses}</p>
-                                    </div>
-                                )}
-
-                                {hasPopular && (
-                                    <div className="monthly-highlight-card">
-                                        <h4>Most Popular Instructor</h4>
-                                        <p><strong>Name:</strong> {popular.full_name}</p>
-                                        <p><strong>Enrollments:</strong> {popular.total_enrollments}</p>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })()}
-                </section>
-            )}
-
-
-
-        </>
-    );
-}
 
 /* ════════════════════════════════════════════════════════════════════════ */
 function CourseGeneralUI({ report, pieData, enrollBarData, createdLine }) {
@@ -428,33 +477,29 @@ function CourseGeneralUI({ report, pieData, enrollBarData, createdLine }) {
 
 function CourseRangedUI({ report }) {
     const mm = report.monthly_metrics;
-
     const renderPopularCourseCard = (m) => {
-        const hasData =
-            !!m?.most_popular_course_title ||
-            m?.pop_enroll_count > 0 ||
-            m?.enroll_count > 0 ||
-            m?.price > 0 ||
-            !!m?.most_popular_instructor_name;
+        const course = m.most_popular_course;
+
+        const hasCourse = course?.title || course?.instructor_name || course?.price != null;
 
         return (
             <div className="monthly-highlight-card" key={`pop-${m.month}`}>
                 <h4>{m.month ?? 'Unknown Month'}</h4>
-                {hasData ? (
+                {hasCourse ? (
                     <>
-                        {m.most_popular_course_title && (
-                            <p><strong>Title:</strong> {m.most_popular_course_title}</p>
+                        {course.title && (
+                            <p><strong>Title:</strong> {course.title}</p>
                         )}
-                        {m.pop_enroll_count != null || m.enroll_count != null ? (
+                        {(m.pop_enroll_count != null || m.enroll_count != null) && (
                             <p><strong>Enrollments:</strong> {m.pop_enroll_count ?? m.enroll_count}</p>
-                        ) : null}
-                        {m.price === 0 ? (
+                        )}
+                        {course.price === 0 ? (
                             <p><strong>Price:</strong> Free</p>
-                        ) : m.price != null ? (
-                            <p><strong>Price:</strong> ${m.price}</p>
+                        ) : course.price != null ? (
+                            <p><strong>Price:</strong> ${course.price}</p>
                         ) : null}
-                        {m.most_popular_instructor_name && (
-                            <p><strong>Instructor:</strong> {m.most_popular_instructor_name}</p>
+                        {course.instructor_name && (
+                            <p><strong>Instructor:</strong> {course.instructor_name}</p>
                         )}
                     </>
                 ) : (
@@ -465,23 +510,28 @@ function CourseRangedUI({ report }) {
     };
 
 
+
+
     const renderCompletedCourseCard = (m) => {
         const hasData =
-            m?.most_completed_course_title ||
-            m?.completion_count != null ||
-            m?.most_completed_count != null ||
-            m?.price != null ||
-            m?.most_completed_instructor_name;
+            m?.most_completed_course?.title ||
+            m?.most_completed_count != null;
+
 
         return (
             <div className="monthly-highlight-card" key={`cmp-${m.month}`}>
                 <h4>{m.month ?? 'Unknown Month'}</h4>
                 {hasData ? (
                     <>
-                        <p><strong>Title:</strong> {m.most_completed_course_title}</p>
-                        <p><strong>Completions:</strong> {m.completion_count ?? m.most_completed_count}</p>
-                        <p><strong>Price:</strong> {m.price === 0 ? 'Free' : `$${m.price}`}</p>
-                        <p><strong>Instructor:</strong> {m.most_completed_instructor_name}</p>
+                        <p><strong>Title:</strong> {m.most_completed_course?.title ?? 'Not available'}</p>
+                        <p><strong>Completions:</strong> {m.most_completed_count ?? 'N/A'}</p>
+                        <p><strong>Price:</strong> {
+                            m.most_completed_course?.price === 0 ? 'Free'
+                                : m.most_completed_course?.price != null ? `$${m.most_completed_course.price}`
+                                    : 'Not available'
+                        }</p>
+                        <p><strong>Instructor:</strong> {m.most_completed_course?.instructor_name ?? 'Not available'}</p>
+
                     </>
                 ) : (
                     <p>No course found.</p>
@@ -490,13 +540,10 @@ function CourseRangedUI({ report }) {
         );
     };
 
-    const hasAnyPopular = mm.some(m =>
-        m?.most_popular_course_title
-    );
+    const hasAnyPopular = mm.some(m => m?.most_popular_course?.title);
+    const hasAnyCompleted = mm.some(m => m?.most_completed_course?.title);
 
-    const hasAnyCompleted = mm.some(m =>
-        m?.most_completed_course_title
-    );
+
 
     return (
         <>

@@ -347,7 +347,9 @@ def get_content_detail(course_id, sec_id, content_id):
 
         # Replace file paths with URLs (assuming files are served statically from /uploads/)
         if content_info.get("document_path"):
-            content_info["document_url"] = f"/api/content/download/{os.path.basename(content_info['document_path'])}"
+            filename = os.path.basename(content_info["document_path"])
+            content_info["document_view_url"] = f"/api/content/view/{filename}"
+            content_info["document_download_url"] = f"/api/content/download/{filename}"
         if content_info.get("video_path"):
             content_info["video_url"] = f"/api/content/download/{os.path.basename(content_info['video_path'])}"
         if content_info.get("assignment_path"):
@@ -372,6 +374,18 @@ def get_content_detail(course_id, sec_id, content_id):
     finally:
         cursor.close()
         conn.close()
+
+@content_operations_bp.route("/api/content/view/<path:filename>", methods=["GET"])
+def view_content_file(filename):
+    uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
+    safe_path = os.path.join(uploads_dir, filename)
+
+    if not os.path.isfile(safe_path):
+        return abort(404, description="File not found")
+
+    # Return without as_attachment to allow inline viewing in iframe
+    return send_from_directory(uploads_dir, filename)
+
 
 @content_operations_bp.route("/api/content/download/<path:filename>", methods=["GET"])
 def download_content_file(filename):
