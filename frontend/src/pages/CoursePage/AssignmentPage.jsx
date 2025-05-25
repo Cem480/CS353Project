@@ -422,14 +422,18 @@ const AssignmentPage = () => {
             </div>
 
             {/* Mark as completed without submission - only show if not already completed and not submitted */}
-            {!isCompleted && !isSubmitted && (
-              <button
-                className="course-assignment-mark-completed"
-                onClick={handleMarkAsCompleted}
-              >
-                Mark as Completed
-              </button>
+            {!isSubmitted && (
+              <form className="course-assignment-form" onSubmit={handleSubmit}>
+                {/* upload logic stays here */}
+              </form>
             )}
+
+            {isSubmitted && !isCompleted && (
+              <div className="course-assignment-pending-note">
+                🕒 Your assignment has been submitted and is awaiting grading.
+              </div>
+            )}
+
           </div>
         </main>
 

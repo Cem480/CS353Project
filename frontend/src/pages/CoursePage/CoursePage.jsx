@@ -120,13 +120,13 @@ const getCourseCompletionSummary = async (courseId, studentId) => {
 };
 
 // Mark content as completed (enhanced)
-const markContentCompletedEnhanced = async (courseId, sectionId, contentId, studentId) => {
+const markContentCompletedEnhanced = async (courseId, sectionId, contentId, studentId, isCompleted = true) => {
   try {
     const response = await fetch(`${BASE_URL}/api/complete/${courseId}/${sectionId}/${contentId}/${studentId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ is_completed: true })
+      body: JSON.stringify({ is_completed: isCompleted })
     });
 
     if (!response.ok) {
@@ -450,6 +450,34 @@ const CoursePage = () => {
     }
   };
 
+  const markContentAsIncompleted = async () => {
+    if (!activeContent || !activeContent.content_id) return;
+  
+    try {
+      await markContentCompletedEnhanced(courseId, activeSection.id, activeContent.content_id, user.user_id, false);
+  
+      const updatedSections = sections.map(section => {
+        if (section.id === activeSection.id) {
+          const updatedContents = section.contents.map(content =>
+            content.id === activeContent.content_id
+              ? { ...content, isCompleted: false }
+              : content
+          );
+          return { ...section, contents: updatedContents };
+        }
+        return section;
+      });
+  
+      setSections(updatedSections);
+      const updatedActiveSection = updatedSections.find(s => s.id === activeSection.id);
+      if (updatedActiveSection) setActiveSection(updatedActiveSection);
+      alert('Content marked as incompleted!');
+    } catch (err) {
+      setErrorMessage('Failed to mark content as incompleted.');
+      setShowErrorModal(true);
+    }
+  };
+    
   // Call loadCompletionStatus after loading sections
   useEffect(() => {
     if (sections.length > 0 && !loading) {
@@ -955,14 +983,30 @@ const CoursePage = () => {
             </div>
 
             <div className="course-page-content-modal-footer">
-              {activeContent.task_type !== 'assessment' && (
-                <button
-                  className="course-page-mark-complete-button"
-                  onClick={markContentAsCompleted}
-                >
-                  Mark As Completed
-                </button>
+              {activeContent.task_type === 'assessment' ? (
+                !activeContent.isCompleted && (
+                  <div className="course-page-assessment-note">
+                    🛑 Assessments cannot be marked as completed until they are graded by the instructor.
+                  </div>
+                )
+              ) : (
+                activeContent.isCompleted ? (
+                  <button
+                    className="course-page-mark-incomplete-button"
+                    onClick={markContentAsIncompleted}
+                  >
+                    Mark as Incomplete
+                  </button>
+                ) : (
+                  <button
+                    className="course-page-mark-complete-button"
+                    onClick={markContentAsCompleted}
+                  >
+                    Mark As Completed
+                  </button>
+                )
               )}
+
             </div>
           </div>
         </div>
