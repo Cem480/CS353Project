@@ -757,10 +757,10 @@ def student_general_report():
         upsert_sql = """
         WITH ins AS (
             INSERT INTO report (
-                report_id, admin_id, report_type, description,
+                report_id, report_type, description,
                 time_range_start, time_range_end
             )
-            VALUES (%(rid)s, %(admin)s, 'student_general',
+            VALUES (%(rid)s, 'student_general',
                     'site-wide student snapshot', %(start)s, %(end)s)
             ON CONFLICT (report_type, time_range_start, time_range_end)
               DO NOTHING
@@ -901,10 +901,10 @@ def student_ranged_report():
         parent_upsert = """
         WITH ins AS (
             INSERT INTO report (
-                report_id, admin_id, report_type,
+                report_id, report_type,
                 time_range_start, time_range_end, description
             )
-            VALUES (%s, %s, 'student_ranged', %s, %s, %s)
+            VALUES (%s, 'student_ranged', %s, %s, %s)
             ON CONFLICT (report_type, time_range_start, time_range_end)
               DO NOTHING
             RETURNING report_id
@@ -923,7 +923,6 @@ def student_ranged_report():
             parent_upsert,
             (
                 parent_id,
-                admin_id,
                 sdt,
                 edt,
                 f"student range {start_raw} - {end_raw}",
@@ -971,11 +970,11 @@ def student_ranged_report():
                 """
                 WITH ins AS (
                     INSERT INTO report (
-                        report_id, admin_id, report_type,
+                        report_id, report_type,
                         time_range_start, time_range_end,
                         parent_report_id, description
                     )
-                    VALUES (%s, %s, 'student_ranged', %s, %s, %s, %s)
+                    VALUES (%s, 'student_ranged', %s, %s, %s, %s)
                     ON CONFLICT (report_type, time_range_start, time_range_end)
                       DO UPDATE SET parent_report_id = EXCLUDED.parent_report_id
                     RETURNING report_id
@@ -992,7 +991,6 @@ def student_ranged_report():
                 """,
                 (
                     child_id,
-                    admin_id,
                     m,
                     last_day(m),
                     parent_id,
@@ -1145,10 +1143,10 @@ def course_general_report() -> tuple:
         upsert_sql = """
         WITH ins AS (
           INSERT INTO report
-            (report_id, admin_id, report_type,
+            (report_id, report_type,
              time_range_start, time_range_end,
              description, summary)
-          VALUES (%(rid)s, %(admin)s, 'course_general',
+          VALUES (%(rid)s, 'course_general',
                   %(start)s, %(end)s,
                   'site-wide course snapshot',
                   %(summary_json)s)
@@ -1271,8 +1269,8 @@ def course_ranged_report() -> tuple:
         upsert_parent = """
         WITH ins AS (
           INSERT INTO report
-            (report_id, admin_id, report_type, time_range_start, time_range_end, description)
-          VALUES (%(rid)s, %(admin)s, 'course_ranged', %(start)s, %(end)s,
+            (report_id, report_type, time_range_start, time_range_end, description)
+          VALUES (%(rid)s,'course_ranged', %(start)s, %(end)s,
                   %(desc)s)
           ON CONFLICT (report_type, time_range_start, time_range_end) DO NOTHING
           RETURNING report_id
@@ -1475,10 +1473,10 @@ def instructor_general_report():
         upsert_sql = """
         WITH ins AS (
           INSERT INTO report
-            (report_id, admin_id, report_type,
+            (report_id, report_type,
              time_range_start, time_range_end,
              description)
-          VALUES (%(rid)s, %(admin)s, 'instructor_general',
+          VALUES (%(rid)s, 'instructor_general',
                   %(start)s, %(end)s,
                   'site-wide instructor snapshot')
           ON CONFLICT (report_type, time_range_start, time_range_end)
@@ -1636,8 +1634,8 @@ def instructor_ranged_report() -> tuple:
         parent_upsert_sql = """
         WITH ins AS (
           INSERT INTO report
-            (report_id, admin_id, report_type, time_range_start, time_range_end, description)
-          VALUES (%(rid)s, %(admin)s, 'instructor_ranged',
+            (report_id, report_type, time_range_start, time_range_end, description)
+          VALUES (%(rid)s, 'instructor_ranged',
                   %(start)s, %(end)s,
                   %(desc)s)
           ON CONFLICT (report_type, time_range_start, time_range_end) DO NOTHING
@@ -1681,17 +1679,16 @@ def instructor_ranged_report() -> tuple:
             cur.execute(
                 """
                 INSERT INTO report
-                  (report_id, admin_id, report_type,
+                  (report_id, report_type,
                    time_range_start, time_range_end,
                    parent_report_id, description)
-                VALUES (%s, %s, 'instructor_ranged', %s, %s, %s, %s)
+                VALUES (%s, 'instructor_ranged', %s, %s, %s, %s)
                 ON CONFLICT (report_type, time_range_start, time_range_end)
                   DO UPDATE SET parent_report_id = EXCLUDED.parent_report_id
                 RETURNING report_id;
                 """,
                 (
                     child_id,
-                    admin_id,
                     m,
                     last_day(m),
                     parent_id,

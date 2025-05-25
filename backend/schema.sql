@@ -287,7 +287,6 @@ CREATE TABLE earn_certificate(
 
 CREATE TABLE report (
     report_id           VARCHAR(8)  PRIMARY KEY,
-    admin_id            VARCHAR(8)  NOT NULL,
     report_type         VARCHAR(20) NOT NULL CHECK (
                             report_type IN (
                               'student_general','student_ranged',
@@ -310,7 +309,6 @@ CREATE TABLE report (
              AND time_range_end = (time_range_start
                                    + INTERVAL '1 month' - INTERVAL '1 day') )
     ),
-    FOREIGN KEY (admin_id)         REFERENCES admin(id) ON DELETE CASCADE,
     FOREIGN KEY (parent_report_id) REFERENCES report(report_id)
 );
 
