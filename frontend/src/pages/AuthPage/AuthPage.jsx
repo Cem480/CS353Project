@@ -21,15 +21,131 @@ const AuthPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
 
+  // Email validation function
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
+  // Turkish phone number validation function
+  const validateTurkishPhone = (phone) => {
+    // Remove all non-digit characters
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    // Turkish phone patterns:
+    // Mobile: starts with 5, total 10 digits (without country code)
+    // With country code: +90 5XX XXX XX XX (total 13 digits including +90)
+    // Landline: starts with area codes like 212, 216, 232, etc.
+    
+    // Check if it starts with +90 or 0090
+    if (cleanPhone.startsWith('90') && cleanPhone.length === 12) {
+      // +90 5XX XXX XX XX format
+      return cleanPhone.substring(2, 3) === '5';
+    }
+    
+    // Check if it starts with 0
+    if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+      // 05XX XXX XX XX format
+      return cleanPhone.substring(1, 2) === '5';
+    }
+    
+    // Check if it's just 10 digits starting with 5
+    if (cleanPhone.length === 10 && cleanPhone.startsWith('5')) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Format Turkish phone number
+  const formatTurkishPhone = (phone) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    if (cleanPhone.length === 10 && cleanPhone.startsWith('5')) {
+      // Format as 5XX XXX XX XX
+      return cleanPhone.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+    }
+    
+    if (cleanPhone.length === 11 && cleanPhone.startsWith('05')) {
+      // Format as 05XX XXX XX XX
+      return cleanPhone.replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+    }
+    
+    if (cleanPhone.length === 12 && cleanPhone.startsWith('905')) {
+      // Format as +90 5XX XXX XX XX
+      return '+90 ' + cleanPhone.substring(2).replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+    }
+    
+    return phone;
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let newValue = value;
+    let newValidationErrors = { ...validationErrors };
+
+    // Handle phone number formatting and validation
+    if (name === 'phone_no') {
+      // Allow only digits, spaces, +, and - characters
+      newValue = value.replace(/[^0-9\s+\-]/g, '');
+      
+      // Validate phone number in real-time
+      if (newValue && !validateTurkishPhone(newValue)) {
+        newValidationErrors.phone_no = 'Please enter a valid Turkish mobile number (e.g., 5XX XXX XX XX)';
+      } else {
+        delete newValidationErrors.phone_no;
+      }
+    }
+
+    // Handle email validation
+    if (name === 'email') {
+      if (newValue && !validateEmail(newValue)) {
+        newValidationErrors.email = 'Please enter a valid email address';
+      } else {
+        delete newValidationErrors.email;
+      }
+    }
+
+    // Password strength validation
+    if (name === 'password' && !isLogin) {
+      if (newValue.length < 8) {
+        newValidationErrors.password = 'Password must be at least 8 characters long';
+      } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newValue)) {
+        newValidationErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+      } else {
+        delete newValidationErrors.password;
+      }
+    }
+
+    // Confirm password validation
+    if (name === 'confirmPassword' && !isLogin) {
+      if (newValue !== formData.password) {
+        newValidationErrors.confirmPassword = 'Passwords do not match';
+      } else {
+        delete newValidationErrors.confirmPassword;
+      }
+    }
+
+    // Update validation errors
+    setValidationErrors(newValidationErrors);
+
     setFormData({
       ...formData,
-      [name]: value
+      [name]: newValue
     });
+  };
+
+  // Handle phone number blur to format it
+  const handlePhoneBlur = (e) => {
+    const { value } = e.target;
+    if (value && validateTurkishPhone(value)) {
+      setFormData({
+        ...formData,
+        phone_no: formatTurkishPhone(value)
+      });
+    }
   };
 
   const validateForm = () => {
@@ -39,6 +155,11 @@ const AuthPage = () => {
     if (isLogin) {
       if (!formData.email || !formData.password) {
         setError('Email and password are required');
+        return false;
+      }
+
+      if (!validateEmail(formData.email)) {
+        setError('Please enter a valid email address');
         return false;
       }
     } else {
@@ -53,8 +174,23 @@ const AuthPage = () => {
         return false;
       }
 
+      if (!validateEmail(formData.email)) {
+        setError('Please enter a valid email address');
+        return false;
+      }
+
       if (!formData.password) {
         setError('Password is required');
+        return false;
+      }
+
+      if (formData.password.length < 8) {
+        setError('Password must be at least 8 characters long');
+        return false;
+      }
+
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+        setError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
         return false;
       }
 
@@ -68,9 +204,21 @@ const AuthPage = () => {
         return false;
       }
 
+      // Validate phone number if provided
+      if (formData.phone_no && !validateTurkishPhone(formData.phone_no)) {
+        setError('Please enter a valid Turkish mobile number');
+        return false;
+      }
+
       // Validate major when role is student
       if (formData.role === 'student' && !formData.major) {
         setError('Major is required for students');
+        return false;
+      }
+
+      // Check if there are any validation errors
+      if (Object.keys(validationErrors).length > 0) {
+        setError('Please fix the validation errors before submitting');
         return false;
       }
     }
@@ -116,7 +264,7 @@ const AuthPage = () => {
           first_name: formData.first_name,
           last_name: formData.last_name,
           middle_name: formData.middle_name || null,
-          phone_no: formData.phone_no || null,
+          phone_no: formData.phone_no ? formData.phone_no.replace(/\s/g, '') : null, // Remove spaces for storage
           email: formData.email,
           password: formData.password,
           birth_date: formData.birth_date,
@@ -157,6 +305,7 @@ const AuthPage = () => {
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
     setError('');
+    setValidationErrors({});
     // Reset form when switching modes
     setFormData({
       first_name: '',
@@ -273,9 +422,15 @@ const AuthPage = () => {
                     name="phone_no"
                     value={formData.phone_no}
                     onChange={handleInputChange}
-                    className="form-input"
-                    placeholder="+90XXX-XXX-XX-XX"
+                    onBlur={handlePhoneBlur}
+                    className={`form-input ${validationErrors.phone_no ? 'error' : ''}`}
+                    placeholder="5XX XXX XX XX or +90 5XX XXX XX XX"
                   />
+                  {validationErrors.phone_no && (
+                    <div className="validation-error">
+                      {validationErrors.phone_no}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -307,10 +462,15 @@ const AuthPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className={`form-input ${validationErrors.email ? 'error' : ''}`}
                   placeholder="Enter your email"
                   required
                 />
+                {validationErrors.email && (
+                  <div className="validation-error">
+                    {validationErrors.email}
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -323,10 +483,15 @@ const AuthPage = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className={`form-input ${validationErrors.password ? 'error' : ''}`}
                   placeholder="Enter your password"
                   required
                 />
+                {validationErrors.password && (
+                  <div className="validation-error">
+                    {validationErrors.password}
+                  </div>
+                )}
               </div>
 
               {!isLogin && (
@@ -340,10 +505,15 @@ const AuthPage = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="form-input"
+                    className={`form-input ${validationErrors.confirmPassword ? 'error' : ''}`}
                     placeholder="Confirm your password"
                     required={!isLogin}
                   />
+                  {validationErrors.confirmPassword && (
+                    <div className="validation-error">
+                      {validationErrors.confirmPassword}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -390,7 +560,6 @@ const AuthPage = () => {
                   <Link to="/forgot-password" className="forgot-password">
                     Forgot Password?
                   </Link>
-
                 )}
               </div>
 
