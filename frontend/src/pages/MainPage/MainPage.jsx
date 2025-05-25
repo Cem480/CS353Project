@@ -159,7 +159,6 @@ const MainPage = () => {
         <section className="main-page-courses-section">
           <div className="main-page-section-header">
             <h2>Recommended for you</h2>
-            <a href="#" className="main-page-view-all">View all</a>
           </div>
           <div className="main-page-courses-grid">
             {recommendedCourses.map(course => (
@@ -185,7 +184,6 @@ const MainPage = () => {
         <section className="main-page-skills-section">
           <div className="main-page-section-header">
             <h2>Top categories for you</h2>
-            <a href="#" className="main-page-view-all">View all</a>
           </div>
           <div className="main-page-skills-container">
             {topCategories.map((category, index) => (
