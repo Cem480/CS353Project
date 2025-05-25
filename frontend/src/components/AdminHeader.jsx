@@ -49,7 +49,6 @@ const AdminHeader = () => {
                     >
                         Generate Reports
                     </NavLink>
-
                     <NavLink
                         to="/admin/past-reports"
                         className={({ isActive }) =>
@@ -58,42 +57,27 @@ const AdminHeader = () => {
                     >
                         Past Reports
                     </NavLink>
-
                     <NavLink to="/admin/users" className={({ isActive }) => isActive ? 'active' : ''}>Manage Users</NavLink>
                 </div>
-
-
             </div>
 
             <div className="header-right">
-                <div className="search-bar">
-                    <input type="text" placeholder="Search..." />
-                    <button className="search-button">Search</button>
-                </div>
-                <NotificationButton />
-                <div className="profile-dropdown">
-                    <div className="profile-icon" onClick={toggleProfileMenu}>
-                        {firstName.charAt(0).toUpperCase()}
-                    </div>
-                    {showProfileMenu && (
-                        <div className="dropdown-menu active">
-                            <div className="profile-info">
-                                <div className="profile-avatar-large">{firstName.charAt(0).toUpperCase()}</div>
-                                <div className="profile-details">
-                                    <div className="profile-name">{firstName}</div>
-                                    <div className="profile-role">{userData?.role ?? 'admin'}</div>
-                                </div>
-                            </div>
-                            <ul>
-                                <li><a href="/admin/settings">Account Settings</a></li>
-                                <div className="menu-divider"></div>
-                                <li><a onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</a></li>
-                            </ul>
-                        </div>
-                    )}
-                </div>
+                <ul className="profile-logout-nav">
+                    <li><NotificationButton /></li>
+                    <li>
+                        <NavLink to="/profile" className={({ isActive }) => isActive ? 'active' : ''}>
+                            Profile
+                        </NavLink>
+                    </li>
+                    <li>
+                        <a onClick={handleLogout} style={{ cursor: 'pointer' }}>
+                            Logout
+                        </a>
+                    </li>
+                </ul>
             </div>
         </header>
+
     );
 };
 

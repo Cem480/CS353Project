@@ -13,3 +13,43 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Global header right-side styling for admin */
+.profile-logout-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.profile-logout-nav li {
+  font-size: 1rem;
+}
+
+.profile-logout-nav a,
+.profile-logout-nav a:visited {
+  color: inherit;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.profile-logout-nav a:hover {
+  text-decoration: underline;
+}
+
+.profile-logout-nav a,
+.profile-logout-nav a:visited,
+.profile-logout-nav li {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  /* Match to your .nav-links if needed */
+  color: inherit;
+  text-decoration: none;
+}
+
+.profile-logout-nav a:hover {
+  text-decoration: underline;
+}

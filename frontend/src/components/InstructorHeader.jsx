@@ -74,41 +74,24 @@ const InstructorHeader = () => {
           <a href="/applications" className={location.pathname === '/applications' ? 'active' : ''}>Financial Aid</a>
         </div>
       </div>
+
       <div className="header-right">
-        <div className="search-bar">
-          <input type="text" placeholder="Search courses..." />
-          <button className="search-button">Search</button>
-        </div>
-        <NotificationButton />
-        <div className="profile-dropdown">
-          <div className="profile-icon" onClick={toggleProfileMenu}>
-            {userData ? userData.user_id.charAt(0).toUpperCase() : 'I'}
-          </div>
-          {showProfileMenu && (
-            <div className="dropdown-menu active">
-              <div className="profile-info">
-                <div className="profile-avatar-large">
-                  {userData ? userData.user_id.charAt(0).toUpperCase() : 'I'}
-                </div>
-                <div className="profile-details">
-                  <div className="profile-name">{firstName}</div>
-                  <div className="profile-role">{userData?.role || 'instructor'}</div>
-                </div>
-              </div>
-              <ul>
-                <li><a href="/my-courses">My Courses</a></li>
-                <li><a href="/earnings">Earnings</a></li>
-                <li><a href="/notifications">Notifications {unreadCount > 0 && `(${unreadCount})`}</a></li>
-                <li><a href="/applications">Financial Aid</a></li>
-                <li><a href="/settings">Account Settings</a></li>
-                <div className="menu-divider"></div>
-                <li><a onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</a></li>
-              </ul>
-            </div>
-          )}
-        </div>
+        <ul className="profile-logout-nav">
+          <li><NotificationButton /></li>
+          <li>
+            <Link to="/profile" className={location.pathname === '/profile' ? 'active' : ''}>
+              Profile
+            </Link>
+          </li>
+          <li>
+            <a onClick={handleLogout} style={{ cursor: 'pointer' }}>
+              Logout
+            </a>
+          </li>
+        </ul>
       </div>
     </header>
+
   );
 };
 
