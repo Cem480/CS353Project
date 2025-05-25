@@ -452,7 +452,7 @@ function CourseGeneralUI({ report, pieData, enrollBarData, createdLine }) {
             )}
 
 
-            <ChartBlock title="Courses Created (Last 12 Months)" type="line" data={createdLine} dataKey="count" />
+            <ChartBlock title="Courses Created" type="line" data={createdLine} dataKey="count" />
 
             <section className="cards-section">
                 <h3>Highlights</h3>
