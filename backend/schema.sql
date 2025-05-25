@@ -1490,11 +1490,20 @@ VALUES
 -- Insert questions to assessment
 INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time)
 VALUES 
-('C0000001', 'S000001', 'CT000001', 'Q000001', 'What is the capital of France?', 60),
-('C0000001', 'S000001', 'CT000001', 'Q000002', 'Solve 2 + 2 * 2.', 30),
-('C0000001', 'S000001', 'CT000001', 'Q000003', 'Explain the concept of gravity.', 120),
-('C0000001', 'S000001', 'CT000001', 'Q000004', 'Select the correct spelling.', 45),
-('C0000001', 'S000001', 'CT000001', 'Q000005', 'Name a prime number between 10 and 20.', 30);
+('C0000001', 'S000001', 'CT000001', 'Q000001', 
+ 'What is the capital of France?\nA) Berlin\nB) Paris\nC) Madrid\nD) Rome\nE) Lisbon', 60),
+
+('C0000001', 'S000001', 'CT000001', 'Q000002', 
+ 'Solve 2 + 2 * 2.\nA) 4\nB) 6\nC) 6\nD) 8\nE) 2', 30),
+
+('C0000001', 'S000001', 'CT000001', 'Q000003', 
+ 'Explain the concept of gravity.\nA) Gravity is the force that attracts objects toward the Earth.\nB) Gravity is a type of magnetism.\nC) Gravity only exists in space.\nD) Gravity pushes things away from Earth.\nE) Gravity is the effect of air pressure.', 120),
+
+('C0000001', 'S000001', 'CT000001', 'Q000004', 
+ 'Select the correct spelling.\nA) Recieve\nB) Acheive\nC) Belive\nD) Receive\nE) Thier', 45),
+
+('C0000001', 'S000001', 'CT000001', 'Q000005', 
+ 'Name a prime number between 10 and 20.\nA) 12\nB) 14\nC) 15\nD) 13\nE) 18', 30);
 
 INSERT INTO multiple_choice (course_id, sec_id, content_id, question_id, correct_answer)
 VALUES 
@@ -1881,19 +1890,47 @@ INSERT INTO assessment (course_id, sec_id, content_id, question_count) VALUES ('
 INSERT INTO assignment (course_id, sec_id, content_id, start_date, end_date, upload_material, body) VALUES ('C0000110', 'S013451', 'CT000010', '2025-05-07', '2025-05-25', 'doc', 'uploads/assignment_unit3_theory_3.pdf');
 
 -- Insert questions for the assessment
+-- Section S011506, Content CT000003
 INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES
-('C0000110', 'S011506', 'CT000003', 'Q0000001', 'What is Data Science?', 2),
-('C0000110', 'S011506', 'CT000003', 'Q0000002', 'Name a key component of Data Science.', 2);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q650762', 'Question 1 for Unit 2: Essentials - Content 2', 3);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q245904', 'Question 2 for Unit 2: Essentials - Content 2', 3);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q479756', 'Question 3 for Unit 2: Essentials - Content 2', 3);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q558419', 'Question 4 for Unit 2: Essentials - Content 2', 3);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S012987', 'CT000005', 'Q641453', 'Question 5 for Unit 2: Essentials - Content 2', 3);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q222694', 'Question 1 for Unit 4: Theory - Content 2', 3);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q962232', 'Question 2 for Unit 4: Theory - Content 2', 3);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q357165', 'Question 3 for Unit 4: Theory - Content 2', 3);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q786756', 'Question 4 for Unit 4: Theory - Content 2', 3);
-INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES ('C0000110', 'S014719', 'CT000012', 'Q727235', 'Question 5 for Unit 4: Theory - Content 2', 3);
+('C0000110', 'S011506', 'CT000003', 'Q0000001', 
+ 'What is Data Science?\nA) A field that uses statistics and algorithms to extract insights from data\nB) A method of producing hardware\nC) A cooking technique\nD) A type of art\nE) A sports training method', 2),
+
+('C0000110', 'S011506', 'CT000003', 'Q0000002', 
+ 'Name a key component of Data Science.\nA) Woodworking\nB) Machine Learning\nC) Painting\nD) Singing\nE) Sculpting', 2);
+
+-- Section: S012987, Content: CT000005
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES 
+('C0000110', 'S012987', 'CT000005', 'Q650762', 
+ 'Which of the following best describes supervised learning?\nA) An unsupervised method for clustering data\nB) Training a model without labeled data\nC) Training a model using labeled input-output pairs\nD) A deep learning technique only for images\nE) An online learning strategy', 3),
+
+('C0000110', 'S012987', 'CT000005', 'Q245904', 
+ 'What is the purpose of feature scaling in machine learning?\nA) To convert features into binary values\nB) To remove outliers\nC) To normalize feature ranges for fair comparison\nD) To increase model complexity\nE) To improve data storage', 3),
+
+('C0000110', 'S012987', 'CT000005', 'Q479756', 
+ 'Which metric is most appropriate for evaluating classification accuracy?\nA) Mean Squared Error\nB) Log Loss\nC) R² Score\nD) Confusion Matrix\nE) Silhouette Score', 3),
+
+('C0000110', 'S012987', 'CT000005', 'Q558419', 
+ 'Which technique is commonly used to prevent overfitting?\nA) Increasing the dataset size\nB) Regularization\nC) Removing all features\nD) Using more epochs\nE) Adding noise to inputs', 3),
+
+('C0000110', 'S012987', 'CT000005', 'Q641453', 
+ 'What does the term "bias" refer to in machine learning?\nA) Model sensitivity to input variance\nB) Error due to overly simple assumptions\nC) Data redundancy\nD) Too many model parameters\nE) High computational cost', 3);
+
+-- Section: S014719, Content: CT000012
+INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time) VALUES 
+('C0000110', 'S014719', 'CT000012', 'Q222694', 
+ 'Which of the following is an assumption of linear regression?\nA) Multicollinearity must be high\nB) Residuals are normally distributed\nC) Features must be binary\nD) No feature transformation is allowed\nE) Regularization must be applied', 3),
+
+('C0000110', 'S014719', 'CT000012', 'Q962232', 
+ 'What is the role of the cost function in a machine learning model?\nA) To perform model visualization\nB) To quantify the error of predictions\nC) To store model parameters\nD) To shuffle the dataset\nE) To apply hyperparameters', 3),
+
+('C0000110', 'S014719', 'CT000012', 'Q357165', 
+ 'Which algorithm is best suited for finding patterns in unlabeled data?\nA) Logistic Regression\nB) Naive Bayes\nC) K-Means Clustering\nD) Decision Trees\nE) Support Vector Machines', 3),
+
+('C0000110', 'S014719', 'CT000012', 'Q786756', 
+ 'Which method reduces dimensionality while preserving variance?\nA) Random Sampling\nB) Grid Search\nC) One-Hot Encoding\nD) Principal Component Analysis\nE) Cross-Validation', 3),
+
+('C0000110', 'S014719', 'CT000012', 'Q727235', 
+ 'Which of the following is a common loss function for binary classification?\nA) Hinge Loss\nB) R² Score\nC) Binary Cross-Entropy\nD) Mean Absolute Error\nE) Explained Variance', 3);
 
 
 -- Insert multiple choice answers for the questions
