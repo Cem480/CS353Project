@@ -142,6 +142,159 @@ def complete_content(course_id, sec_id, content_id, student_id):
         conn.close()
 
 
+@content_operations_bp.route("/api/complete/<course_id>/<sec_id>/<content_id>/<student_id>", methods=["GET"])
+def check_content_completion(course_id, sec_id, content_id, student_id):
+    """Check if specific content is completed"""
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    try:
+        # Check if content is marked as completed
+        cursor.execute("""
+            SELECT is_completed FROM complete 
+            WHERE course_id = %s AND sec_id = %s AND content_id = %s AND student_id = %s
+        """, (course_id, sec_id, content_id, student_id))
+        
+        completion_record = cursor.fetchone()
+        
+        # Also check if there's a submission with grade (indicates completion)
+        cursor.execute("""
+            SELECT grade FROM submit 
+            WHERE course_id = %s AND sec_id = %s AND content_id = %s AND student_id = %s
+        """, (course_id, sec_id, content_id, student_id))
+        
+        submission_record = cursor.fetchone()
+        
+        is_completed = False
+        if completion_record and completion_record['is_completed']:
+            is_completed = True
+        elif submission_record and submission_record['grade'] is not None:
+            is_completed = True
+            
+        return jsonify({
+            "success": True,
+            "is_completed": is_completed,
+            "has_completion_record": completion_record is not None,
+            "has_grade": submission_record is not None and submission_record['grade'] is not None
+        }), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@content_operations_bp.route("/api/course/<course_id>/student/<student_id>/completion-status", methods=["GET"])
+def get_detailed_completion_status(course_id, student_id):
+    """Get detailed completion status for all content in a course"""
+    conn = connect_project_db()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    try:
+        # Check if course exists and is accepted
+        cursor.execute("SELECT status FROM course WHERE course_id = %s", (course_id,))
+        course = cursor.fetchone()
+        if not course:
+            return jsonify({"success": False, "message": "Course not found"}), 404
+        if course["status"] != "accepted":
+            return jsonify({"success": False, "message": "Course is not accepted"}), 403
+
+        # Check if student exists
+        cursor.execute("SELECT 1 FROM student WHERE id = %s", (student_id,))
+        if not cursor.fetchone():
+            return jsonify({"success": False, "message": "Student not found"}), 404
+
+        # Check if student is enrolled
+        cursor.execute("""
+            SELECT 1 FROM enroll WHERE course_id = %s AND student_id = %s
+        """, (course_id, student_id))
+        if not cursor.fetchone():
+            return jsonify({"success": False, "message": "Student is not enrolled in this course"}), 403
+
+        # Get all content with completion status
+        cursor.execute("""
+            SELECT 
+                s.sec_id,
+                s.title as section_title,
+                s.order_number as section_order,
+                c.content_id,
+                c.title as content_title,
+                c.content_type,
+                c.allocated_time,
+                c.order_number as content_order,
+                COALESCE(comp.is_completed, false) as is_completed,
+                sub.grade,
+                CASE 
+                    WHEN comp.is_completed = true THEN true
+                    WHEN sub.grade IS NOT NULL THEN true
+                    ELSE false
+                END as is_complete_or_graded
+            FROM section s
+            JOIN content c ON s.course_id = c.course_id AND s.sec_id = c.sec_id
+            LEFT JOIN complete comp ON c.course_id = comp.course_id 
+                AND c.sec_id = comp.sec_id 
+                AND c.content_id = comp.content_id 
+                AND comp.student_id = %s
+            LEFT JOIN submit sub ON c.course_id = sub.course_id 
+                AND c.sec_id = sub.sec_id 
+                AND c.content_id = sub.content_id 
+                AND sub.student_id = %s
+            WHERE s.course_id = %s
+            ORDER BY s.order_number, c.order_number
+        """, (student_id, student_id, course_id))
+        
+        results = cursor.fetchall()
+        
+        # Organize by sections
+        sections = {}
+        for row in results:
+            section_id = row['sec_id']
+            if section_id not in sections:
+                sections[section_id] = {
+                    'section_id': section_id,
+                    'section_title': row['section_title'],
+                    'section_order': row['section_order'],
+                    'contents': []
+                }
+            
+            sections[section_id]['contents'].append({
+                'content_id': row['content_id'],
+                'content_title': row['content_title'],
+                'content_type': row['content_type'],
+                'allocated_time': row['allocated_time'],
+                'content_order': row['content_order'],
+                'is_completed': row['is_completed'],
+                'grade': row['grade'],
+                'is_complete_or_graded': row['is_complete_or_graded']
+            })
+        
+        # Convert to list
+        sections_list = list(sections.values())
+        
+        # Calculate totals
+        total_content = len(results)
+        completed_content = sum(1 for row in results if row['is_complete_or_graded'])
+        
+        return jsonify({
+            "success": True,
+            "course_id": course_id,
+            "student_id": student_id,
+            "total_content": total_content,
+            "completed_content": completed_content,
+            "completion_percentage": round((completed_content / total_content * 100) if total_content > 0 else 0, 2),
+            "sections": sections_list
+        }), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
 # get specific content
 @content_operations_bp.route("/api/course/<course_id>/section/<sec_id>/content/<content_id>", methods=["GET"])
 def get_content_detail(course_id, sec_id, content_id):
