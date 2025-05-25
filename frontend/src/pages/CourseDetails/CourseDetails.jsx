@@ -4,11 +4,13 @@ import './CourseDetails.css';
 import { getCurrentUser } from '../../services/auth';
 import { enrollInCourse, checkEnrollment } from '../../services/student';
 import { submitFinancialAidApplication } from '../../services/financial_aid';
-
-import { 
-  getCourseInfo, 
-  getCourseSections, 
-  getSectionContents 
+import StudentHeader from '../../components/StudentHeader';
+import AdminHeader from '../../components/AdminHeader';
+import InstructorHeader from '../../components/InstructorHeader';
+import {
+  getCourseInfo,
+  getCourseSections,
+  getSectionContents
 } from '../../services/courseContent';
 
 const CourseDetails = () => {
@@ -21,32 +23,32 @@ const CourseDetails = () => {
   const [sections, setSections] = useState([]);
   const [sectionContents, setSectionContents] = useState({});
   const [isEnrolled, setIsEnrolled] = useState(false);
-  
+
   // Extract course ID from URL query parameters
   const searchParams = new URLSearchParams(location.search);
   const courseId = searchParams.get('id');
-  
+
   // Get current user data
   const userData = getCurrentUser();
-  
+  const role = userData?.role;
   // Use ref to prevent multiple API calls
   const dataFetchedRef = useRef(false);
-  
+
   useEffect(() => {
     // If no user is logged in, redirect to login
     if (!userData) {
       navigate('/login');
       return;
     }
-    
+
     // Prevent refetching data when component remounts
     if (dataFetchedRef.current) return;
     dataFetchedRef.current = true;
-    
+
     const fetchCourseData = async () => {
       setLoading(true);
       setError('');
-      
+
       try {
         if (!courseId) {
           throw new Error('No course ID provided');
@@ -55,25 +57,25 @@ const CourseDetails = () => {
         // Fetch course info
         const courseData = await getCourseInfo(courseId);
         console.log('Fetched course info:', courseData);
-        
+
         if (!courseData) {
           throw new Error('Failed to fetch course information');
         }
-        
+
         setCourseInfo(courseData);
 
         const enrollmentResult = await checkEnrollment(courseId, userData.user_id);
         setIsEnrolled(enrollmentResult.enrolled);
-        
+
         // Fetch course sections
         const sectionsData = await getCourseSections(courseId);
-        
+
         if (Array.isArray(sectionsData) && sectionsData.length > 0) {
           setSections(sectionsData);
-          
+
           // Fetch content for each section
           const contentsObj = {};
-          
+
           for (const section of sectionsData) {
             try {
               const sectionContentsData = await getSectionContents(courseId, section.sec_id);
@@ -84,7 +86,7 @@ const CourseDetails = () => {
               console.error(`Error fetching contents for section ${section.sec_id}:`, sectionError);
             }
           }
-          
+
           setSectionContents(contentsObj);
         }
       } catch (err) {
@@ -94,7 +96,7 @@ const CourseDetails = () => {
         setLoading(false);
       }
     };
-    
+
     fetchCourseData();
   }, [courseId, userData, navigate]);
 
@@ -128,23 +130,23 @@ const CourseDetails = () => {
 
   const handleSubmitFinancialAid = async (e) => {
     e.preventDefault();
-    
+
     // Get form data
     const formData = new FormData(e.target);
     const income = formData.get('income');
     const statement = formData.get('reason');
-    
+
     if (!income || !statement) {
       alert('Please fill in all required fields.');
       return;
     }
-    
+
     try {
       const result = await submitFinancialAidApplication(courseId, userData.user_id, {
         income: parseFloat(income),
         statement: statement
       });
-      
+
       if (result.success) {
         alert("Financial aid application submitted successfully!");
         setShowFinancialAid(false);
@@ -163,7 +165,7 @@ const CourseDetails = () => {
   // Get duration text based on allocated_time (in minutes)
   const getDurationText = (minutes) => {
     if (!minutes) return 'Duration not specified';
-    
+
     if (minutes < 60) {
       return `${minutes} minutes`;
     } else {
@@ -197,7 +199,7 @@ const CourseDetails = () => {
     return (
       <div className="course-details">
         <div className="course-details-container">
-          <div style={{ 
+          <div style={{
             textAlign: 'center',
             padding: '40px 20px',
             fontSize: '16px',
@@ -215,71 +217,44 @@ const CourseDetails = () => {
   const title = course.title || 'Course Title';
   const description = course.description || 'No course description available.';
   const university = course.creator_id ? `Instructor ID: ${course.creator_id}` : 'University';
-  const level = course.difficulty_level 
-    ? `Level ${course.difficulty_level}` 
+  const level = course.difficulty_level
+    ? `Level ${course.difficulty_level}`
     : 'Not specified';
 
   const price = course.price === 0
-  ? 'Free'
-  : course.price > 0
-    ? `$${course.price}`
-    : 'Price Not Available';
+    ? 'Free'
+    : course.price > 0
+      ? `$${course.price}`
+      : 'Price Not Available';
 
-  const enrolled = course.enrollment_count 
-    ? `${course.enrollment_count} student${course.enrollment_count !== 1 ? 's' : ''}` 
+  const enrolled = course.enrollment_count
+    ? `${course.enrollment_count} student${course.enrollment_count !== 1 ? 's' : ''}`
     : 'Not specified';
   const lastUpdated = course.last_update_date || 'Not specified';
 
   return (
     <div className="course-details">
       <header className="main-page-header">
-        <div className="main-page-header-left">
-          <div className="main-page-logo">
-            <h1 onClick={() => navigate('/home')} style={{cursor: 'pointer'}}>LearnHub</h1>
-          </div>
-          <div className="main-page-nav-links">
-            <a href="/home">Home</a>
-            <a href="/degrees" className="active">Online Degrees</a>
-            <a href="/my-learning">My Learning</a>
-            <a href="/my-certificates">My Certificates</a>
-            <a href="/student/fapplications">My Fapplications</a>
-          </div>
-        </div>
-        <div className="main-page-header-right">
-          <div className="main-page-search-bar">
-            <input type="text" placeholder="Search courses..." />
-            <button className="main-page-search-button">Search</button>
-          </div>
-          <div 
-            className="notification-button" 
-            onClick={() => navigate('/notifications')} 
-            style={{ cursor: 'pointer' }}
-            title="View notifications"
-          >
-            <span className="notification-icon">🔔</span>
-          </div>
-          <div className="main-page-profile-dropdown">
-            <div className="main-page-profile-icon">
-              {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}
-            </div>
-          </div>
-        </div>
+        {role === 'admin' && <AdminHeader />}
+        {role === 'instructor' && <InstructorHeader />}
+        {role === 'student' && <StudentHeader />}
+
       </header>
-      
+
       {/* Error Message (if any) */}
       {error && (
-        <div style={{ 
-          padding: '10px', 
-          margin: '10px auto', 
-          backgroundColor: '#ffebee', 
-          color: '#c62828', 
+        <div style={{
+          padding: '10px',
+          margin: '10px auto',
+          backgroundColor: '#ffebee',
+          color: '#c62828',
           borderRadius: '4px',
           maxWidth: '1200px'
         }}>
           {error}
         </div>
       )}
-      
+
       <div className="course-details-container">
         <div className="course-details-header">
           <button className="course-details-back-button" onClick={handleGoBack}>
@@ -290,13 +265,13 @@ const CourseDetails = () => {
             <h3>{university}</h3>
           </div>
         </div>
-        
+
         <div className="course-details-main">
           <div className="course-details-info-container">
             <div className="course-details-overview">
               <h2>Overview</h2>
               <p>{description}</p>
-              
+
               <div className="course-details-metadata">
                 <div className="course-details-metadata-item">
                   <span className="course-details-metadata-label">Duration:</span>
@@ -316,7 +291,7 @@ const CourseDetails = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="course-details-syllabus">
               <h2>Syllabus</h2>
               {sections && sections.length > 0 ? (
@@ -327,17 +302,17 @@ const CourseDetails = () => {
                         <h4>{section.section_title}</h4>
                         <span className="course-details-module-duration">Section {section.order_number}</span>
                       </div>
-                      
+
                       {sectionContents[section.sec_id] && sectionContents[section.sec_id].length > 0 ? (
                         <ul className="course-details-module-topics">
                           {sectionContents[section.sec_id].map((content) => (
                             <li key={content.content_id}>
                               <span style={{ marginRight: '8px' }}>{getContentTypeIcon(content.content_type)}</span>
                               {content.content_title}
-                              <span style={{ 
-                                fontSize: '0.85em', 
-                                color: '#666', 
-                                marginLeft: '8px' 
+                              <span style={{
+                                fontSize: '0.85em',
+                                color: '#666',
+                                marginLeft: '8px'
                               }}>
                                 ({getDurationText(content.allocated_time)})
                               </span>
@@ -356,7 +331,7 @@ const CourseDetails = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="course-details-instructors-section">
               <h2>Instructors</h2>
               <div className="course-details-no-instructors">
@@ -364,26 +339,26 @@ const CourseDetails = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="course-details-enrollment-card">
             <h2>{title}</h2>
             <div className="course-details-enrollment-price">{price}</div>
             {userData?.role === 'instructor' ? (
-                <>
-                  <button 
-                    className="course-details-apply-button" 
-                    onClick={() => navigate(`/course/${courseId}/content`)}
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button 
-                    className="course-details-apply-button" 
-                    onClick={() => navigate(`/instructor/grading`)}
-                  >
-                    📝 Grading
-                  </button>
-                </>
-              ) : isEnrolled ? (
+              <>
+                <button
+                  className="course-details-apply-button"
+                  onClick={() => navigate(`/course/${courseId}/content`)}
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  className="course-details-apply-button"
+                  onClick={() => navigate(`/instructor/grading`)}
+                >
+                  📝 Grading
+                </button>
+              </>
+            ) : isEnrolled ? (
               <button className="course-details-continue-button" onClick={() => navigate('/my-learning')}>
                 Continue Learning
               </button>
@@ -418,25 +393,25 @@ const CourseDetails = () => {
             </div>
           </div>
         </div>
-        
+
         {showFinancialAid && (
           <div className="course-details-financial-aid-modal">
             <div className="course-details-financial-aid-content">
               <button className="course-details-close-modal" onClick={handleFinancialAid}>×</button>
               <h2>Financial Aid Application</h2>
               <p>Please complete the following form to apply for financial aid for the {title} program.</p>
-              
+
               <form onSubmit={handleSubmitFinancialAid}>
                 <div className="course-details-form-group">
                   <label htmlFor="income">Annual Income (USD)</label>
                   <input type="number" id="income" name="income" required />
                 </div>
-                
+
                 <div className="course-details-form-group">
                   <label htmlFor="reason">Why are you applying for financial aid?</label>
                   <textarea id="reason" name="reason" rows="4" required></textarea>
                 </div>
-                
+
                 <button type="submit" className="course-details-submit-aid-button">Submit Application</button>
               </form>
             </div>

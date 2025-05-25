@@ -1,0 +1,58 @@
+/* src/components/StudentHeader.css */
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    height: 64px;
+    background-color: white;
+    border-bottom: 1px solid #eee;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.logo h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--primary-color);
+}
+
+.nav-links a {
+    margin-right: 20px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.nav-links a.active {
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.profile-logout-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.profile-logout-nav li {
+    font-size: 1rem !important;
+    font-family: inherit !important;
+}
+
+.profile-logout-nav a,
+.profile-logout-nav a:visited {
+    font-size: 1rem !important;
+    font-family: inherit !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+.profile-logout-nav a:hover {
+    text-decoration: underline !important;
+}

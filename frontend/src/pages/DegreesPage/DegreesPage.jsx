@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import './DegreesPage.css';
 import { getCurrentUser, logout } from '../../services/auth';
 import axios from 'axios';
+import StudentHeader from '../../components/StudentHeader';
+import AdminHeader from '../../components/AdminHeader';
+import InstructorHeader from '../../components/InstructorHeader';
 
 const DegreesPage = () => {
   const navigate = useNavigate();
   const userData = getCurrentUser();
   const initialFetchRef = useRef(false);
-  
+  const role = userData?.role;
   // State variables
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
@@ -19,7 +22,7 @@ const DegreesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
   const [sortOption, setSortOption] = useState("relevance");
-  
+
   const [filters, setFilters] = useState({
     title: "",
     description: "",
@@ -54,10 +57,10 @@ const DegreesPage = () => {
 
   const getInitials = () => {
     if (!userData) return 'U';
-    
+
     const firstName = userData.first_name || '';
     const lastName = userData.last_name || '';
-    
+
     if (firstName && lastName) {
       return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     } else if (firstName) {
@@ -65,7 +68,7 @@ const DegreesPage = () => {
     } else if (userData.user_id) {
       return userData.user_id.charAt(0).toUpperCase();
     }
-    
+
     return 'U';
   };
 
@@ -91,27 +94,27 @@ const DegreesPage = () => {
       console.log('Fetching online degrees...');
       setLoading(true);
       setError('');
-      
+
       // Using the correct endpoint for online degrees
       const response = await axios.get('http://localhost:5001/api/degrees');
       const coursesData = response.data;
-      
+
       console.log('Degrees data received:', coursesData);
-      
+
       if (!Array.isArray(coursesData)) {
         throw new Error('Invalid response format');
       }
-      
+
       setCourses(coursesData);
       setFilteredCourses(coursesData);
-      
+
       // Extract unique categories, instructors, and levels
       const uniqueCategories = [...new Set(coursesData.map(course => course.category))].filter(Boolean);
-      const uniqueInstructors = [...new Set(coursesData.map(course => 
+      const uniqueInstructors = [...new Set(coursesData.map(course =>
         course.instructor_name || "Unknown"))].filter(Boolean);
-      const uniqueLevels = [...new Set(coursesData.map(course => 
+      const uniqueLevels = [...new Set(coursesData.map(course =>
         course.difficulty_level || "Not specified"))].filter(Boolean);
-      
+
       setCategories(uniqueCategories);
       setUniversities(uniqueInstructors); // Rename this to instructors in the component
       setLevels(uniqueLevels);
@@ -127,63 +130,63 @@ const DegreesPage = () => {
   const applyFilters = async () => {
     try {
       setLoading(true);
-      
+
       // Build query parameters
       const params = new URLSearchParams();
-      
+
       if (filters.title) {
         params.append('title', filters.title);
       }
-      
+
       if (filters.description) {
         params.append('description', filters.description);
       }
-      
+
       if (filters.category) {
         params.append('category', filters.category);
       }
-      
+
       // Price parameters
       params.append('min_price', filters.priceMin);
       params.append('max_price', filters.priceMax);
-      
+
       if (filters.is_free) {
         params.append('free_only', 'true');
       }
-      
+
       // Date parameters
       if (filters.creation_date_from) {
         params.append('creation_start', filters.creation_date_from);
       }
-      
+
       if (filters.creation_date_to) {
         params.append('creation_end', filters.creation_date_to);
       }
-      
+
       if (filters.last_update_date_from) {
         params.append('update_start', filters.last_update_date_from);
       }
-      
+
       if (filters.last_update_date_to) {
         params.append('update_end', filters.last_update_date_to);
       }
-      
+
       // Enrollment parameters
       params.append('enroll_min', filters.enrollment_count_min);
       params.append('enroll_max', filters.enrollment_count_max);
-      
+
       // Level parameter
       if (filters.level) {
         params.append('level', filters.level);
       }
-      
+
       // University (instructor) parameter
       if (filters.university) {
         // This is a bit trickier since we need to search by instructor name
         // We'll use the general search parameter
         params.append('search', filters.university);
       }
-      
+
       // Sort parameter
       if (sortOption === 'newest') {
         params.append('sort', 'newest');
@@ -196,18 +199,18 @@ const DegreesPage = () => {
       } else {
         params.append('sort', 'relevance');
       }
-      
+
       // Make the API call with filters
       const response = await axios.get(`http://localhost:5001/api/degrees?${params.toString()}`);
       const filteredData = response.data;
-      
+
       if (!Array.isArray(filteredData)) {
         throw new Error('Invalid response format');
       }
-      
+
       setFilteredCourses(filteredData);
       setCurrentPage(1); // Reset to first page when filters change
-      
+
     } catch (err) {
       console.error('Error applying filters:', err);
       setError('Failed to filter courses. Please try again.');
@@ -255,7 +258,7 @@ const DegreesPage = () => {
   const handleSortChange = (e) => {
     const sortValue = e.target.value;
     setSortOption(sortValue);
-    
+
     // Apply current filters with new sort option
     applyFilters();
   };
@@ -276,7 +279,7 @@ const DegreesPage = () => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
-  
+
   const formatPrice = (price) => {
     if (price === 0) return "Free";
     return `$${price?.toLocaleString() || '0'}`;
@@ -293,8 +296,8 @@ const DegreesPage = () => {
   for (let i = 1; i <= totalPages; i++) {
     if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
       pageButtons.push(
-        <button 
-          key={i} 
+        <button
+          key={i}
           className={`page-button ${currentPage === i ? 'active' : ''}`}
           onClick={() => handlePageChange(i)}
         >
@@ -309,89 +312,12 @@ const DegreesPage = () => {
   return (
     <div className="degrees-page">
       {/* Header/Navbar */}
-      <div className="main-header">
-        <div className="header-left">
-          <div className="logo">
-            <h1 onClick={() => navigate('/home')}>LearnHub</h1>
-          </div>
-          <div className="nav-links">
-            <a 
-              href="#" 
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/home');
-              }}
-            >
-              Home
-            </a>
-            <a 
-              href="#" 
-              className="active"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/degrees');
-              }}
-            >
-              Online Degrees
-            </a>
-            <a 
-              href="#" 
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/my-learning');
-              }}
-            >
-              My Learning
-            </a>
-          </div>
-        </div>
-        <div className="header-right">
-          <div className="search-bar">
-            <input type="text" placeholder="Search courses..." />
-            <button className="search-button">Search</button>
-          </div>
-          <div 
-            className="notifications-icon"
-            onClick={() => navigate('/notifications')}
-          >
-            🔔
-          </div>
-          <div className="profile-dropdown">
-            <div 
-              className="profile-icon" 
-              onClick={toggleProfileDropdown}
-            >
-              {getInitials()}
-            </div>
-            {showProfileDropdown && (
-              <div className="dropdown-menu">
-                <div className="dropdown-item" onClick={() => {
-                  navigate('/profile');
-                  setShowProfileDropdown(false);
-                }}>
-                  Profile
-                </div>
-                <div className="dropdown-item" onClick={() => {
-                  navigate('/my-certificates');
-                  setShowProfileDropdown(false);
-                }}>
-                  Certificates
-                </div>
-                <div className="dropdown-item" onClick={() => {
-                  navigate('/change-password');
-                  setShowProfileDropdown(false);
-                }}>
-                  Change Password
-                </div>
-                <div className="dropdown-divider"></div>
-                <div className="dropdown-item" onClick={handleLogout}>
-                  Logout
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <header className="main-page-header">
+        {role === 'admin' && <AdminHeader />}
+        {role === 'instructor' && <InstructorHeader />}
+        {role === 'student' && <StudentHeader />}
+
+      </header>
 
       <div className="degrees-container">
         <div className="page-title">
@@ -401,18 +327,18 @@ const DegreesPage = () => {
 
         {/* Error message if any */}
         {error && (
-          <div style={{ 
-            padding: '10px', 
-            margin: '10px auto', 
-            backgroundColor: '#ffebee', 
-            color: '#c62828', 
+          <div style={{
+            padding: '10px',
+            margin: '10px auto',
+            backgroundColor: '#ffebee',
+            color: '#c62828',
             borderRadius: '4px',
             maxWidth: '1200px',
             textAlign: 'center'
           }}>
             {error}
-            <button 
-              onClick={fetchCourses} 
+            <button
+              onClick={fetchCourses}
               style={{
                 marginLeft: '15px',
                 padding: '5px 10px',
@@ -430,7 +356,7 @@ const DegreesPage = () => {
 
         {/* Loading indicator */}
         {loading && (
-          <div style={{ 
+          <div style={{
             textAlign: 'center',
             padding: '40px 20px',
             fontSize: '16px',
@@ -451,9 +377,9 @@ const DegreesPage = () => {
           {/* Filters Section */}
           <div className={`filters-section ${showFilters ? 'show' : ''}`}>
             <h3>Category</h3>
-            <select 
-              name="category" 
-              value={filters.category} 
+            <select
+              name="category"
+              value={filters.category}
               onChange={handleFilterChange}
               className="filter-select"
             >
@@ -466,13 +392,13 @@ const DegreesPage = () => {
             <div className="filter-group">
               <h4>Price</h4>
               <div className="price-range">
-                <input 
-                  type="range" 
-                  name="priceMax" 
-                  min="0" 
-                  max="20000" 
-                  step="500" 
-                  value={filters.priceMax} 
+                <input
+                  type="range"
+                  name="priceMax"
+                  min="0"
+                  max="20000"
+                  step="500"
+                  value={filters.priceMax}
                   onChange={handleFilterChange}
                 />
                 <div className="price-range-labels">
@@ -481,11 +407,11 @@ const DegreesPage = () => {
                 </div>
               </div>
               <div className="checkbox-group">
-                <input 
-                  type="checkbox" 
-                  id="is_free" 
-                  name="is_free" 
-                  checked={filters.is_free} 
+                <input
+                  type="checkbox"
+                  id="is_free"
+                  name="is_free"
+                  checked={filters.is_free}
                   onChange={handleFilterChange}
                 />
                 <label htmlFor="is_free">Free courses only</label>
@@ -496,17 +422,17 @@ const DegreesPage = () => {
               <h4>Creation Date</h4>
               <div className="date-range">
                 <label>From</label>
-                <input 
-                  type="date" 
-                  name="creation_date_from" 
-                  value={filters.creation_date_from} 
+                <input
+                  type="date"
+                  name="creation_date_from"
+                  value={filters.creation_date_from}
                   onChange={handleFilterChange}
                 />
                 <label>To</label>
-                <input 
-                  type="date" 
-                  name="creation_date_to" 
-                  value={filters.creation_date_to} 
+                <input
+                  type="date"
+                  name="creation_date_to"
+                  value={filters.creation_date_to}
                   onChange={handleFilterChange}
                 />
               </div>
@@ -516,17 +442,17 @@ const DegreesPage = () => {
               <h4>Last Update Date</h4>
               <div className="date-range">
                 <label>From</label>
-                <input 
-                  type="date" 
-                  name="last_update_date_from" 
-                  value={filters.last_update_date_from} 
+                <input
+                  type="date"
+                  name="last_update_date_from"
+                  value={filters.last_update_date_from}
                   onChange={handleFilterChange}
                 />
                 <label>To</label>
-                <input 
-                  type="date" 
-                  name="last_update_date_to" 
-                  value={filters.last_update_date_to} 
+                <input
+                  type="date"
+                  name="last_update_date_to"
+                  value={filters.last_update_date_to}
                   onChange={handleFilterChange}
                 />
               </div>
@@ -535,13 +461,13 @@ const DegreesPage = () => {
             <div className="filter-group">
               <h4>Enrollment Count</h4>
               <div className="enrollment-range">
-                <input 
-                  type="range" 
-                  name="enrollment_count_max" 
-                  min="0" 
-                  max="10000" 
-                  step="500" 
-                  value={filters.enrollment_count_max} 
+                <input
+                  type="range"
+                  name="enrollment_count_max"
+                  min="0"
+                  max="10000"
+                  step="500"
+                  value={filters.enrollment_count_max}
                   onChange={handleFilterChange}
                 />
                 <div className="enrollment-range-labels">
@@ -579,9 +505,9 @@ const DegreesPage = () => {
             <div className="degrees-header">
               <div className="degrees-sort">
                 <label htmlFor="sort">Sort by:</label>
-                <select 
-                  id="sort" 
-                  value={sortOption} 
+                <select
+                  id="sort"
+                  value={sortOption}
                   onChange={handleSortChange}
                 >
                   <option value="relevance">Relevance</option>
@@ -594,10 +520,10 @@ const DegreesPage = () => {
             </div>
 
             {!loading && filteredCourses.length === 0 && (
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '40px 0', 
-                color: '#666' 
+              <div style={{
+                textAlign: 'center',
+                padding: '40px 0',
+                color: '#666'
               }}>
                 No courses match your filters. Try adjusting your criteria.
               </div>
@@ -628,7 +554,7 @@ const DegreesPage = () => {
                     </div>
                     <div className="degree-footer">
                       <div className="degree-price">{formatPrice(course.price)}</div>
-                      <button 
+                      <button
                         className="learn-more"
                         onClick={() => handleViewCourseDetails(course.course_id)}
                       >
@@ -643,19 +569,19 @@ const DegreesPage = () => {
             {totalPages > 1 && (
               <div className="pagination">
                 {currentPage > 1 && (
-                  <button 
-                    className="page-button" 
+                  <button
+                    className="page-button"
                     onClick={() => handlePageChange(currentPage - 1)}
                   >
                     &lt;
                   </button>
                 )}
-                
+
                 {pageButtons}
-                
+
                 {currentPage < totalPages && (
-                  <button 
-                    className="page-button" 
+                  <button
+                    className="page-button"
                     onClick={() => handlePageChange(currentPage + 1)}
                   >
                     &gt;

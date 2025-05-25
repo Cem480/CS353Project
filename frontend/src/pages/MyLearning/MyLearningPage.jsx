@@ -6,11 +6,14 @@ import { getCurrentUser } from '../../services/auth';
 import { getEnrolledCourses } from '../../services/course';
 import { getStudentCertificates, generateCertificate } from '../../services/student';
 import NotificationButton from '../../components/NotificationButton';
+import StudentHeader from '../../components/StudentHeader';
+import AdminHeader from '../../components/AdminHeader';
+import InstructorHeader from '../../components/InstructorHeader';
 
 const MyLearningPage = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
-
+  const role = user.role;
   const [activeFilter, setActiveFilter] = useState('all');
   const [allCourses, setAllCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,37 +84,10 @@ const MyLearningPage = () => {
   return (
     <div className="my-learning-page">
       <header className="main-page-header">
-        <div className="main-page-header-left">
-          <div className="main-page-logo">
-            <h1>LearnHub</h1>
-          </div>
-          <div className="main-page-nav-links">
-            <Link to="/home">Home</Link>
-            <Link to="/degrees">Online Degrees</Link>
-            <Link to="/my-learning" className="active">My Learning</Link>
-            <Link to="/my-certificates">My Certificates</Link>
-            <Link to="/student/fapplications">My Fapplications</Link>
-          </div>
-        </div>
-        <div className="main-page-header-right">
-          <div className="main-page-search-bar">
-            <input type="text" placeholder="Search my courses..." />
-            <button className="main-page-search-button">Search</button>
-          </div>
-          <div 
-            className="notification-button" 
-            onClick={() => navigate('/notifications')} 
-            style={{ cursor: 'pointer' }}
-            title="View notifications"
-          >
-            <span className="notification-icon">🔔</span>
-          </div>
-          <div className="main-page-profile-dropdown">
-            <div className="main-page-profile-icon" onClick={() => navigate('/profile')}>
-              {user.user_id.charAt(0).toUpperCase()}
-            </div>
-          </div>
-        </div>
+        {role === 'admin' && <AdminHeader />}
+        {role === 'instructor' && <InstructorHeader />}
+        {role === 'student' && <StudentHeader />}
+
       </header>
 
       <div className="learning-container">
@@ -133,7 +109,7 @@ const MyLearningPage = () => {
         <div className="learning-filters">
           {['all', 'inProgress', 'notStarted', 'completed'].map(filter => (
             <button key={filter} className={`filter-button ${activeFilter === filter ? 'active' : ''}`} onClick={() => setActiveFilter(filter)}>
-              {filterDisplayNames[filter] || (filter.charAt(0).toUpperCase() + filter.slice(1))} 
+              {filterDisplayNames[filter] || (filter.charAt(0).toUpperCase() + filter.slice(1))}
             </button>
           ))}
         </div>
@@ -184,8 +160,8 @@ const MyLearningPage = () => {
                       ) : (
                         <>
                           {/* Updated to use handleContinueLearning */}
-                          <button 
-                            className="primary-button" 
+                          <button
+                            className="primary-button"
                             onClick={() => handleContinueLearning(course.course_id)}
                           >
                             Continue Learning

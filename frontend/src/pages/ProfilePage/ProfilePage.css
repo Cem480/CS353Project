@@ -474,11 +474,12 @@
 ======================================================= */
 
 /* bump global font again (was 1.25rem) → 1.38rem ≈ 22px base */
-.profile-page,
-.profile-page * {
+.profile-main,
+.profile-main * {
     font-size: 1.38rem;
     line-height: 1.6;
 }
+
 
 /* Top-level cards: add padding */
 .info-card,

@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './NotificationPage.css';
+import { getCurrentUser } from '../../services/auth';
 import * as notificationService from '../../services/notification';
 import { formatDistanceToNow } from 'date-fns';
+
+import StudentHeader from '../../components/StudentHeader';
+import AdminHeader from '../../components/AdminHeader';
+import InstructorHeader from '../../components/InstructorHeader';
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  
+
   // State for filter tabs
   const [activeFilter, setActiveFilter] = useState('all');
-  
+
   // Get the current user ID from localStorage
   const getUserId = () => {
     const userData = localStorage.getItem('userData');
@@ -22,9 +27,11 @@ const NotificationPage = () => {
     }
     return null;
   };
-  
+
   const userId = getUserId();
-  
+  const userData = getCurrentUser();
+  const role = userData?.role;
+
   // Fetch notifications on component mount and when filter changes
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -33,13 +40,13 @@ const NotificationPage = () => {
         setLoading(false);
         return;
       }
-      
+
       try {
         setLoading(true);
         // Only pass status if it's not 'all'
         const statusParam = activeFilter !== 'all' ? activeFilter : null;
         const response = await notificationService.getUserNotifications(userId, statusParam);
-        
+
         if (response.success) {
           // Transform backend data to match our component's expected format
           const transformedNotifications = response.notifications.map(note => ({
@@ -52,9 +59,9 @@ const NotificationPage = () => {
             read: note.status !== 'unread',
             status: note.status
           }));
-          
+
           setNotifications(transformedNotifications);
-          
+
           // Update the notification count in local storage for comparison
           const unreadCount = transformedNotifications.filter(note => !note.read).length;
           notificationService.acknowledgeNotifications(unreadCount);
@@ -68,13 +75,13 @@ const NotificationPage = () => {
         setLoading(false);
       }
     };
-    
+
     fetchNotifications();
   }, [userId, activeFilter]);
-  
+
   // Helper function to generate title based on notification type
   const getTitleFromType = (type) => {
-    switch(type) {
+    switch (type) {
       case 'assignment':
         return 'Assignment Due Soon';
       case 'course':
@@ -91,7 +98,7 @@ const NotificationPage = () => {
         return 'Notification';
     }
   };
-  
+
   // Format timestamp to relative time
   const formatTimeAgo = (timestamp) => {
     try {
@@ -102,17 +109,17 @@ const NotificationPage = () => {
       return 'some time ago';
     }
   };
-  
+
   // Mark notification as read
   const markAsRead = async (id) => {
     if (!userId) return;
-    
+
     try {
       const response = await notificationService.markNotificationAsRead(id, userId);
-      
+
       if (response.success) {
         setNotifications(
-          notifications.map((note) => 
+          notifications.map((note) =>
             note.id === id ? { ...note, read: true, status: 'read' } : note
           )
         );
@@ -121,14 +128,14 @@ const NotificationPage = () => {
       console.error('Error marking notification as read:', err);
     }
   };
-  
+
   // Mark all as read
   const markAllAsRead = async () => {
     if (!userId) return;
-    
+
     try {
       const response = await notificationService.markAllNotificationsAsRead(userId);
-      
+
       if (response.success) {
         setNotifications(
           notifications.map((note) => ({ ...note, read: true, status: 'read' }))
@@ -143,10 +150,10 @@ const NotificationPage = () => {
   const archiveNotification = async (id, event) => {
     event.stopPropagation(); // Prevent triggering the parent click (markAsRead)
     if (!userId) return;
-    
+
     try {
       const response = await notificationService.archiveNotification(id, userId);
-      
+
       if (response.success) {
         // Remove the notification from the list if we're not viewing archived
         if (activeFilter !== 'archived') {
@@ -154,7 +161,7 @@ const NotificationPage = () => {
         } else {
           // Or update its status if we're viewing archived
           setNotifications(
-            notifications.map((note) => 
+            notifications.map((note) =>
               note.id === id ? { ...note, status: 'archived' } : note
             )
           );
@@ -167,7 +174,7 @@ const NotificationPage = () => {
 
   // Get filtered notifications
   const getFilteredNotifications = () => {
-    switch(activeFilter) {
+    switch (activeFilter) {
       case 'unread':
         return notifications.filter(note => !note.read);
       case 'archived':
@@ -180,7 +187,7 @@ const NotificationPage = () => {
 
   // Get notification icon based on type
   const getNotificationIcon = (type) => {
-    switch(type) {
+    switch (type) {
       case 'assignment':
         return '📝';
       case 'course':
@@ -198,48 +205,17 @@ const NotificationPage = () => {
 
   // Count unread notifications
   const unreadCount = notifications.filter(note => !note.read).length;
-  
+
   // Get filtered notifications
   const filteredNotifications = getFilteredNotifications();
 
   return (
     <div className="notification-page">
-      {/* Header */}
-      <header className="main-header">          <div className="header-left">
-          <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }} title="Go to home page">
-            <h1>LearnHub</h1>
-          </div>
-          <div className="nav-links">
-            <a onClick={() => navigate('/')} className="nav-link" style={{ cursor: 'pointer' }} title="Home">Home</a>
-            <a onClick={() => navigate('/my-learning')} className="nav-link" style={{ cursor: 'pointer' }} title="My Learning">My Learning</a>
-            <a onClick={() => navigate('/explore')} className="nav-link" style={{ cursor: 'pointer' }} title="Explore">Explore</a>
-          </div>
-        </div>
-        <div className="header-right">
-          <div className="search-bar">
-            <input type="text" placeholder="Search courses..." />
-            <button className="search-button">Search</button>
-          </div>
-          <div 
-            className="notification-button active" 
-            onClick={() => navigate('/notifications')}
-            style={{ cursor: 'pointer' }}
-            aria-label="Notifications"
-            title="View notifications"
-          >
-            <span className="notification-icon">🔔</span>
-            {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
-          </div>
-          <div 
-            className="profile-icon" 
-            onClick={() => navigate('/profile')}
-            style={{ cursor: 'pointer' }}
-            aria-label="Profile"
-            title="View profile"
-          >
-            {userId ? userId.substring(0, 2).toUpperCase() : 'GU'}
-          </div>
-        </div>
+      <header className="main-page-header">
+        {role === 'admin' && <AdminHeader />}
+        {role === 'instructor' && <InstructorHeader />}
+        {role === 'student' && <StudentHeader />}
+
       </header>
 
       {/* Main Content */}
@@ -248,8 +224,8 @@ const NotificationPage = () => {
           <h1>Notifications</h1>
           <div className="notification-actions">
             {unreadCount > 0 && (
-              <button 
-                className="mark-all-read" 
+              <button
+                className="mark-all-read"
                 onClick={markAllAsRead}
                 aria-label="Mark all notifications as read"
                 title="Mark all notifications as read"
@@ -262,7 +238,7 @@ const NotificationPage = () => {
 
         {/* Filter Tabs */}
         <div className="notification-filters">
-          <button 
+          <button
             className={`filter-button ${activeFilter === 'all' ? 'active' : ''}`}
             onClick={() => setActiveFilter('all')}
             aria-label="Show all notifications"
@@ -270,7 +246,7 @@ const NotificationPage = () => {
           >
             All
           </button>
-          <button 
+          <button
             className={`filter-button ${activeFilter === 'unread' ? 'active' : ''}`}
             onClick={() => setActiveFilter('unread')}
             aria-label="Show unread notifications"
@@ -278,7 +254,7 @@ const NotificationPage = () => {
           >
             Unread ({unreadCount})
           </button>
-          <button 
+          <button
             className={`filter-button ${activeFilter === 'archived' ? 'active' : ''}`}
             onClick={() => setActiveFilter('archived')}
             aria-label="Show archived notifications"
@@ -310,8 +286,8 @@ const NotificationPage = () => {
             </div>
           ) : (
             filteredNotifications.map((notification) => (
-              <div 
-                key={notification.id} 
+              <div
+                key={notification.id}
                 className={`notification-item ${!notification.read ? 'unread' : ''}`}
                 onClick={() => markAsRead(notification.id)}
                 tabIndex="0"
@@ -333,7 +309,7 @@ const NotificationPage = () => {
                   <div className="notification-time">{notification.time}</div>
                 </div>
                 <div className="notification-actions">
-                  <button 
+                  <button
                     className="archive-button"
                     onClick={(e) => archiveNotification(notification.id, e)}
                     title="Archive notification"

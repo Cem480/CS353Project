@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import './MainPage.css';
 import { getCurrentUser, logout } from '../../services/auth';
 import { getStudentInfo, getRecommendedCourses, getTopCategories } from '../../services/student';
+import StudentHeader from '../../components/StudentHeader';
+import AdminHeader from '../../components/AdminHeader';
+import InstructorHeader from '../../components/InstructorHeader';
 
 const MainPage = () => {
   const navigate = useNavigate();
@@ -10,42 +13,43 @@ const MainPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // State for API data
   const [userInfo, setUserInfo] = useState({});
   const [recommendedCourses, setRecommendedCourses] = useState([]);
   const [topCategories, setTopCategories] = useState([]);
-  
+
   // Get current user data
   const userData = getCurrentUser();
-  
+  const role = userData?.role;
+
   // Use refs to prevent multiple API calls
   const dataFetchedRef = useRef(false);
-  
+
   useEffect(() => {
     // If no user is logged in, redirect to login
     if (!userData) {
       navigate('/login');
       return;
     }
-    
+
     // Prevent refetching data when component remounts
     if (dataFetchedRef.current) return;
-    
+
     const fetchData = async () => {
       setLoading(true);
       setError('');
-      
+
       try {
         // Only fetch student-specific data if the role is student
         if (userData.role === 'student') {
           // Mark data as fetched immediately to prevent multiple calls
           dataFetchedRef.current = true;
-          
+
           // Fetch user info
           const userInfoData = await getStudentInfo(userData.user_id);
           setUserInfo(userInfoData);
-          
+
           // Fetch recommended courses
           const coursesData = await getRecommendedCourses(userData.user_id);
           if (Array.isArray(coursesData) && coursesData.length > 0) {
@@ -59,7 +63,7 @@ const MainPage = () => {
               { course_id: 4, title: 'Blockchain Technology', instructor_name: 'Crypto Learning', difficulty_level: 'Advanced' }
             ]);
           }
-          
+
           // Fetch top categories
           const categoriesData = await getTopCategories(userData.user_id);
           if (Array.isArray(categoriesData) && categoriesData.length > 0) {
@@ -94,7 +98,7 @@ const MainPage = () => {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [userData, navigate]);
 
@@ -118,68 +122,10 @@ const MainPage = () => {
     <div className="main-page">
       {/* Header */}
       <header className="main-page-header">
-        <div className="main-page-header-left">
-          <div className="main-page-logo">
-            <h1>LearnHub</h1>
-          </div>
-          <div className="main-page-nav-links">
-            <a href="/home" className="active">Home</a>
-            <a href="/degrees">Online Degrees</a>
-            <a href="/my-learning">My Learning</a>
-            <a href="/my-certificates">My Certificates</a>
-            <a href="/student/fapplications">My Fapplications</a>
-          </div>
-        </div>
-        <div className="main-page-header-right">
-          <div className="main-page-search-bar">
-            <input 
-              type="text" 
-              placeholder="Search my courses..." 
-              value={searchTerm}
-              onChange={handleSearch}
-            />
-            <button className="main-page-search-button">Search</button>
-          </div>
-          <div 
-            className="notification-button" 
-            onClick={() => navigate('/notifications')} 
-            style={{ cursor: 'pointer' }}
-            title="View notifications"
-          >
-            <span className="notification-icon">🔔</span>
-            {/* Add notification count badge here if you have unread notifications */}
-          </div>
-          <div className="main-page-profile-dropdown">
-            <div className="main-page-profile-icon" onClick={toggleProfileMenu}>
-              {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}
-            </div>
-            
-            {showProfileMenu && (
-              <div className="main-page-dropdown-menu">
-                <div className="main-page-profile-info">
-                  <div className="main-page-profile-avatar-large">
-                    {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                  <div className="main-page-profile-details">
-                    <div className="main-page-profile-name">{firstName}</div>
-                    <div className="main-page-profile-role">{userData ? userData.role : 'Student'}</div>
-                  </div>
-                </div>
-                <ul>
-                  <li><a href="/my-learning">My Learning</a></li>
-                  <li><a href="/notifications">Notifications</a></li>
-                  <li><a href="/transaction">Transactions</a></li>
-                  {userData && userData.role === 'instructor' && (
-                    <li><a href="/applications">Instructor Applications</a></li>
-                  )}
-                  <div className="main-page-menu-divider"></div>
-                  <li><a href="/profile">Profile</a></li>
-                  <li><a href="#" onClick={handleLogout}>Logout</a></li>
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
+        {role === 'admin' && <AdminHeader />}
+        {role === 'instructor' && <InstructorHeader />}
+        {role === 'student' && <StudentHeader />}
+
       </header>
 
       {/* Main Content */}
@@ -217,9 +163,9 @@ const MainPage = () => {
           </div>
           <div className="main-page-courses-grid">
             {recommendedCourses.map(course => (
-              <div 
-                className="main-page-course-card" 
-                key={course.course_id} 
+              <div
+                className="main-page-course-card"
+                key={course.course_id}
                 onClick={() => navigate(`/course-details?id=${course.course_id}`)}
               >
                 <div className="main-page-course-image">

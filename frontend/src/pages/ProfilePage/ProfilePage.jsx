@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../../services/auth';
 import './ProfilePage.css';
+import AdminHeader from '../../components/AdminHeader';
+import InstructorHeader from '../../components/InstructorHeader';
+import StudentHeader from '../../components/StudentHeader';
+
 
 /* ───── helper for nice dates (e.g. 30 Apr 2025) ───── */
 const prettyDate = iso =>
@@ -60,16 +64,12 @@ const ProfilePage = () => {
 
     return (
         <div className="profile-page">
-            {/* Header */}
-            <header className="profile-header">
-                <div className="logo" onClick={() => navigate('/')}>
-                    <span className="logo-text">LearnHub</span>
-                </div>
-                <div className="header-right">
-                    <button className="notification-btn">🔔</button>
-                    <button className="profile-icon" onClick={handleLogout}>{full_name[0]}</button>
-                </div>
-            </header>
+            {/* Header based on role */}
+            {role === 'admin' && <AdminHeader />}
+            {role === 'instructor' && <InstructorHeader />}
+            {role === 'student' && <StudentHeader />}
+
+
 
             <main className="profile-main flex-row">
 

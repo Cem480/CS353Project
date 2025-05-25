@@ -5,6 +5,9 @@ import { getCurrentUser, logout } from '../../services/auth';
 import { getCourseInfo } from '../../services/courseContent';
 import { enrollInCourse } from '../../services/student';
 
+import StudentHeader from '../../components/StudentHeader';
+import AdminHeader from '../../components/AdminHeader';
+import InstructorHeader from '../../components/InstructorHeader';
 
 
 
@@ -28,18 +31,19 @@ const TransactionPage = () => {
     setShowProfileMenu(!showProfileMenu);
   };
 
-const firstName = userData?.user_id?.split('@')[0] || 'User';
-  
+  const firstName = userData?.user_id?.split('@')[0] || 'User';
+
   // State for form fields
   const [cardNumber, setCardNumber] = useState('');
   const [cardName, setCardName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
-  
+
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const user = getCurrentUser();
+  const role = user.role;
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -63,44 +67,44 @@ const firstName = userData?.user_id?.split('@')[0] || 'User';
   const formattedPrice = course.price ? `$${Number(course.price).toLocaleString()}` : 'Free';
   const formattedDate = course.creation_date
     ? new Date(course.creation_date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: '2-digit'
-      })
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit'
+    })
     : 'Not available';
-  
+
   const formatCardNumber = (value) => {
     const input = value.replace(/\D/g, '');
     const formatted = input.replace(/(.{4})/g, '$1 ').trim();
     return formatted;
   };
-  
+
   const handleCardNumberChange = (e) => {
     const formatted = formatCardNumber(e.target.value);
     if (formatted.length <= 19) { // 16 digits + 3 spaces
       setCardNumber(formatted);
     }
   };
-  
+
   const handleExpiryDateChange = (e) => {
     let input = e.target.value.replace(/\D/g, '');
-    
+
     if (input.length > 2) {
       input = input.slice(0, 2) + '/' + input.slice(2, 4);
     }
-    
+
     if (input.length <= 5) { // MM/YY format
       setExpiryDate(input);
     }
   };
-  
+
   const handleCvvChange = (e) => {
     const input = e.target.value.replace(/\D/g, '');
     if (input.length <= 3) {
       setCvv(input);
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -122,73 +126,26 @@ const firstName = userData?.user_id?.split('@')[0] || 'User';
       alert("An error occurred during enrollment.");
     }
   };
-  
+
   const handleCancel = () => {
     navigate(`/course-details?id=${courseId}`);
   };
-  
+
   return (
     <div>
       <header className="main-page-header">
-        <div className="main-page-header-left">
-          <div className="main-page-logo">
-            <h1 onClick={() => navigate('/home')}>LearnHub</h1>
-          </div>
-          <div className="main-page-nav-links">
-            <a href="/home">Home</a>
-            <a href="/degrees">Online Degrees</a>
-            <a href="/my-learning">My Learning</a>
-            <a href="/my-certificates">My Certificates</a>
-          </div>
-        </div>
-        <div className="main-page-header-right">
-          <div className="main-page-search-bar">
-            <input 
-              type="text" 
-              placeholder="Search my courses..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button className="main-page-search-button">Search</button>
-          </div>
-          <div className="main-page-profile-dropdown">
-            <div className="main-page-profile-icon" onClick={toggleProfileMenu}>
-              {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}
-            </div>
-            {showProfileMenu && (
-              <div className="main-page-dropdown-menu">
-                <div className="main-page-profile-info">
-                  <div className="main-page-profile-avatar-large">
-                    {userData ? userData.user_id.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                  <div className="main-page-profile-details">
-                    <div className="main-page-profile-name">{firstName}</div>
-                    <div className="main-page-profile-role">{userData ? userData.role : 'Student'}</div>
-                  </div>
-                </div>
-                <ul>
-                  <li><a href="/my-learning">My Learning</a></li>
-                  <li><a href="/notifications">Notifications</a></li>
-                  <li><a href="/transaction">Transactions</a></li>
-                  {userData?.role === 'instructor' && (
-                    <li><a href="/applications">Instructor Applications</a></li>
-                  )}
-                  <div className="main-page-menu-divider"></div>
-                  <li><a href="/profile">Profile</a></li>
-                  <li><a href="#" onClick={handleLogout}>Logout</a></li>
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
+        {role === 'admin' && <AdminHeader />}
+        {role === 'instructor' && <InstructorHeader />}
+        {role === 'student' && <StudentHeader />}
+
       </header>
-      
+
       <div className="transaction-container">
         <div className="transaction-header">
           <h1>Complete Your Enrollment</h1>
           <p>You're one step away from starting your learning journey</p>
         </div>
-        
+
         <div className="transaction-content">
           <div className="payment-form-container">
             <h2>Payment Details</h2>
@@ -203,18 +160,18 @@ const firstName = userData?.user_id?.split('@')[0] || 'User';
                   PayPal
                 </div>
               </div>
-              
+
               <div className="form-row">
                 <div className="form-group full-width">
                   <label htmlFor="cardNumber">Card Number</label>
                   <div className="card-input-container">
-                    <input 
-                      type="text" 
-                      id="cardNumber" 
+                    <input
+                      type="text"
+                      id="cardNumber"
                       value={cardNumber}
                       onChange={handleCardNumberChange}
                       placeholder="1234 5678 9012 3456"
-                      required 
+                      required
                     />
                     <div className="card-icons">
                       <span className="visa">VISA</span>
@@ -224,46 +181,46 @@ const firstName = userData?.user_id?.split('@')[0] || 'User';
                   </div>
                 </div>
               </div>
-              
+
               <div className="form-row">
                 <div className="form-group full-width">
                   <label htmlFor="cardName">Cardholder Name</label>
-                  <input 
-                    type="text" 
-                    id="cardName" 
+                  <input
+                    type="text"
+                    id="cardName"
                     value={cardName}
                     onChange={(e) => setCardName(e.target.value)}
                     placeholder="John Smith"
-                    required 
+                    required
                   />
                 </div>
               </div>
-              
+
               <div className="form-row">
                 <div className="form-group half-width">
                   <label htmlFor="expiryDate">Expiry Date</label>
-                  <input 
-                    type="text" 
-                    id="expiryDate" 
+                  <input
+                    type="text"
+                    id="expiryDate"
                     value={expiryDate}
                     onChange={handleExpiryDateChange}
                     placeholder="MM/YY"
-                    required 
+                    required
                   />
                 </div>
                 <div className="form-group half-width">
                   <label htmlFor="cvv">CVV</label>
-                  <input 
-                    type="text" 
-                    id="cvv" 
+                  <input
+                    type="text"
+                    id="cvv"
                     value={cvv}
                     onChange={handleCvvChange}
                     placeholder="123"
-                    required 
+                    required
                   />
                 </div>
               </div>
-              
+
               <div className="form-actions">
                 <button type="button" className="cancel-button" onClick={handleCancel}>
                   Cancel
@@ -274,7 +231,7 @@ const firstName = userData?.user_id?.split('@')[0] || 'User';
               </div>
             </form>
           </div>
-          
+
           <div className="order-summary-container">
             <div className="order-summary">
               <h2>Order Summary</h2>
@@ -289,7 +246,7 @@ const firstName = userData?.user_id?.split('@')[0] || 'User';
                 </div>
               </div>
 
-              <div className="order-details">      
+              <div className="order-details">
                 <div className="order-detail-item">
                   <span className="detail-label">Instructor Name</span>
                   <span className="detail-value">{course.first_name + " " + course.last_name}</span>

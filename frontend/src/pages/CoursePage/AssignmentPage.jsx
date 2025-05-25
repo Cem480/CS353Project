@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../services/auth';
-import { 
-  getContentDetail, 
-  submitAssignment, 
-  markContentCompleted, 
-  getContentComments, 
-  addContentComment 
+import {
+  getContentDetail,
+  submitAssignment,
+  markContentCompleted,
+  getContentComments,
+  addContentComment
 } from '../../services/course';
 import './CoursePage.css';
+import StudentHeader from '../../components/StudentHeader';
+import AdminHeader from '../../components/AdminHeader';
+import InstructorHeader from '../../components/InstructorHeader';
 
 // Base URL for API calls
 const BASE_URL = 'http://localhost:5001';
@@ -16,27 +19,27 @@ const BASE_URL = 'http://localhost:5001';
 // Helper function to get content type icon
 const getContentTypeIcon = (content) => {
   if (content.isCompleted) return '✓';
-  
+
   if (content.type === 'video' || content.content_type === 'video') return '📹';
   if (content.type === 'document' || content.content_type === 'document') return '📄';
-  
+
   // For tasks, check the task_type
   if (content.type === 'task' || content.content_type === 'task') {
     if (content.task_type === 'assessment') return '📝';
     if (content.task_type === 'assignment') return '📋';
   }
-  
+
   // Fallbacks based on string matching
-  if (content.type?.includes('quiz') || content.title?.includes('Quiz') || 
-      content.title?.includes('Assessment') || content.content_type?.includes('assessment')) {
+  if (content.type?.includes('quiz') || content.title?.includes('Quiz') ||
+    content.title?.includes('Assessment') || content.content_type?.includes('assessment')) {
     return '📝';
   }
-  
-  if (content.type?.includes('assignment') || content.title?.includes('Assignment') || 
-      content.content_type?.includes('assignment')) {
+
+  if (content.type?.includes('assignment') || content.title?.includes('Assignment') ||
+    content.content_type?.includes('assignment')) {
     return '📋';
   }
-  
+
   // Default icon
   return '📄';
 };
@@ -45,7 +48,7 @@ const AssignmentPage = () => {
   const { courseId, sectionId, contentId } = useParams();
   const navigate = useNavigate();
   const user = getCurrentUser();
-  
+  const role = user.role;
   // State for assignment
   const [assignment, setAssignment] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -64,17 +67,17 @@ const AssignmentPage = () => {
   useEffect(() => {
     const loadAssignment = async () => {
       if (!courseId || !sectionId || !contentId) return;
-      
+
       setLoading(true);
-      
+
       try {
         // Fetch the assignment details
         const response = await getContentDetail(courseId, sectionId, contentId);
-        
+
         if (response.success && response.content) {
           setAssignment(response.content);
           setCourseTitle(response.content.course_title || 'Course Title');
-          
+
           // Check if already completed or submitted
           if (response.content.is_completed) {
             setIsCompleted(true);
@@ -82,7 +85,7 @@ const AssignmentPage = () => {
         } else {
           throw new Error('Failed to fetch assignment details');
         }
-        
+
         // Check completion status from grades API
         try {
           const gradesResponse = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/grades/${user.user_id}`, {
@@ -90,14 +93,14 @@ const AssignmentPage = () => {
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
           });
-          
+
           if (gradesResponse.ok) {
             const grades = await gradesResponse.json();
-            const assignmentGrade = grades.find(grade => 
-              grade.section_id === sectionId && 
+            const assignmentGrade = grades.find(grade =>
+              grade.section_id === sectionId &&
               grade.content_id === contentId
             );
-            
+
             if (assignmentGrade) {
               if (assignmentGrade.grade !== null) {
                 setIsCompleted(true);
@@ -108,7 +111,7 @@ const AssignmentPage = () => {
         } catch (err) {
           console.log('Could not fetch completion status:', err);
         }
-        
+
         // Try to fetch comments
         try {
           const commentsData = await getContentComments(courseId, sectionId, contentId);
@@ -124,38 +127,38 @@ const AssignmentPage = () => {
         setLoading(false);
       }
     };
-    
+
     loadAssignment();
   }, [courseId, sectionId, contentId, user.user_id]);
-  
+
   // Handle file selection
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setSelectedFile(file);
   };
-  
+
   // Handle assignment submission
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     if (!selectedFile) {
       setErrorMessage('Please select a file to upload.');
       setShowErrorModal(true);
       return;
     }
-    
+
     try {
       // Submit the assignment
       await submitAssignment(courseId, sectionId, contentId, user.user_id, selectedFile);
-      
+
       // Mark as completed
       await markContentCompleted(courseId, sectionId, contentId, user.user_id);
       setIsCompleted(true);
       setIsSubmitted(true);
-      
+
       // Show success message
       alert('Assignment submitted successfully!');
-      
+
       // Reset file selection but keep the submitted file info
       setSubmissionFile(selectedFile);
       setSelectedFile(null);
@@ -165,7 +168,7 @@ const AssignmentPage = () => {
       setShowErrorModal(true);
     }
   };
-  
+
   // Handle marking as completed without submission
   const handleMarkAsCompleted = async () => {
     try {
@@ -175,7 +178,7 @@ const AssignmentPage = () => {
         credentials: 'include',
         body: JSON.stringify({ is_completed: true })
       });
-      
+
       setIsCompleted(true);
       alert('Assignment marked as completed!');
     } catch (err) {
@@ -184,16 +187,16 @@ const AssignmentPage = () => {
       setShowErrorModal(true);
     }
   };
-  
+
   // Handle comment submission
   const handleAddComment = async (event) => {
     event.preventDefault();
-    
+
     if (!newComment.trim()) return;
-    
+
     try {
       await addContentComment(courseId, sectionId, contentId, user.user_id, newComment);
-      
+
       // Add the comment to the UI (optimistic update)
       setComments([
         {
@@ -206,7 +209,7 @@ const AssignmentPage = () => {
         },
         ...comments
       ]);
-      
+
       // Clear the input
       setNewComment('');
     } catch (err) {
@@ -215,13 +218,13 @@ const AssignmentPage = () => {
       setShowErrorModal(true);
     }
   };
-  
+
   // Close error modal
   const closeErrorModal = () => {
     setShowErrorModal(false);
     setErrorMessage(null);
   };
-  
+
   // Loading state
   if (loading) {
     return (
@@ -231,7 +234,7 @@ const AssignmentPage = () => {
       </div>
     );
   }
-  
+
   // Error state
   if (error) {
     return (
@@ -244,43 +247,16 @@ const AssignmentPage = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="course-page">
       <header className="main-page-header">
-  <div className="main-page-header-left">
-    <div className="main-page-logo">
-      <h1 onClick={() => navigate('/home')} style={{cursor: 'pointer'}}>LearnHub</h1>
-    </div>
-    <div className="main-page-nav-links">
-      <a href="/home">Home</a>
-      <a href="/degrees">Online Degrees</a>
-      <a href="/my-learning" className="active">My Learning</a>
-      <a href="/my-certificates">My Certificates</a>
-      <a href="/student/fapplications">My Fapplications</a>
-    </div>
-  </div>
-  <div className="main-page-header-right">
-    <div className="main-page-search-bar">
-      <input type="text" placeholder="Search in course..." />
-      <button className="main-page-search-button">Search</button>
-    </div>
-    <div 
-      className="notification-button" 
-      onClick={() => navigate('/notifications')} 
-      style={{ cursor: 'pointer' }}
-      title="View notifications"
-    >
-      <span className="notification-icon">🔔</span>
-    </div>
-    <div className="main-page-profile-dropdown">
-      <div className="main-page-profile-icon" onClick={() => navigate('/profile')}>
-        {user.user_id.charAt(0).toUpperCase()}
-      </div>
-    </div>
-  </div>
-</header>
-      
+        {role === 'admin' && <AdminHeader />}
+        {role === 'instructor' && <InstructorHeader />}
+        {role === 'student' && <StudentHeader />}
+
+      </header>
+
       {/* Error Modal */}
       {showErrorModal && (
         <div className="course-page-error-modal-overlay">
@@ -299,7 +275,7 @@ const AssignmentPage = () => {
           </div>
         </div>
       )}
-      
+
       <div className="course-page-container">
         {/* Left Sidebar - Remains the same as CoursePage*/}
         <aside className="course-page-sidebar">
@@ -307,27 +283,27 @@ const AssignmentPage = () => {
           <div className="course-page-title">
             <h2>{courseTitle}</h2>
           </div>
-          
+
           <div className="course-page-sidebar-section">
             <div className="course-page-sidebar-section-header">
               <span>Course Material</span>
             </div>
             {/* Navigation items would go here */}
           </div>
-          
+
           <div className="course-page-sidebar-section">
             <div className="course-page-sidebar-section-header">
               <span>Grades</span>
             </div>
           </div>
-          
+
           <div className="course-page-sidebar-section">
             <div className="course-page-sidebar-section-header">
               <span>Course Info</span>
             </div>
           </div>
         </aside>
-        
+
         {/* Main Content - Assignment */}
         <main className="course-page-content">
           <div className="course-assignment-container">
@@ -340,17 +316,17 @@ const AssignmentPage = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="course-assignment-description">
               <p>{assignment?.body || 'Complete the assignment as instructed.'}</p>
-              
+
               {assignment?.start_date && assignment?.end_date && (
                 <div className="course-assignment-dates">
                   <p><strong>Start Date:</strong> {new Date(assignment.start_date).toLocaleDateString()}</p>
                   <p><strong>Due Date:</strong> {new Date(assignment.end_date).toLocaleDateString()}</p>
                 </div>
               )}
-              
+
               {assignment?.assignment_file_url && (
                 <div className="course-assignment-dates">
                   <p>
@@ -362,7 +338,7 @@ const AssignmentPage = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Assignment upload form */}
             {!isSubmitted ? (
               <form className="course-assignment-form" onSubmit={handleSubmit}>
@@ -370,10 +346,10 @@ const AssignmentPage = () => {
                   <label className="course-assignment-file-label" htmlFor="assignment-file">
                     Choose File
                   </label>
-                  <input 
-                    type="file" 
-                    id="assignment-file" 
-                    onChange={handleFileChange} 
+                  <input
+                    type="file"
+                    id="assignment-file"
+                    onChange={handleFileChange}
                   />
                   {selectedFile && (
                     <div className="course-assignment-file-name">
@@ -381,9 +357,9 @@ const AssignmentPage = () => {
                     </div>
                   )}
                 </div>
-                
-                <button 
-                  type="submit" 
+
+                <button
+                  type="submit"
                   className="course-assignment-submit-button"
                   disabled={isCompleted}
                 >
@@ -401,15 +377,15 @@ const AssignmentPage = () => {
                 </div>
               </div>
             )}
-            
+
             {/* Comments section */}
             <div className="course-assignment-comments">
               <div className="course-assignment-comments-header">
                 <h3 className="course-assignment-comments-count">Comments ({comments.length})</h3>
               </div>
-              
+
               <form className="course-assignment-comments-form" onSubmit={handleAddComment}>
-                <textarea 
+                <textarea
                   className="course-assignment-comments-input"
                   placeholder="Add a comment..."
                   value={newComment}
@@ -419,7 +395,7 @@ const AssignmentPage = () => {
                   Post
                 </button>
               </form>
-              
+
               <div className="course-assignment-comments-list">
                 {comments.length > 0 ? (
                   comments.map((comment, index) => (
@@ -444,10 +420,10 @@ const AssignmentPage = () => {
                 )}
               </div>
             </div>
-            
+
             {/* Mark as completed without submission - only show if not already completed and not submitted */}
             {!isCompleted && !isSubmitted && (
-              <button 
+              <button
                 className="course-assignment-mark-completed"
                 onClick={handleMarkAsCompleted}
               >
@@ -456,7 +432,7 @@ const AssignmentPage = () => {
             )}
           </div>
         </main>
-        
+
         {/* Right Sidebar - Progress */}
         <aside className="course-page-progress-sidebar">
           <div className="course-page-progress-header">
@@ -466,20 +442,20 @@ const AssignmentPage = () => {
             <p className="course-page-progress-text">
               Stay on track with your learning goals
             </p>
-            
+
             <div className="course-page-progress-stats">
               <div className="course-page-progress-stat">
                 <div className="course-page-progress-number">{isCompleted ? 1 : 0}</div>
                 <div className="course-page-progress-label">Completed Items</div>
               </div>
-              
+
               <div className="course-page-progress-stat">
                 <div className="course-page-progress-number">1</div>
                 <div className="course-page-progress-label">Total Items</div>
               </div>
             </div>
           </div>
-          
+
           <div className="course-page-lab-section">
             <div className="course-page-lab-header">
               <div className="course-page-lab-title">
@@ -488,7 +464,7 @@ const AssignmentPage = () => {
                 <span className="course-page-beta-badge">BETA</span>
               </div>
             </div>
-            
+
             <div className="course-page-lab-features">
               <ul>
                 <li>Easily launch LearnHub's preconfigured environment for programming</li>
@@ -496,7 +472,7 @@ const AssignmentPage = () => {
                 <li>Practice programming and work on assignments from your browser</li>
               </ul>
             </div>
-            
+
             <button className="course-page-open-lab-button">
               Open Lab Sandbox
             </button>
