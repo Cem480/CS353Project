@@ -28,10 +28,14 @@ const AddSectionContent = () => {
     // Fields for assignment
     start_date: new Date().toISOString().split('T')[0], // Today as default
     end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from today
-    upload_material: 'pdf,doc,docx', // Default allowed upload formats
+    upload_material: 'pdf', // Default allowed upload format (single format)
     // Fields for visual material
     duration: 10 // Default duration in minutes
   });
+  
+  // Assessment creation state
+  const [assessmentQuestions, setAssessmentQuestions] = useState([]);
+  const [showAssessmentCreator, setShowAssessmentCreator] = useState(false);
   
   const [selectedFile, setSelectedFile] = useState(null);
   const [errors, setErrors] = useState({});
@@ -79,9 +83,30 @@ const AddSectionContent = () => {
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Handle database constraints based on your schema
+    let processedValue = value;
+    
+    // upload_material appears to be very short (like "zip", "pdf") - limit to 3 chars
+    if (name === 'upload_material' && value.length > 3) {
+      processedValue = value.substring(0, 3);
+    }
+    
+    // Handle other potential constraints
+    if (name === 'task_type' && value.length > 10) {
+      processedValue = value.substring(0, 10);
+    }
+    
+    // For content_type, map long values to shorter ones if needed
+    if (name === 'content_type') {
+      if (value === 'visual_material') {
+        processedValue = 'visual'; // Shorten to fit constraints
+      }
+    }
+    
     setContentData({
       ...contentData,
-      [name]: value
+      [name]: processedValue
     });
     
     // Clear error for the field being edited
@@ -90,6 +115,14 @@ const AddSectionContent = () => {
         ...errors,
         [name]: ''
       });
+    }
+    
+    // Show assessment creator when task type is assessment
+    if (name === 'task_type' && processedValue === 'assessment') {
+      setShowAssessmentCreator(true);
+    } else if (name === 'task_type' && processedValue !== 'assessment') {
+      setShowAssessmentCreator(false);
+      setAssessmentQuestions([]);
     }
   };
   
@@ -107,6 +140,79 @@ const AddSectionContent = () => {
     }
   };
   
+  // Assessment Questions Management
+  const addQuestion = (type = 'multiple_choice') => {
+    const newQuestion = {
+      id: Date.now(),
+      question_body: '',
+      question_type: type,
+      max_time: 5,
+      options: type === 'multiple_choice' ? [
+        { id: 1, text: '', is_correct: false },
+        { id: 2, text: '', is_correct: false }
+      ] : [],
+      correct_answer: type === 'text' ? '' : null,
+      explanation: ''
+    };
+    
+    setAssessmentQuestions(prev => [...prev, newQuestion]);
+  };
+  
+  const removeQuestion = (questionId) => {
+    setAssessmentQuestions(prev => prev.filter(q => q.id !== questionId));
+  };
+  
+  const updateQuestion = (questionId, field, value) => {
+    setAssessmentQuestions(prev => 
+      prev.map(q => q.id === questionId ? { ...q, [field]: value } : q)
+    );
+  };
+  
+  const addOption = (questionId) => {
+    setAssessmentQuestions(prev => 
+      prev.map(q => q.id === questionId ? {
+        ...q,
+        options: [...q.options, {
+          id: Date.now(),
+          text: '',
+          is_correct: false
+        }]
+      } : q)
+    );
+  };
+  
+  const removeOption = (questionId, optionId) => {
+    setAssessmentQuestions(prev => 
+      prev.map(q => q.id === questionId ? {
+        ...q,
+        options: q.options.filter(opt => opt.id !== optionId)
+      } : q)
+    );
+  };
+  
+  const updateOption = (questionId, optionId, field, value) => {
+    setAssessmentQuestions(prev => 
+      prev.map(q => q.id === questionId ? {
+        ...q,
+        options: q.options.map(opt => 
+          opt.id === optionId ? { ...opt, [field]: value } : opt
+        )
+      } : q)
+    );
+  };
+  
+  const setCorrectAnswer = (questionId, optionId) => {
+    setAssessmentQuestions(prev => 
+      prev.map(q => q.id === questionId ? {
+        ...q,
+        options: q.options.map(opt => ({
+          ...opt,
+          is_correct: opt.id === optionId
+        }))
+      } : q)
+    );
+  };
+  
   // Validate form based on content type
   const validateForm = () => {
     const newErrors = {};
@@ -121,7 +227,7 @@ const AddSectionContent = () => {
     }
     
     // File validation for document and visual_material
-    if ((contentData.content_type === 'document' || contentData.content_type === 'visual_material') && !selectedFile) {
+    if ((contentData.content_type === 'document' || contentData.content_type === 'visual') && !selectedFile) {
       newErrors.file = 'A file is required for this content type';
     }
     
@@ -160,15 +266,34 @@ const AddSectionContent = () => {
       
       // Assessment specific validations
       if (contentData.task_type === 'assessment') {
-        if (!contentData.question_count || isNaN(contentData.question_count) || 
-            parseInt(contentData.question_count) <= 0) {
-          newErrors.question_count = 'Question count must be a positive number';
+        if (assessmentQuestions.length === 0) {
+          newErrors.assessment_questions = 'At least one question is required for assessment';
         }
+        
+        // Validate each question
+        assessmentQuestions.forEach((question, index) => {
+          if (!question.question_body.trim()) {
+            newErrors[`question_${question.id}_body`] = `Question ${index + 1} text is required`;
+          }
+          
+          if (question.question_type === 'multiple_choice') {
+            if (question.options.length < 2) {
+              newErrors[`question_${question.id}_options`] = `Question ${index + 1} must have at least 2 options`;
+            }
+            
+            const hasCorrectAnswer = question.options.some(opt => opt.is_correct);
+            if (!hasCorrectAnswer) {
+              newErrors[`question_${question.id}_correct`] = `Question ${index + 1} must have a correct answer selected`;
+            }
+          } else if (question.question_type === 'text' && !question.correct_answer?.trim()) {
+            newErrors[`question_${question.id}_answer`] = `Question ${index + 1} must have a correct answer`;
+          }
+        });
       }
     }
     
     // Visual material specific validations
-    if (contentData.content_type === 'visual_material') {
+    if (contentData.content_type === 'visual') {
       if (!contentData.duration || isNaN(contentData.duration) || parseInt(contentData.duration) <= 0) {
         newErrors.duration = 'Duration must be a positive number';
       }
@@ -202,8 +327,14 @@ const AddSectionContent = () => {
         formData.append('body', selectedFile);
       }
       
+      // For assessments, we need to set the question_count from actual questions
+      if (contentData.content_type === 'task' && contentData.task_type === 'assessment') {
+        formData.set('question_count', assessmentQuestions.length);
+      }
+      
       console.log('Submitting content with data:', contentData);
       console.log('File:', selectedFile);
+      console.log('Assessment questions:', assessmentQuestions);
       
       // Submit to API
       const response = await fetch(`http://localhost:5001/api/add/course/${courseId}/section/${sectionId}/content`, {
@@ -218,6 +349,41 @@ const AddSectionContent = () => {
         throw new Error(data.message || 'Failed to add content');
       }
       
+      // If this is an assessment and we have questions, submit them separately
+      if (contentData.content_type === 'task' && contentData.task_type === 'assessment' && assessmentQuestions.length > 0) {
+        try {
+          // Format questions for backend
+          const formattedQuestions = assessmentQuestions.map((q, index) => ({
+            question_id: index + 1,
+            question_body: q.question_body,
+            max_time: parseInt(q.max_time) || 5,
+            // For multiple choice, we can store options in the question_body as JSON
+            // or create a separate options submission
+            options: q.question_type === 'multiple_choice' ? q.options : null,
+            correct_answer: q.question_type === 'text' ? q.correct_answer : 
+                           q.question_type === 'true_false' ? q.correct_answer :
+                           q.options?.find(opt => opt.is_correct)?.text || null
+          }));
+          
+          // Submit questions - this might need to be adapted based on your backend API
+          const questionsResponse = await fetch(`http://localhost:5001/api/course/${courseId}/section/${sectionId}/content/${data.content_id}/questions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ questions: formattedQuestions })
+          });
+          
+          if (!questionsResponse.ok) {
+            console.warn('Failed to submit questions, but content was created successfully');
+          }
+        } catch (questionError) {
+          console.error('Error submitting questions:', questionError);
+          // Don't fail the whole process if questions fail
+        }
+      }
+      
       setSuccessMessage('Content added successfully!');
       
       // Reset form after successful submission
@@ -227,6 +393,8 @@ const AddSectionContent = () => {
         allocated_time: ''
       });
       setSelectedFile(null);
+      setAssessmentQuestions([]);
+      setShowAssessmentCreator(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -287,7 +455,7 @@ const AddSectionContent = () => {
             >
               <option value="document">Document</option>
               <option value="task">Task (Assignment/Assessment)</option>
-              <option value="visual_material">Visual Material</option>
+              <option value="visual">Visual Material</option>
             </select>
             {errors.content_type && <div className="error-message">{errors.content_type}</div>}
           </div>
@@ -431,18 +599,23 @@ const AddSectionContent = () => {
                   </div>
                   
                   <div className="form-row">
-                    <label htmlFor="upload_material">Allowed Upload Formats <span className="required-mark">*</span></label>
-                    <input
-                      type="text"
+                    <label htmlFor="upload_material">Allowed Upload Format <span className="required-mark">*</span></label>
+                    <select
                       id="upload_material"
                       name="upload_material"
                       className={`form-input ${errors.upload_material ? 'error' : ''}`}
                       value={contentData.upload_material}
                       onChange={handleInputChange}
-                      placeholder="e.g., pdf,doc,docx"
-                    />
+                    >
+                      <option value="pdf">PDF</option>
+                      <option value="doc">DOC</option>
+                      <option value="zip">ZIP</option>
+                      <option value="txt">TXT</option>
+                      <option value="jpg">JPG</option>
+                      <option value="png">PNG</option>
+                    </select>
                     {errors.upload_material && <div className="error-message">{errors.upload_material}</div>}
-                    <div className="form-hint">Comma-separated list of file formats</div>
+                    <div className="form-hint">Select the allowed file format for submissions</div>
                   </div>
                   
                   <div className="form-row">
@@ -463,20 +636,239 @@ const AddSectionContent = () => {
               
               {/* Assessment-specific fields */}
               {contentData.task_type === 'assessment' && (
-                <div className="form-row">
-                  <label htmlFor="question_count">Number of Questions <span className="required-mark">*</span></label>
-                  <input
-                    type="number"
-                    id="question_count"
-                    name="question_count"
-                    min="1"
-                    className={`form-input ${errors.question_count ? 'error' : ''}`}
-                    value={contentData.question_count}
-                    onChange={handleInputChange}
-                    placeholder="Total number of questions"
-                  />
-                  {errors.question_count && <div className="error-message">{errors.question_count}</div>}
-                </div>
+                <>
+                  {errors.assessment_questions && (
+                    <div className="error-message" style={{marginBottom: '20px'}}>
+                      {errors.assessment_questions}
+                    </div>
+                  )}
+                  
+                  <div className="assessment-creator-section">
+                    <h4>Assessment Questions ({assessmentQuestions.length})</h4>
+                    
+                    <div className="add-question-buttons" style={{marginBottom: '20px'}}>
+                      <button 
+                        type="button"
+                        className="add-button"
+                        onClick={() => addQuestion('multiple_choice')}
+                        style={{marginRight: '10px'}}
+                      >
+                        + Multiple Choice
+                      </button>
+                      <button 
+                        type="button"
+                        className="add-button"
+                        onClick={() => addQuestion('text')}
+                        style={{marginRight: '10px'}}
+                      >
+                        + Text Answer
+                      </button>
+                      <button 
+                        type="button"
+                        className="add-button"
+                        onClick={() => addQuestion('true_false')}
+                      >
+                        + True/False
+                      </button>
+                    </div>
+                    
+                    {assessmentQuestions.map((question, index) => (
+                      <div key={question.id} className="question-card" style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        marginBottom: '20px',
+                        backgroundColor: '#f9f9f9'
+                      }}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
+                          <span style={{fontWeight: '600'}}>Question {index + 1}</span>
+                          <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                            <select
+                              value={question.question_type}
+                              onChange={(e) => updateQuestion(question.id, 'question_type', e.target.value)}
+                              style={{padding: '5px 8px', border: '1px solid #ccc', borderRadius: '4px'}}
+                            >
+                              <option value="multiple_choice">Multiple Choice</option>
+                              <option value="text">Text Answer</option>
+                              <option value="true_false">True/False</option>
+                            </select>
+                            <input
+                              type="number"
+                              value={question.max_time}
+                              onChange={(e) => updateQuestion(question.id, 'max_time', parseInt(e.target.value) || 5)}
+                              placeholder="Time (min)"
+                              style={{width: '80px', padding: '5px 8px', border: '1px solid #ccc', borderRadius: '4px'}}
+                              min="1"
+                            />
+                            <button 
+                              type="button"
+                              onClick={() => removeQuestion(question.id)}
+                              style={{
+                                background: '#ff4757',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '25px',
+                                height: '25px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="form-row">
+                          <label>
+                            Question Text *
+                            <textarea
+                              value={question.question_body}
+                              onChange={(e) => updateQuestion(question.id, 'question_body', e.target.value)}
+                              className={`form-input ${errors[`question_${question.id}_body`] ? 'error' : ''}`}
+                              placeholder="Enter your question here"
+                              rows={2}
+                            />
+                            {errors[`question_${question.id}_body`] && 
+                              <span className="error-message">{errors[`question_${question.id}_body`]}</span>}
+                          </label>
+                        </div>
+
+                        {/* Multiple Choice Options */}
+                        {question.question_type === 'multiple_choice' && (
+                          <div style={{marginTop: '15px'}}>
+                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
+                              <span style={{fontWeight: '500'}}>Answer Options</span>
+                              <button 
+                                type="button"
+                                onClick={() => addOption(question.id)}
+                                style={{
+                                  padding: '5px 10px',
+                                  background: '#e8f4f8',
+                                  border: '1px solid #b8daff',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                + Add Option
+                              </button>
+                            </div>
+                            
+                            {errors[`question_${question.id}_options`] && 
+                              <div className="error-message">{errors[`question_${question.id}_options`]}</div>}
+                            {errors[`question_${question.id}_correct`] && 
+                              <div className="error-message">{errors[`question_${question.id}_correct`]}</div>}
+
+                            {question.options.map((option, optIndex) => (
+                              <div key={option.id} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                marginBottom: '10px'
+                              }}>
+                                <input
+                                  type="radio"
+                                  name={`question_${question.id}_correct`}
+                                  checked={option.is_correct}
+                                  onChange={() => setCorrectAnswer(question.id, option.id)}
+                                  style={{width: 'auto', margin: '0'}}
+                                />
+                                <input
+                                  type="text"
+                                  value={option.text}
+                                  onChange={(e) => updateOption(question.id, option.id, 'text', e.target.value)}
+                                  className={`form-input ${errors[`question_${question.id}_option_${option.id}`] ? 'error' : ''}`}
+                                  placeholder={`Option ${optIndex + 1}`}
+                                  style={{flex: '1'}}
+                                />
+                                {question.options.length > 2 && (
+                                  <button 
+                                    type="button"
+                                    onClick={() => removeOption(question.id, option.id)}
+                                    style={{
+                                      background: '#ff6b7a',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '50%',
+                                      width: '20px',
+                                      height: '20px',
+                                      cursor: 'pointer',
+                                      fontSize: '14px'
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                                {errors[`question_${question.id}_option_${option.id}`] && 
+                                  <span className="error-message" style={{display: 'block', width: '100%'}}>
+                                    {errors[`question_${question.id}_option_${option.id}`]}
+                                  </span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* True/False Options */}
+                        {question.question_type === 'true_false' && (
+                          <div style={{display: 'flex', gap: '20px', marginTop: '10px'}}>
+                            <label style={{display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer'}}>
+                              <input
+                                type="radio"
+                                name={`question_${question.id}_tf`}
+                                checked={question.correct_answer === 'true'}
+                                onChange={() => updateQuestion(question.id, 'correct_answer', 'true')}
+                                style={{width: 'auto', margin: '0'}}
+                              />
+                              True
+                            </label>
+                            <label style={{display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer'}}>
+                              <input
+                                type="radio"
+                                name={`question_${question.id}_tf`}
+                                checked={question.correct_answer === 'false'}
+                                onChange={() => updateQuestion(question.id, 'correct_answer', 'false')}
+                                style={{width: 'auto', margin: '0'}}
+                              />
+                              False
+                            </label>
+                          </div>
+                        )}
+
+                        {/* Text Answer */}
+                        {question.question_type === 'text' && (
+                          <div className="form-row">
+                            <label>
+                              Correct Answer *
+                              <input
+                                type="text"
+                                value={question.correct_answer || ''}
+                                onChange={(e) => updateQuestion(question.id, 'correct_answer', e.target.value)}
+                                className={`form-input ${errors[`question_${question.id}_answer`] ? 'error' : ''}`}
+                                placeholder="Enter the correct answer"
+                              />
+                              {errors[`question_${question.id}_answer`] && 
+                                <span className="error-message">{errors[`question_${question.id}_answer`]}</span>}
+                            </label>
+                          </div>
+                        )}
+
+                        {/* Explanation */}
+                        <div className="form-row">
+                          <label>
+                            Explanation (Optional)
+                            <textarea
+                              value={question.explanation}
+                              onChange={(e) => updateQuestion(question.id, 'explanation', e.target.value)}
+                              className="form-input"
+                              placeholder="Explain the correct answer (shown after submission)"
+                              rows={2}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </>
           )}
@@ -499,7 +891,7 @@ const AddSectionContent = () => {
           )}
           
           {/* Visual Material-specific fields */}
-          {contentData.content_type === 'visual_material' && (
+          {contentData.content_type === 'visual' && (
             <>
               <div className="form-row">
                 <label htmlFor="duration">Duration (minutes) <span className="required-mark">*</span></label>
@@ -551,6 +943,65 @@ const AddSectionContent = () => {
           </div>
         </form>
       </div>
+
+      <style jsx>{`
+        .add-button {
+          background-color: #0c6349;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background-color 0.3s, transform 0.2s;
+          font-size: 14px;
+        }
+
+        .add-button:hover {
+          background-color: #09553d;
+          transform: translateY(-2px);
+        }
+
+        .assessment-creator-section {
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+          padding: 20px;
+          margin: 20px 0;
+          background-color: #fafafa;
+        }
+
+        .assessment-creator-section h4 {
+          margin-top: 0;
+          color: #333;
+          border-bottom: 1px solid #e0e0e0;
+          padding-bottom: 10px;
+        }
+
+        .add-question-buttons {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .question-card {
+          transition: all 0.3s ease;
+        }
+
+        .question-card:hover {
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+          .add-question-buttons {
+            flex-direction: column;
+          }
+          
+          .add-button {
+            width: 100%;
+            margin-bottom: 5px;
+          }
+        }
+      `}</style>
     </div>
   );
 };

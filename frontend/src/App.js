@@ -6,7 +6,7 @@ import MainPage from './pages/MainPage/MainPage';
 import DegreesPage from './pages/DegreesPage/DegreesPage';
 import MyLearningPage from './pages/MyLearning/MyLearningPage';
 import CoursePage from './pages/CoursePage/CoursePage';
-import AssignmentPage from './pages/CoursePage/AssignmentPage'; // Import the new AssignmentPage
+import AssignmentPage from './pages/CoursePage/AssignmentPage';
 import NotificationPage from './pages/NotificationPage/NotificationPage';
 import CourseDetails from './pages/CourseDetails/CourseDetails';
 import FinancialAid from './pages/FinancialAid/FinancialAid';
@@ -16,7 +16,7 @@ import InstructorMainPage from './pages/InstructorsMainPage/InstructorsMainPage'
 import CreateCourse from './pages/CreateCourse/CreateCourse';
 import AddSection from './pages/AddSection/AddSection';
 import AddSectionContent from './pages/AddSection/AddSectionContent';
-import CourseEditor from './pages/AddSection/CourseEditor'; // Import CourseEditor
+import CourseEditor from './pages/AddSection/CourseEditor';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import CertificatesPage from './pages/CertificatesPage/CertificatesPage';
 import AdminMainPage from './pages/AdminMainPage/AdminMainPage';
@@ -36,16 +36,34 @@ function App() {
   /* ─────────────────────────  helpers  ───────────────────────── */
 
   // Generic protected route
-  const ProtectedRoute = ({ element }) =>
-    isLoggedIn() ? element : <Navigate to="/login" replace />;
+  const ProtectedRoute = ({ element }) => {
+    console.log('ProtectedRoute check - isLoggedIn:', isLoggedIn());
+    return isLoggedIn() ? element : <Navigate to="/login" replace />;
+  };
 
-  // Role-based protected route
+  // Role-based protected route with better debugging
   const RoleProtectedRoute = ({ element, allowedRole }) => {
-    if (!isLoggedIn()) return <Navigate to="/login" replace />;
+    const loggedIn = isLoggedIn();
     const userData = getCurrentUser();
-    return userData?.role === allowedRole
-      ? element
-      : <Navigate to="/home" replace />;
+    
+    console.log('RoleProtectedRoute check:', {
+      loggedIn,
+      userData,
+      allowedRole,
+      userRole: userData?.role
+    });
+    
+    if (!loggedIn) {
+      console.log('Not logged in, redirecting to login');
+      return <Navigate to="/login" replace />;
+    }
+    
+    if (userData?.role !== allowedRole) {
+      console.log(`Role mismatch. Required: ${allowedRole}, Got: ${userData?.role}`);
+      return <Navigate to="/home" replace />;
+    }
+    
+    return element;
   };
 
   // Dynamic home (redirects by role)
@@ -76,7 +94,7 @@ function App() {
         <Route path="/course" element={<ProtectedRoute element={<CoursePage />} />} />
         <Route path="/course/:courseId/content" element={<ProtectedRoute element={<CoursePage />} />} />
 
-        {/* NEW - Assignment route */}
+        {/* Assignment route */}
         <Route path="/course/:courseId/section/:sectionId/assignment/:contentId"
           element={<ProtectedRoute element={<AssignmentPage />} />} />
 
@@ -86,29 +104,45 @@ function App() {
         <Route path="/transaction" element={<ProtectedRoute element={<TransactionPage />} />} />
         <Route path="/degrees" element={<ProtectedRoute element={<DegreesPage />} />} />
 
-
-        {/* NEW — profile page (all logged-in users) */}
+        {/* Profile and certificates */}
         <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
-
-        {/* NEW — certificates page */}
         <Route path="/my-certificates" element={<ProtectedRoute element={<CertificatesPage />} />} />
 
         {/* NEW — Student Financial Aid page */}
         <Route path="/student/applications" element={<ProtectedRoute element={<StudentFinancialAidPage />} />} />
 
-
-        {/* Instructor-only */}
+        {/* Instructor-only routes */}
         <Route path="/instructor/dashboard"
           element={<RoleProtectedRoute element={<InstructorMainPage />} allowedRole="instructor" />} />
+        
+        {/* Course creation and editing */}
         <Route path="/create-course"
           element={<RoleProtectedRoute element={<CreateCourse />} allowedRole="instructor" />} />
         <Route path="/edit-course/:courseId"
           element={<RoleProtectedRoute element={<CreateCourse />} allowedRole="instructor" />} />
+        
+        {/* Section management */}
         <Route path="/course/:courseId/add-section"
           element={<RoleProtectedRoute element={<AddSection />} allowedRole="instructor" />} />
         <Route path="/course/:courseId/edit-section/:sectionId"
           element={<RoleProtectedRoute element={<AddSection isEditMode={true} />} allowedRole="instructor" />} />
+        
+        {/* Course Editor and Content Management */}
+        <Route path="/course/:courseId/content-editor"
+          element={<RoleProtectedRoute element={<CourseEditor />} allowedRole="instructor" />} />
+        
+        {/* Content management */}
+        <Route path="/course/:courseId/section/:sectionId/add-content"
+          element={<RoleProtectedRoute element={<AddSectionContent />} allowedRole="instructor" />} />
+        <Route path="/course/:courseId/section/:sectionId/edit-content/:contentId"
+          element={<RoleProtectedRoute element={<AddSectionContent isEditMode={true} />} allowedRole="instructor" />} />
+        
+        {/* Content viewing */}
+        <Route path="/course/:courseId/section/:sectionId/content/:contentId"
+          element={<RoleProtectedRoute element={<AddSectionContent viewMode={true} />} allowedRole="instructor" />} />
+        
+        {/* Other instructor routes */}
         <Route path="/applications"
           element={<RoleProtectedRoute element={<InstructorApplicationsPage />} allowedRole="instructor" />} />
         <Route path="/instructor/courses"
@@ -116,13 +150,7 @@ function App() {
         <Route path="/instructor/grading"
           element={<RoleProtectedRoute element={<Grading />} allowedRole="instructor" />} />
 
-        {/* Course Editor and Content Management Routes - Instructor Only */}
-        <Route path="/course/:courseId/content-editor"
-          element={<RoleProtectedRoute element={<CourseEditor />} allowedRole="instructor" />} />
-        <Route path="/course/:courseId/section/:sectionId/add-content"
-          element={<RoleProtectedRoute element={<AddSectionContent />} allowedRole="instructor" />} />
-
-        {/* Admin-only */}
+        {/* Admin-only routes */}
         <Route path="/admin/dashboard"
           element={<RoleProtectedRoute element={<AdminMainPage />} allowedRole="admin" />} />
         <Route path="/admin/course-approvals"
@@ -133,11 +161,8 @@ function App() {
           element={<RoleProtectedRoute element={<GenerateReportPage />} allowedRole="admin" />} />
         <Route path="/admin/reports/:reportType/:reportId"
           element={<RoleProtectedRoute element={<ReportResultsPage />} allowedRole="admin" />} />
-        <Route
-          path="/admin/users"
-          element={<RoleProtectedRoute element={<AdminUserListPage />} allowedRole="admin" />}
-        />
-
+        <Route path="/admin/users"
+          element={<RoleProtectedRoute element={<AdminUserListPage />} allowedRole="admin" />} />
 
         {/* Fallbacks */}
         <Route path="/" element={<Navigate to="/login" replace />} />

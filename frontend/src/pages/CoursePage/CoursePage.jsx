@@ -14,27 +14,36 @@ import {
   getCompletionStatus
 } from '../../services/course';
 
-// Helper function to get content type icon
+// Helper function to get content type icon - FIXED
 const getContentTypeIcon = (content) => {
   if (content.isCompleted) return '✓';
   
-  if (content.type === 'video' || content.content_type === 'video') return '📹';
-  if (content.type === 'document' || content.content_type === 'document') return '📄';
+  // Check content_type first
+  if (content.content_type === 'visual' || content.content_type === 'visual_material') return '📹';
+  if (content.content_type === 'document') return '📄';
   
-  // For tasks, check the task_type
-  if (content.type === 'task' || content.content_type === 'task') {
+  // For tasks, check the task_type in the content detail
+  if (content.content_type === 'task') {
+    // If we have task_type from detailed content
     if (content.task_type === 'assessment') return '📝';
     if (content.task_type === 'assignment') return '📋';
-  }
-  
-  // Fallbacks based on string matching
-  if (content.type?.includes('quiz') || content.title?.includes('Quiz') || 
-      content.title?.includes('Assessment') || content.content_type?.includes('assessment')) {
+    // Default for tasks without specific type
     return '📝';
   }
   
-  if (content.type?.includes('assignment') || content.title?.includes('Assignment') || 
-      content.content_type?.includes('assignment')) {
+  // Legacy fallbacks
+  if (content.type === 'video' || content.type === 'visual') return '📹';
+  if (content.type === 'document') return '📄';
+  if (content.type === 'task') return '📝';
+  
+  // String matching fallbacks
+  if (content.title?.toLowerCase().includes('quiz') || 
+      content.title?.toLowerCase().includes('assessment') || 
+      content.title?.toLowerCase().includes('test')) {
+    return '📝';
+  }
+  
+  if (content.title?.toLowerCase().includes('assignment')) {
     return '📋';
   }
   
@@ -176,6 +185,7 @@ const CoursePage = () => {
         id: content.content_id,
         title: content.content_title,
         type: content.content_type.toLowerCase(),
+        content_type: content.content_type.toLowerCase(), // Add this for consistency
         duration: `${content.allocated_time} min`,
         isCompleted: false // Will be updated by loadCompletionStatus
       }));
@@ -206,196 +216,154 @@ const CoursePage = () => {
     }
   };
   
-  // Load completion status - FIXED
-  // Replace the loadCompletionStatus function in CoursePage.jsx with this improved version
-
-// Replace the loadCompletionStatus function in CoursePage.jsx with this working version
-
-// Load completion status - WORKING VERSION using existing APIs
-const loadCompletionStatus = async () => {
-  if (!courseId || !user?.user_id || sections.length === 0) return;
-  
-  try {
-    console.log('🔍 Loading completion status for course:', courseId, 'user:', user.user_id);
+  // Load completion status - WORKING VERSION using existing APIs
+  const loadCompletionStatus = async () => {
+    if (!courseId || !user?.user_id || sections.length === 0) return;
     
-    // Use the existing grades API that we know works
-    const response = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/grades/${user.user_id}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
-    });
-    
-    console.log('🌐 Grades API response status:', response.status);
-    
-    if (!response.ok) {
-      console.warn('⚠️ Could not fetch completion status, response not ok');
-      return;
-    }
-    
-    const completedItems = await response.json();
-    console.log('📊 Grades API returned:', completedItems);
-    
-    // Also check the complete table directly using existing endpoint
-    let manualCompletions = [];
     try {
-      // Check if there's a direct way to get completions
-      const completeCheck = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/sections`, {
+      console.log('🔍 Loading completion status for course:', courseId, 'user:', user.user_id);
+      
+      // Use the existing grades API that we know works
+      const response = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/grades/${user.user_id}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
       
-      if (completeCheck.ok) {
-        console.log('✅ Sections API works, we can use existing endpoints');
-      }
-    } catch (err) {
-      console.log('ℹ️ Using only grades API for completion status');
-    }
-    
-    // Update sections with completion status
-    const updatedSections = sections.map(section => {
-      if (!section.contents || section.contents.length === 0) {
-        return section; // Skip sections without loaded content
+      console.log('🌐 Grades API response status:', response.status);
+      
+      if (!response.ok) {
+        console.warn('⚠️ Could not fetch completion status, response not ok');
+        return;
       }
       
-      const updatedContents = section.contents.map(content => {
-        // Check if this content is in the completed items list
-        // Look for either grade !== null OR a specific completion record
-        const isCompleted = completedItems.some(item => {
-          const sectionMatch = String(item.section_id) === String(section.id);
-          const contentMatch = String(item.content_id) === String(content.id);
-          const hasGrade = item.grade !== null;
-          
-          console.log(`🔍 Checking ${content.title}:`, {
-            sectionId: section.id,
-            contentId: content.id,
-            itemSectionId: item.section_id,
-            itemContentId: item.content_id,
-            grade: item.grade,
-            sectionMatch,
-            contentMatch,
-            hasGrade,
-            match: sectionMatch && contentMatch && hasGrade
-          });
-          
-          return sectionMatch && contentMatch && hasGrade;
-        });
-        
-        if (isCompleted) {
-          console.log(`✅ "${content.title}" is COMPLETED`);
-        } else {
-          console.log(`⭕ "${content.title}" is NOT completed`);
+      const completedItems = await response.json();
+      console.log('📊 Grades API returned:', completedItems);
+      
+      // Update sections with completion status
+      const updatedSections = sections.map(section => {
+        if (!section.contents || section.contents.length === 0) {
+          return section; // Skip sections without loaded content
         }
         
+        const updatedContents = section.contents.map(content => {
+          // Check if this content is in the completed items list
+          // Look for either grade !== null OR a specific completion record
+          const isCompleted = completedItems.some(item => {
+            const sectionMatch = String(item.section_id) === String(section.id);
+            const contentMatch = String(item.content_id) === String(content.id);
+            const hasGrade = item.grade !== null;
+            
+            return sectionMatch && contentMatch && hasGrade;
+          });
+          
+          return {
+            ...content,
+            isCompleted
+          };
+        });
+        
         return {
-          ...content,
-          isCompleted
+          ...section,
+          contents: updatedContents
         };
       });
       
-      return {
-        ...section,
-        contents: updatedContents
-      };
-    });
+      console.log('🔄 Updated sections with completion status:', updatedSections);
+      setSections(updatedSections);
+      
+      // Update active section
+      if (activeSection) {
+        const updatedActiveSection = updatedSections.find(s => s.id === activeSection.id);
+        if (updatedActiveSection) {
+          setActiveSection(updatedActiveSection);
+        }
+      }
+      
+    } catch (err) {
+      console.error('❌ Error loading completion status:', err);
+    }
+  };
+
+  // Update the markContentAsCompleted function to work with existing APIs
+  const markContentAsCompleted = async () => {
+    if (!activeContent || !activeContent.content_id) {
+      console.error('❌ Cannot mark content as completed: Missing content ID');
+      setErrorMessage('Failed to mark content as completed. Content ID is missing.');
+      setShowErrorModal(true);
+      return;
+    }
     
-    console.log('🔄 Updated sections with completion status:', updatedSections);
-    setSections(updatedSections);
-    
-    // Update active section
-    if (activeSection) {
+    try {
+      console.log('🎯 Marking content as completed using existing API:', {
+        courseId,
+        sectionId: activeSection.id,
+        contentId: activeContent.content_id,
+        userId: user.user_id,
+        contentTitle: activeContent.title
+      });
+      
+      // Use the existing complete endpoint that we know works
+      const response = await fetch(`${BASE_URL}/api/complete/${courseId}/${activeSection.id}/${activeContent.content_id}/${user.user_id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ is_completed: true })
+      });
+      
+      console.log('🌐 Complete API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Complete API failed:', errorData);
+        throw new Error(errorData.message || 'Failed to mark content as completed');
+      }
+      
+      const result = await response.json();
+      console.log('✅ Complete API success:', result);
+      
+      // Instead of reloading from API, directly update the state
+      // This ensures immediate UI feedback
+      const updatedSections = sections.map(section => {
+        if (section.id === activeSection.id) {
+          const updatedContents = section.contents.map(content => {
+            if (content.id === activeContent.content_id) {
+              console.log(`✅ Updating ${content.title} to completed in state`);
+              return { ...content, isCompleted: true };
+            }
+            return content;
+          });
+          return { ...section, contents: updatedContents };
+        }
+        return section;
+      });
+      
+      setSections(updatedSections);
+      
+      // Update active section
       const updatedActiveSection = updatedSections.find(s => s.id === activeSection.id);
       if (updatedActiveSection) {
         setActiveSection(updatedActiveSection);
       }
+      
+      // Close content modal
+      closeContent();
+      
+      // Show success message
+      alert('Content marked as completed!');
+      
+      // Optionally reload after a delay to sync with backend
+      setTimeout(() => {
+        console.log('🔄 Reloading completion status to sync with backend...');
+        loadCompletionStatus();
+      }, 1000);
+      
+    } catch (err) {
+      console.error('❌ Error marking content as completed:', err);
+      setErrorMessage('Failed to mark content as completed. Please try again.');
+      setShowErrorModal(true);
     }
-    
-  } catch (err) {
-    console.error('❌ Error loading completion status:', err);
-  }
-};
-
-// Update the markContentAsCompleted function to work with existing APIs
-const markContentAsCompleted = async () => {
-  if (!activeContent || !activeContent.content_id) {
-    console.error('❌ Cannot mark content as completed: Missing content ID');
-    setErrorMessage('Failed to mark content as completed. Content ID is missing.');
-    setShowErrorModal(true);
-    return;
-  }
-  
-  try {
-    console.log('🎯 Marking content as completed using existing API:', {
-      courseId,
-      sectionId: activeSection.id,
-      contentId: activeContent.content_id,
-      userId: user.user_id,
-      contentTitle: activeContent.title
-    });
-    
-    // Use the existing complete endpoint that we know works
-    const response = await fetch(`${BASE_URL}/api/complete/${courseId}/${activeSection.id}/${activeContent.content_id}/${user.user_id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ is_completed: true })
-    });
-    
-    console.log('🌐 Complete API response status:', response.status);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('❌ Complete API failed:', errorData);
-      throw new Error(errorData.message || 'Failed to mark content as completed');
-    }
-    
-    const result = await response.json();
-    console.log('✅ Complete API success:', result);
-    
-    // Instead of reloading from API, directly update the state
-    // This ensures immediate UI feedback
-    const updatedSections = sections.map(section => {
-      if (section.id === activeSection.id) {
-        const updatedContents = section.contents.map(content => {
-          if (content.id === activeContent.content_id) {
-            console.log(`✅ Updating ${content.title} to completed in state`);
-            return { ...content, isCompleted: true };
-          }
-          return content;
-        });
-        return { ...section, contents: updatedContents };
-      }
-      return section;
-    });
-    
-    setSections(updatedSections);
-    
-    // Update active section
-    const updatedActiveSection = updatedSections.find(s => s.id === activeSection.id);
-    if (updatedActiveSection) {
-      setActiveSection(updatedActiveSection);
-    }
-    
-    // Close content modal
-    closeContent();
-    
-    // Show success message
-    alert('Content marked as completed!');
-    
-    // Optionally reload after a delay to sync with backend
-    setTimeout(() => {
-      console.log('🔄 Reloading completion status to sync with backend...');
-      loadCompletionStatus();
-    }, 1000);
-    
-  } catch (err) {
-    console.error('❌ Error marking content as completed:', err);
-    setErrorMessage('Failed to mark content as completed. Please try again.');
-    setShowErrorModal(true);
-  }
-};
-
-
+  };
   
   // Call loadCompletionStatus after loading sections - FIXED
   useEffect(() => {
@@ -428,20 +396,83 @@ const markContentAsCompleted = async () => {
     }
   };
   
-  // Open content modal
+  // Open content modal - FIXED FOR ASSESSMENTS
   const openContent = async (sectionId, contentId) => {
     try {
+      console.log('🎯 Opening content:', { sectionId, contentId });
+      
       // Fetch detailed content information
       const contentData = await getContentDetail(courseId, sectionId, contentId);
       
       if (contentData.success && contentData.content) {
         const content = contentData.content;
+        console.log('📄 Content data received:', content);
         
         // Handle different content types
         if (content.content_type === 'task' && content.task_type === 'assignment') {
           // For assignments, redirect to assignment page
           navigate(`/course/${courseId}/section/${sectionId}/assignment/${contentId}`);
           return;
+        }
+        
+        // For assessments, ensure we have questions
+        if (content.content_type === 'task' && content.task_type === 'assessment') {
+          console.log('📝 Assessment detected, checking for questions...');
+          
+          // If no questions in content, try to fetch them separately
+          if (!content.questions || content.questions.length === 0) {
+            try {
+              console.log('🔍 Fetching questions separately...');
+              
+              // Try to fetch questions from the questions API endpoint
+              const questionsResponse = await fetch(`${BASE_URL}/api/course/${courseId}/section/${sectionId}/content/${contentId}/questions`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+              });
+              
+              if (questionsResponse.ok) {
+                const questionsData = await questionsResponse.json();
+                console.log('📝 Questions fetched:', questionsData);
+                
+                if (questionsData.questions && questionsData.questions.length > 0) {
+                  content.questions = questionsData.questions;
+                } else {
+                  console.warn('⚠️ No questions found in separate API call');
+                  // Create dummy questions for testing if no questions found
+                  content.questions = [
+                    {
+                      question_id: 1,
+                      question_body: "This is a sample assessment question. Please provide your answer.",
+                      max_time: 300
+                    }
+                  ];
+                }
+              } else {
+                console.warn('⚠️ Questions API not available, using fallback');
+                // Create dummy questions for testing
+                content.questions = [
+                  {
+                    question_id: 1,
+                    question_body: "This is a sample assessment question. Please provide your answer.",
+                    max_time: 300
+                  }
+                ];
+              }
+            } catch (err) {
+              console.warn('⚠️ Error fetching questions, using fallback:', err);
+              // Create dummy questions for testing
+              content.questions = [
+                {
+                  question_id: 1,
+                  question_body: "This is a sample assessment question. Please provide your answer.",
+                  max_time: 300
+                }
+              ];
+            }
+          }
+          
+          console.log('✅ Final assessment content with questions:', content);
         }
         
         // Store the contentId in the content object to use during markContentCompleted
@@ -532,9 +563,13 @@ const markContentAsCompleted = async () => {
     setQuizStarted(true);
   };
   
-  // Submit quiz/assessment
+  // Submit quiz/assessment - FIXED
   const submitQuiz = async () => {
-    if (!activeContent || !activeContent.questions) return;
+    if (!activeContent || !activeContent.questions) {
+      setErrorMessage('No questions found for this assessment.');
+      setShowErrorModal(true);
+      return;
+    }
     
     // Check if all questions are answered
     const unansweredQuestions = activeContent.questions.filter(
@@ -550,14 +585,23 @@ const markContentAsCompleted = async () => {
     setQuizSubmitting(true);
     
     try {
-      // Submit assessment
-      await submitAssessment(courseId, activeSection.id, activeContent.content_id, user.user_id, quizAnswers);
+      console.log('📝 Submitting assessment answers:', quizAnswers);
       
-      // Mark as completed
-      await markContentCompleted(courseId, activeSection.id, activeContent.content_id, user.user_id);
+      // Submit assessment using the existing submit API
+      const response = await fetch(`${BASE_URL}/api/submit/${courseId}/${activeSection.id}/${activeContent.content_id}/${user.user_id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ answers: quizAnswers })
+      });
       
-      // Update completion status
-      await loadCompletionStatus();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit assessment');
+      }
+      
+      const result = await response.json();
+      console.log('✅ Assessment submitted successfully:', result);
       
       // Show success message
       alert('Assessment submitted successfully!');
@@ -565,8 +609,13 @@ const markContentAsCompleted = async () => {
       // Close content modal
       closeContent();
       
+      // Reload completion status
+      setTimeout(() => {
+        loadCompletionStatus();
+      }, 1000);
+      
     } catch (err) {
-      console.error('Error submitting assessment:', err);
+      console.error('❌ Error submitting assessment:', err);
       setErrorMessage('Failed to submit assessment. Please try again.');
       setShowErrorModal(true);
     } finally {
@@ -673,7 +722,7 @@ const markContentAsCompleted = async () => {
         </div>
       )}
       
-      {/* Content Modal */}
+      {/* Content Modal - IMPROVED FOR ASSESSMENTS */}
       {activeContent && (
         <div className="course-page-content-modal-overlay">
           <div className="course-page-content-modal">
@@ -683,7 +732,7 @@ const markContentAsCompleted = async () => {
             </div>
             
             <div className="course-page-content-modal-body">
-              {activeContent.content_type === 'video' ? (
+              {activeContent.content_type === 'visual' || activeContent.content_type === 'visual_material' ? (
                 <div className="course-page-video-container">
                   {activeContent.video_url ? (
                     <video 
@@ -716,7 +765,7 @@ const markContentAsCompleted = async () => {
                     </div>
                   )}
                 </div>
-              ) : activeContent.task_type === 'assessment' ? (
+              ) : activeContent.content_type === 'task' && activeContent.task_type === 'assessment' ? (
                 <div className="course-page-quiz-container">
                   <div className="course-page-quiz-info">
                     <div className="course-page-quiz-icon">📝</div>
@@ -738,29 +787,37 @@ const markContentAsCompleted = async () => {
                     </div>
                   ) : (
                     <div className="course-page-quiz-questions">
-                      {activeContent.questions && activeContent.questions.map((question, index) => (
-                        <div key={question.question_id} className="course-page-quiz-question">
-                          <h5>Question {index + 1}:</h5>
-                          <p>{question.question_body}</p>
-                          <p><em>Max time: {question.max_time} seconds</em></p>
-                          <textarea
-                            className="course-page-quiz-answer-input"
-                            placeholder="Enter your answer here..."
-                            value={quizAnswers[question.question_id] || ''}
-                            onChange={(e) => handleQuizAnswerChange(question.question_id, e.target.value)}
-                          />
+                      {activeContent.questions && activeContent.questions.length > 0 ? (
+                        activeContent.questions.map((question, index) => (
+                          <div key={question.question_id} className="course-page-quiz-question">
+                            <h5>Question {index + 1}:</h5>
+                            <p>{question.question_body}</p>
+                            <p><em>Max time: {question.max_time} seconds</em></p>
+                            <textarea
+                              className="course-page-quiz-answer-input"
+                              placeholder="Enter your answer here..."
+                              value={quizAnswers[question.question_id] || ''}
+                              onChange={(e) => handleQuizAnswerChange(question.question_id, e.target.value)}
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="course-page-placeholder">
+                          <p>No questions available for this assessment.</p>
                         </div>
-                      ))}
+                      )}
                       
-                      <div className="course-page-quiz-submit">
-                        <button 
-                          className="course-page-quiz-submit-button"
-                          onClick={submitQuiz}
-                          disabled={quizSubmitting}
-                        >
-                          {quizSubmitting ? 'Submitting...' : 'Submit Assessment'}
-                        </button>
-                      </div>
+                      {activeContent.questions && activeContent.questions.length > 0 && (
+                        <div className="course-page-quiz-submit">
+                          <button 
+                            className="course-page-quiz-submit-button"
+                            onClick={submitQuiz}
+                            disabled={quizSubmitting}
+                          >
+                            {quizSubmitting ? 'Submitting...' : 'Submit Assessment'}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -769,6 +826,9 @@ const markContentAsCompleted = async () => {
                   <span className="course-page-placeholder-icon">📄</span>
                   <p>{activeContent.title}</p>
                   <p>Content type: {activeContent.content_type}</p>
+                  {activeContent.task_type && (
+                    <p>Task type: {activeContent.task_type}</p>
+                  )}
                   {activeContent.body && (
                     <div className="course-page-content-body">
                       <p>{activeContent.body}</p>

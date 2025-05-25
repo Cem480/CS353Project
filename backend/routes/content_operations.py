@@ -223,6 +223,77 @@ def get_content_detail(course_id, sec_id, content_id):
 
 
 completion_bp = Blueprint("completion", __name__)
+@content_operations_bp.route("/api/course/<course_id>/section/<sec_id>/content/<content_id>/questions", methods=["POST"])
+def create_assessment_questions(course_id, sec_id, content_id):
+    conn = connect_project_db()
+    cursor = conn.cursor()
+    
+    try:
+        # Verify the content exists and is an assessment
+        cursor.execute("""
+            SELECT t.task_type FROM content c
+            JOIN task t ON (c.course_id, c.sec_id, c.content_id) = (t.course_id, t.sec_id, t.content_id)
+            WHERE c.course_id = %s AND c.sec_id = %s AND c.content_id = %s
+        """, (course_id, sec_id, content_id))
+        
+        task = cursor.fetchone()
+        if not task:
+            return jsonify({"success": False, "message": "Content not found or not a task"}), 404
+        
+        if task[0] != 'assessment':
+            return jsonify({"success": False, "message": "Content is not an assessment"}), 400
+        
+        # Get the questions data from request
+        data = request.get_json()
+        if not data or 'questions' not in data:
+            return jsonify({"success": False, "message": "Questions data is required"}), 400
+        
+        questions = data['questions']
+        
+        # Delete existing questions for this assessment (if any)
+        cursor.execute("""
+            DELETE FROM question 
+            WHERE course_id = %s AND sec_id = %s AND content_id = %s
+        """, (course_id, sec_id, content_id))
+        
+        # Insert new questions
+        for question in questions:
+            cursor.execute("""
+                INSERT INTO question (course_id, sec_id, content_id, question_id, question_body, max_time)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                course_id,
+                sec_id, 
+                content_id,
+                question['question_id'],
+                question['question_body'],
+                question.get('max_time', 300)  # Default 5 minutes
+            ))
+        
+        # Update the question count in the assessment table
+        cursor.execute("""
+            UPDATE assessment 
+            SET question_count = %s 
+            WHERE course_id = %s AND sec_id = %s AND content_id = %s
+        """, (len(questions), course_id, sec_id, content_id))
+        
+        conn.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": f"Successfully created {len(questions)} questions",
+            "question_count": len(questions)
+        }), 201
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+
 
 @completion_bp.route("/api/course/<course_id>/completion/<student_id>", methods=["GET"])
 def get_completion_status(course_id, student_id):
