@@ -3,11 +3,6 @@ from db import connect_project_db
 
 course_content_bp = Blueprint("course_content_bp", __name__)
 
-from flask import Blueprint, request, jsonify
-from db import connect_project_db
-
-course_content_bp = Blueprint("course_content_bp", __name__)
-
 # Course info on the content page
 @course_content_bp.route("/api/course-content/course/<course_id>/info", methods=["GET"])
 def get_course_content_info(course_id):
@@ -274,6 +269,72 @@ def get_section_incomplete_summary(course_id, section_id, student_id):
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
     
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@course_content_bp.route("/api/course-content/course/<course_id>/completion-summary/<student_id>", methods=["GET"])
+def get_course_completion_summary(course_id, student_id):
+    """Get a summary of completion status for the entire course"""
+    try:
+        conn = connect_project_db()
+        cursor = conn.cursor()
+
+        # Check course and enrollment
+        cursor.execute("SELECT status FROM course WHERE course_id = %s", (course_id,))
+        course = cursor.fetchone()
+        if not course:
+            return jsonify({"success": False, "message": "Course not found"}), 404
+        if course[0] != "accepted":
+            return jsonify({"success": False, "message": "Course is not accepted"}), 403
+
+        cursor.execute("""
+            SELECT 1 FROM enroll WHERE course_id = %s AND student_id = %s
+        """, (course_id, student_id))
+        if not cursor.fetchone():
+            return jsonify({"success": False, "message": "Student is not enrolled"}), 403
+
+        # Get completion statistics
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_content,
+                SUM(CASE 
+                    WHEN comp.is_completed = true OR sub.grade IS NOT NULL 
+                    THEN 1 ELSE 0 
+                END) as completed_content,
+                SUM(CASE WHEN c.content_type = 'task' THEN 1 ELSE 0 END) as total_tasks,
+                SUM(CASE 
+                    WHEN c.content_type = 'task' AND (comp.is_completed = true OR sub.grade IS NOT NULL)
+                    THEN 1 ELSE 0 
+                END) as completed_tasks
+            FROM content c
+            LEFT JOIN complete comp ON c.course_id = comp.course_id 
+                AND c.sec_id = comp.sec_id 
+                AND c.content_id = comp.content_id 
+                AND comp.student_id = %s
+            LEFT JOIN submit sub ON c.course_id = sub.course_id 
+                AND c.sec_id = sub.sec_id 
+                AND c.content_id = sub.content_id 
+                AND sub.student_id = %s
+            WHERE c.course_id = %s
+        """, (student_id, student_id, course_id))
+
+        stats = cursor.fetchone()
+        total_content, completed_content, total_tasks, completed_tasks = stats
+
+        return jsonify({
+            "success": True,
+            "total_content": total_content or 0,
+            "completed_content": completed_content or 0,
+            "total_tasks": total_tasks or 0,
+            "completed_tasks": completed_tasks or 0,
+            "completion_percentage": round((completed_content / total_content * 100) if total_content > 0 else 0, 2)
+        }), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
     finally:
         cursor.close()
         conn.close()

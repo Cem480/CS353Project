@@ -494,3 +494,118 @@ export async function checkContentCompleted(courseId, sectionId, contentId, stud
     return false;
   }
 }
+
+export const getDetailedCompletionStatus = async (courseId, studentId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/course/${courseId}/student/${studentId}/completion-status`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: Failed to fetch completion status`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching detailed completion status:', error);
+    throw error;
+  }
+};
+
+// Check specific content completion
+export const checkContentCompletion = async (courseId, sectionId, contentId, studentId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/complete/${courseId}/${sectionId}/${contentId}/${studentId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: Failed to check content completion`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error checking content completion:', error);
+    throw error;
+  }
+};
+
+// Get course completion summary
+export const getCourseCompletionSummary = async (courseId, studentId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/completion-summary/${studentId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: Failed to fetch completion summary`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching completion summary:', error);
+    throw error;
+  }
+};
+
+// Mark content as completed (enhanced)
+export const markContentCompletedEnhanced = async (courseId, sectionId, contentId, studentId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/complete/${courseId}/${sectionId}/${contentId}/${studentId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ is_completed: true })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP ${response.status}: Failed to mark content as completed`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error marking content as completed:', error);
+    throw error;
+  }
+};
+
+// Utility function to merge completion status with content data
+export const mergeCompletionStatus = (sectionsData, completionData) => {
+  if (!completionData || !completionData.sections) {
+    return sectionsData;
+  }
+
+  return sectionsData.map(section => {
+    const completionSection = completionData.sections.find(cs => cs.section_id === section.id);
+    
+    if (!completionSection) {
+      return section;
+    }
+
+    const updatedContents = section.contents.map(content => {
+      const completionContent = completionSection.contents.find(cc => cc.content_id === content.id);
+      
+      return {
+        ...content,
+        isCompleted: completionContent ? completionContent.is_complete_or_graded : false,
+        grade: completionContent ? completionContent.grade : null
+      };
+    });
+
+    return {
+      ...section,
+      contents: updatedContents
+    };
+  });
+};

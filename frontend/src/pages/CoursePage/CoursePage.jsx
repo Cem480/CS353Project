@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CoursePage.css';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../services/auth';
 import { 
   getCourseInfo,
@@ -10,11 +10,13 @@ import {
   markContentCompleted,
   getContentComments,
   addContentComment,
-  submitAssessment,
-  getCompletionStatus
+  submitAssessment
 } from '../../services/course';
+import StudentHeader from '../../components/StudentHeader';
+import AdminHeader from '../../components/AdminHeader';
+import InstructorHeader from '../../components/InstructorHeader';
 
-// Helper function to get content type icon - FIXED
+// Helper function to get content type icon
 const getContentTypeIcon = (content) => {
   if (content.isCompleted) return '✓';
   
@@ -54,38 +56,127 @@ const getContentTypeIcon = (content) => {
 // Base URL
 const BASE_URL = 'http://localhost:5001';
 
-// Helper function to fetch data with error handling
-const fetchData = async (url, options = {}) => {
+// Enhanced completion status fetching
+const getDetailedCompletionStatus = async (courseId, studentId) => {
   try {
-    const defaultOptions = {
+    const response = await fetch(`${BASE_URL}/api/course/${courseId}/student/${studentId}/completion-status`, {
+      method: 'GET',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      ...options
-    };
-    
-    // Don't set Content-Type for FormData
-    if (options.body instanceof FormData) {
-      delete defaultOptions.headers['Content-Type'];
-    }
-    
-    const response = await fetch(url, defaultOptions);
-    const data = await response.json();
-    
+      credentials: 'include'
+    });
+
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      throw new Error(`HTTP ${response.status}: Failed to fetch completion status`);
     }
-    
+
+    const data = await response.json();
     return data;
   } catch (error) {
-    console.error(`API Error (${url}):`, error);
+    console.error('Error fetching detailed completion status:', error);
     throw error;
   }
+};
+
+// Check specific content completion
+const checkContentCompletion = async (courseId, sectionId, contentId, studentId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/complete/${courseId}/${sectionId}/${contentId}/${studentId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: Failed to check content completion`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error checking content completion:', error);
+    throw error;
+  }
+};
+
+// Get course completion summary
+const getCourseCompletionSummary = async (courseId, studentId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/completion-summary/${studentId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: Failed to fetch completion summary`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching completion summary:', error);
+    throw error;
+  }
+};
+
+// Mark content as completed (enhanced)
+const markContentCompletedEnhanced = async (courseId, sectionId, contentId, studentId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/complete/${courseId}/${sectionId}/${contentId}/${studentId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ is_completed: true })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP ${response.status}: Failed to mark content as completed`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error marking content as completed:', error);
+    throw error;
+  }
+};
+
+// Utility function to merge completion status with content data
+const mergeCompletionStatus = (sectionsData, completionData) => {
+  if (!completionData || !completionData.sections) {
+    return sectionsData;
+  }
+
+  return sectionsData.map(section => {
+    const completionSection = completionData.sections.find(cs => cs.section_id === section.id);
+    
+    if (!completionSection) {
+      return section;
+    }
+
+    const updatedContents = section.contents.map(content => {
+      const completionContent = completionSection.contents.find(cc => cc.content_id === content.id);
+      
+      return {
+        ...content,
+        isCompleted: completionContent ? completionContent.is_complete_or_graded : false,
+        grade: completionContent ? completionContent.grade : null
+      };
+    });
+
+    return {
+      ...section,
+      contents: updatedContents
+    };
+  });
 };
 
 const CoursePage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const role = user.role;
   
   // State management
   const [courseTitle, setCourseTitle] = useState('');
@@ -99,6 +190,7 @@ const CoursePage = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [completionSummary, setCompletionSummary] = useState(null);
   
   // Quiz/Assessment state
   const [quizAnswers, setQuizAnswers] = useState({});
@@ -166,7 +258,7 @@ const CoursePage = () => {
     loadCourseData();
   }, [courseId]);
   
-  // Function to load section content - FIXED
+  // Function to load section content
   const loadSectionContent = async (sectionId, sectionsArray = sections) => {
     try {
       // Check if content is already loaded to prevent unnecessary API calls
@@ -216,76 +308,84 @@ const CoursePage = () => {
     }
   };
   
-  // Load completion status - WORKING VERSION using existing APIs
+  // Enhanced completion status loading
   const loadCompletionStatus = async () => {
     if (!courseId || !user?.user_id || sections.length === 0) return;
     
     try {
-      console.log('🔍 Loading completion status for course:', courseId, 'user:', user.user_id);
+      console.log('🔍 Loading detailed completion status...');
       
-      // Use the existing grades API that we know works
-      const response = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/grades/${user.user_id}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
+      // Use the new detailed completion API
+      const completionData = await getDetailedCompletionStatus(courseId, user.user_id);
       
-      console.log('🌐 Grades API response status:', response.status);
-      
-      if (!response.ok) {
-        console.warn('⚠️ Could not fetch completion status, response not ok');
-        return;
-      }
-      
-      const completedItems = await response.json();
-      console.log('📊 Grades API returned:', completedItems);
-      
-      // Update sections with completion status
-      const updatedSections = sections.map(section => {
-        if (!section.contents || section.contents.length === 0) {
-          return section; // Skip sections without loaded content
-        }
+      if (completionData.success) {
+        console.log('📊 Completion data received:', completionData);
         
-        const updatedContents = section.contents.map(content => {
-          // Check if this content is in the completed items list
-          // Look for either grade !== null OR a specific completion record
-          const isCompleted = completedItems.some(item => {
-            const sectionMatch = String(item.section_id) === String(section.id);
-            const contentMatch = String(item.content_id) === String(content.id);
-            const hasGrade = item.grade !== null;
-            
-            return sectionMatch && contentMatch && hasGrade;
-          });
-          
-          return {
-            ...content,
-            isCompleted
-          };
-        });
+        // Store completion summary
+        setCompletionSummary(completionData);
         
-        return {
-          ...section,
-          contents: updatedContents
-        };
-      });
-      
-      console.log('🔄 Updated sections with completion status:', updatedSections);
-      setSections(updatedSections);
-      
-      // Update active section
-      if (activeSection) {
-        const updatedActiveSection = updatedSections.find(s => s.id === activeSection.id);
-        if (updatedActiveSection) {
-          setActiveSection(updatedActiveSection);
+        // Merge completion status with existing sections
+        const updatedSections = mergeCompletionStatus(sections, completionData);
+        
+        console.log('🔄 Updated sections with completion status:', updatedSections);
+        setSections(updatedSections);
+        
+        // Update active section if needed
+        if (activeSection) {
+          const updatedActiveSection = updatedSections.find(s => s.id === activeSection.id);
+          if (updatedActiveSection) {
+            setActiveSection(updatedActiveSection);
+          }
         }
       }
       
     } catch (err) {
       console.error('❌ Error loading completion status:', err);
+      
+      // Fallback to the old method if new API is not available
+      try {
+        console.log('🔄 Falling back to grades API...');
+        
+        const response = await fetch(`${BASE_URL}/api/course-content/course/${courseId}/grades/${user.user_id}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const completedItems = await response.json();
+          console.log('📊 Grades API returned:', completedItems);
+          
+          // Update sections with completion status from grades
+          const updatedSections = sections.map(section => {
+            if (!section.contents || section.contents.length === 0) {
+              return section;
+            }
+            
+            const updatedContents = section.contents.map(content => {
+              const isCompleted = completedItems.some(item => {
+                const sectionMatch = String(item.section_id) === String(section.id);
+                const contentMatch = String(item.content_id) === String(content.id);
+                const hasGrade = item.grade !== null;
+                
+                return sectionMatch && contentMatch && hasGrade;
+              });
+              
+              return { ...content, isCompleted };
+            });
+            
+            return { ...section, contents: updatedContents };
+          });
+          
+          setSections(updatedSections);
+        }
+      } catch (fallbackErr) {
+        console.error('❌ Fallback method also failed:', fallbackErr);
+      }
     }
   };
 
-  // Update the markContentAsCompleted function to work with existing APIs
+  // Enhanced mark content as completed function
   const markContentAsCompleted = async () => {
     if (!activeContent || !activeContent.content_id) {
       console.error('❌ Cannot mark content as completed: Missing content ID');
@@ -295,7 +395,7 @@ const CoursePage = () => {
     }
     
     try {
-      console.log('🎯 Marking content as completed using existing API:', {
+      console.log('🎯 Marking content as completed:', {
         courseId,
         sectionId: activeSection.id,
         contentId: activeContent.content_id,
@@ -303,27 +403,12 @@ const CoursePage = () => {
         contentTitle: activeContent.title
       });
       
-      // Use the existing complete endpoint that we know works
-      const response = await fetch(`${BASE_URL}/api/complete/${courseId}/${activeSection.id}/${activeContent.content_id}/${user.user_id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ is_completed: true })
-      });
+      // Use the enhanced completion function
+      await markContentCompletedEnhanced(courseId, activeSection.id, activeContent.content_id, user.user_id);
       
-      console.log('🌐 Complete API response status:', response.status);
+      console.log('✅ Content marked as completed successfully');
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ Complete API failed:', errorData);
-        throw new Error(errorData.message || 'Failed to mark content as completed');
-      }
-      
-      const result = await response.json();
-      console.log('✅ Complete API success:', result);
-      
-      // Instead of reloading from API, directly update the state
-      // This ensures immediate UI feedback
+      // Immediately update the UI state
       const updatedSections = sections.map(section => {
         if (section.id === activeSection.id) {
           const updatedContents = section.contents.map(content => {
@@ -352,7 +437,7 @@ const CoursePage = () => {
       // Show success message
       alert('Content marked as completed!');
       
-      // Optionally reload after a delay to sync with backend
+      // Reload completion status after a delay to sync with backend
       setTimeout(() => {
         console.log('🔄 Reloading completion status to sync with backend...');
         loadCompletionStatus();
@@ -365,7 +450,7 @@ const CoursePage = () => {
     }
   };
   
-  // Call loadCompletionStatus after loading sections - FIXED
+  // Call loadCompletionStatus after loading sections
   useEffect(() => {
     if (sections.length > 0 && !loading) {
       // Add condition to only load once the page is fully loaded
@@ -373,7 +458,7 @@ const CoursePage = () => {
     }
   }, [sections.length, loading]); // Only depend on sections length, not the full sections object
   
-  // Toggle section expansion - FIXED
+  // Toggle section expansion
   const toggleSection = (sectionId) => {
     // Toggle expanded state for this section
     setExpandedSections(prev => ({
@@ -563,7 +648,7 @@ const CoursePage = () => {
     setQuizStarted(true);
   };
   
-  // Submit quiz/assessment - FIXED
+  // Submit quiz/assessment
   const submitQuiz = async () => {
     if (!activeContent || !activeContent.questions) {
       setErrorMessage('No questions found for this assessment.');
@@ -646,7 +731,7 @@ const CoursePage = () => {
     );
   }
   
-  // Calculate total completed items and total items
+  // Enhanced progress calculation
   const calculateProgress = () => {
     let totalItems = 0;
     let completedItems = 0;
@@ -662,10 +747,12 @@ const CoursePage = () => {
       }
     });
     
-    return { totalItems, completedItems };
+    const progressPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+    
+    return { totalItems, completedItems, progressPercentage };
   };
   
-  const { totalItems, completedItems } = calculateProgress();
+  const { totalItems, completedItems, progressPercentage } = calculateProgress();
   
   return (
     <div className="course-page">
@@ -970,7 +1057,7 @@ const CoursePage = () => {
               <div className="course-page-section-info">
                 <div className="course-page-time-info">
                   <span className="course-page-icon">🕒</span>
-                  <span>0m of content remaining</span>
+                  <span>Course progress tracking enabled</span>
                 </div>
               </div>
               
@@ -1037,7 +1124,7 @@ const CoursePage = () => {
           )}
         </main>
         
-        {/* Right Sidebar */}
+        {/* Right Sidebar - Enhanced Progress */}
         <aside className="course-page-progress-sidebar">
           <div className="course-page-progress-header">
             <h3>Your Course Progress</h3>
@@ -1046,6 +1133,11 @@ const CoursePage = () => {
             <p className="course-page-progress-text">
               Stay on track with your learning goals
             </p>
+            
+            {/* Enhanced progress display */}
+            <div className="course-page-progress-circle">
+              <div className="progress-percentage">{progressPercentage}%</div>
+            </div>
             
             <div className="course-page-progress-stats">
               <div className="course-page-progress-stat">
@@ -1057,7 +1149,20 @@ const CoursePage = () => {
                 <div className="course-page-progress-number">{totalItems}</div>
                 <div className="course-page-progress-label">Total Items</div>
               </div>
+              
+              <div className="course-page-progress-stat">
+                <div className="course-page-progress-number">{totalItems - completedItems}</div>
+                <div className="course-page-progress-label">Remaining</div>
+              </div>
             </div>
+            
+            {/* Completion Summary from API */}
+            {completionSummary && (
+              <div className="course-page-completion-details">
+                <p><strong>Overall Progress:</strong> {completionSummary.completion_percentage}%</p>
+                <p><strong>Completed:</strong> {completionSummary.completed_content} / {completionSummary.total_content}</p>
+              </div>
+            )}
           </div>
           
           <div className="course-page-lab-section">
