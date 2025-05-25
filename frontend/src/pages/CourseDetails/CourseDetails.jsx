@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './CourseDetails.css';
 import { getCurrentUser } from '../../services/auth';
 import { enrollInCourse, checkEnrollment } from '../../services/student';
-import { submitFinancialAidApplication } from '../../services/financial_aid';
+import { submitFinancialAidApplication, hasStudentAppliedForAid } from '../../services/financial_aid';
 import StudentHeader from '../../components/StudentHeader';
 import AdminHeader from '../../components/AdminHeader';
 import InstructorHeader from '../../components/InstructorHeader';
@@ -33,6 +33,8 @@ const CourseDetails = () => {
   const role = userData?.role;
   // Use ref to prevent multiple API calls
   const dataFetchedRef = useRef(false);
+
+  const [hasAppliedForAid, setHasAppliedForAid] = useState(false);
 
   useEffect(() => {
     // If no user is logged in, redirect to login
@@ -88,6 +90,16 @@ const CourseDetails = () => {
           }
 
           setSectionContents(contentsObj);
+        }
+        // Check if student already applied for aid
+        if (userData.role === 'student') {
+          try {
+            const applied = await hasStudentAppliedForAid(courseId, userData.user_id);
+            setHasAppliedForAid(applied);
+            console.log("Already applied for aid?", applied);
+          } catch (err) {
+            console.error('Error checking financial aid application status:', err);
+          }
         }
       } catch (err) {
         console.error('Error fetching course data:', err);
@@ -371,9 +383,11 @@ const CourseDetails = () => {
                   {course.is_free ? 'Enroll Now' : 'Continue with Payment'}
                 </button>
 
-                <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
-                  Financial Aid Available
-                </button>
+                {!hasAppliedForAid && (
+                  <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
+                    Financial Aid Available
+                  </button>
+                )}
               </>
             )}
 

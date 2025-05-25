@@ -324,3 +324,28 @@ def get_course_financial_aid_applications(course_id):
     finally:
         cursor.close()
         conn.close()
+
+@financial_aid_bp.route("/api/financial_aid/has_applied/<course_id>/<student_id>", methods=["GET"])
+def has_applied_for_financial_aid(course_id, student_id):
+    conn = connect_project_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT 1
+            WHERE EXISTS (
+                SELECT *
+                FROM apply_financial_aid
+                WHERE course_id = %s AND student_id = %s
+            )
+        """, (course_id, student_id))
+
+        has_applied = cursor.fetchone() is not None
+        return jsonify({"hasApplied": has_applied}), 200
+
+    except Exception as e:
+        print(f"Error checking financial aid application: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()

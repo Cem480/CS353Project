@@ -80,3 +80,20 @@ const BASE_URL = 'http://localhost:5001';
       throw err;
     }
   }
+
+  export async function hasStudentAppliedForAid(courseId, studentId) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/financial_aid/has_applied/${courseId}/${studentId}`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+    const result = await res.json();
+    console.log("API Response:", result); 
+    return result;
+  } catch (err) {
+    console.error("Failed to check financial aid application:", err);
+    throw err;
+  }
+}
+
+
