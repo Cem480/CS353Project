@@ -158,39 +158,51 @@ WITH months AS (
     '1 month'
   ) AS m
 ),
+
 stats AS (
   SELECT
     date_trunc('month', u.registration_date) AS m,
-    COUNT(*)                                 AS registration_count,
-    COUNT(*) FILTER (WHERE s.account_status='active') AS active_students
+    COUNT(*) AS registration_count
   FROM "user" u
   JOIN student s ON s.id = u.id
   WHERE u.registration_date BETWEEN %s
         AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
   GROUP BY m
 ),
+
+active_stats AS (
+  SELECT
+    m.m AS m,
+    COUNT(*) AS active_students
+  FROM months m
+  CROSS JOIN student s
+  WHERE s.account_status = 'active'
+  GROUP BY m.m
+),
+
 cumulative AS (
   SELECT
     months.m AS m,
-    (SELECT COUNT(*) FROM "user" ux JOIN student sx ON sx.id=ux.id
+    (SELECT COUNT(*) FROM "user" ux JOIN student sx ON sx.id = ux.id
      WHERE ux.registration_date <= months.m + INTERVAL '1 month' - INTERVAL '1 day')
       AS total_students
   FROM months
 ),
+
 enrolls AS (
   SELECT
     sub.m,
-    ROUND(AVG(sub.enroll_cnt)::numeric,2) AS avg_enroll_per_student,
-    ROUND(AVG(s.certificate_count)::numeric,2) AS avg_cert_per_student,
-    ROUND(AVG(sub.avg_progress)::numeric,2)   AS avg_completion_rate
+    ROUND(AVG(sub.enroll_cnt)::numeric, 2) AS avg_enroll_per_student,
+    ROUND(AVG(s.certificate_count)::numeric, 2) AS avg_cert_per_student,
+    ROUND(AVG(sub.avg_progress)::numeric, 2) AS avg_completion_rate
   FROM student s
   JOIN "user" u ON u.id = s.id
   LEFT JOIN (
     SELECT
       student_id,
       date_trunc('month', enroll_date) AS m,
-      COUNT(*)                       AS enroll_cnt,
-      AVG(progress_rate)             AS avg_progress
+      COUNT(*) AS enroll_cnt,
+      AVG(progress_rate) AS avg_progress
     FROM enroll
     WHERE enroll_date BETWEEN %s
           AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
@@ -200,21 +212,21 @@ enrolls AS (
         AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
   GROUP BY sub.m
 ),
+
 major_stats AS (
   SELECT
-    date_trunc('month', u.registration_date) AS m,
+    m.m AS m,
     s.major,
-    COUNT(*)                                AS major_count,
+    COUNT(*) AS major_count,
     ROW_NUMBER() OVER (
-      PARTITION BY date_trunc('month', u.registration_date)
+      PARTITION BY m.m
       ORDER BY COUNT(*) DESC, s.major
     ) AS rn
-  FROM "user" u
-  JOIN student s ON s.id = u.id
-  WHERE u.registration_date BETWEEN %s
-        AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
-  GROUP BY m, s.major
+  FROM months m
+  CROSS JOIN student s
+  GROUP BY m.m, s.major
 ),
+
 age_stats AS (
   SELECT
     date_trunc('month', u.registration_date) AS m,
@@ -227,27 +239,30 @@ age_stats AS (
         AND (%s + INTERVAL '1 month' - INTERVAL '1 day')
   GROUP BY m
 ),
+
 out AS (
   SELECT
-    TO_CHAR(months.m,'YYYY-MM')                     AS month,
-    COALESCE(stats.registration_count,0)             AS registration_count,
-    COALESCE(cumulative.total_students,0)            AS total_students,
-    COALESCE(stats.active_students,0)                AS active_students,
-    COALESCE(enrolls.avg_enroll_per_student,0)       AS avg_enroll_per_student,
-    COALESCE(enrolls.avg_cert_per_student,0)         AS avg_cert_per_student,
-    COALESCE(enrolls.avg_completion_rate,0)          AS avg_completion_rate,
-    COALESCE(ms.major,'')                            AS most_common_major,
-    COALESCE(ms.major_count,0)                       AS most_common_major_count,
-    COALESCE(a.avg_age,0)                            AS avg_age,
-    COALESCE(a.youngest_age,0)                       AS youngest_age,
-    COALESCE(a.oldest_age,0)                         AS oldest_age
+    TO_CHAR(months.m, 'YYYY-MM')                     AS month,
+    COALESCE(stats.registration_count, 0)             AS registration_count,
+    COALESCE(cumulative.total_students, 0)            AS total_students,
+    COALESCE(active_stats.active_students, 0)         AS active_students,
+    COALESCE(enrolls.avg_enroll_per_student, 0)       AS avg_enroll_per_student,
+    COALESCE(enrolls.avg_cert_per_student, 0)         AS avg_cert_per_student,
+    COALESCE(enrolls.avg_completion_rate, 0)          AS avg_completion_rate,
+    COALESCE(ms.major, '')                            AS most_common_major,
+    COALESCE(ms.major_count, 0)                       AS most_common_major_count,
+    COALESCE(a.avg_age, 0)                            AS avg_age,
+    COALESCE(a.youngest_age, 0)                       AS youngest_age,
+    COALESCE(a.oldest_age, 0)                         AS oldest_age
   FROM months
   LEFT JOIN stats       ON stats.m       = months.m
   LEFT JOIN cumulative  ON cumulative.m  = months.m
   LEFT JOIN enrolls     ON enrolls.m     = months.m
-  LEFT JOIN major_stats ms ON ms.m       = months.m AND ms.rn = 1
-  LEFT JOIN age_stats   a  ON a.m         = months.m
+  LEFT JOIN active_stats ON active_stats.m = months.m
+  LEFT JOIN major_stats ms ON ms.m = months.m AND ms.rn = 1
+  LEFT JOIN age_stats   a  ON a.m = months.m
 )
+
 SELECT * FROM out
 ORDER BY month;
 """
@@ -978,7 +993,8 @@ def student_ranged_report():
 
             print(f"[PROCESS] Creating report for {m.strftime('%Y-%m')}", flush=True)
 
-            cur.execute(STUDENT_RANGE_SQL, (m, m) * 6)
+            cur.execute(STUDENT_RANGE_SQL, (m, m, m, m, m, m, m, m, m, m))
+
             one = cur.fetchone()
             one["active_student_count"] = one.pop("active_students")
 

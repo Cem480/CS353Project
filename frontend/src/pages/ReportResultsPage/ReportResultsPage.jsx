@@ -21,6 +21,11 @@ const Metric = ({ label, value }) => (
     </div>
 );
 
+const formatMonth = (isoStr) => {
+    const date = new Date(isoStr);
+    return date.toLocaleString('en-US', { month: 'short', year: 'numeric' }); // e.g., "Apr 2024"
+};
+
 const ChartBlock = ({ title, type, data, dataKey, xKey = 'month' }) => (
     <section className="chart-section">
         <h3>{title}</h3>
@@ -50,7 +55,8 @@ function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSou
     const monthlyStats = report.monthly_stats || [];
 
     const monthlyLine = (key) => monthlyStats.map(m => ({
-        month: m.month_start?.slice(0, 7) || m.month || '',
+        month: formatMonth(m.month_start)
+            || m.month || '',
         value: m[key] != null ? Number(m[key]) : null
     }));
 
@@ -63,7 +69,8 @@ function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSou
                         title="Monthly Active Students"
                         type="line"
                         data={monthlyStats.map(m => ({
-                            month: m.month_start?.slice(0, 7),
+                            month: formatMonth(m.month_start)
+                            ,
                             value: Number(m.active_student_count ?? 0)
                         }))}
                         dataKey="value"
@@ -74,7 +81,8 @@ function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSou
                         title="Average Completion Rate per Month"
                         type="bar"
                         data={monthlyStats.map(m => ({
-                            month: m.month_start?.slice(0, 7),
+                            month: formatMonth(m.month_start)
+                            ,
                             value: Number(m.avg_completion_rate ?? 0)
                         }))}
                         dataKey="value"
@@ -85,7 +93,8 @@ function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSou
                         title="Average Enrollments per Student"
                         type="line"
                         data={monthlyStats.map(m => ({
-                            month: m.month_start?.slice(0, 7),
+                            month: formatMonth(m.month_start)
+                            ,
                             value: Number(m.avg_enrollments_per_student ?? 0)
                         }))}
                         dataKey="value"
@@ -96,7 +105,8 @@ function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSou
                         title="Total Students"
                         type="bar"
                         data={monthlyStats.map(m => ({
-                            month: m.month_start?.slice(0, 7),
+                            month: formatMonth(m.month_start)
+                            ,
                             value: Number(m.total_students ?? 0)
                         }))}
                         dataKey="value"
@@ -111,7 +121,8 @@ function StudentInstructorUI({ report, regSeries, isInstructor = false, instrSou
                         {monthlyStats.map((m, idx) => (
                             <Metric
                                 key={m.month_start}
-                                label={m.month_start?.slice(0, 7)}
+                                label={formatMonth(m.month_start)
+                                }
                                 value={
                                     m.most_common_major
                                         ? `${m.most_common_major} (${m.most_common_major_count})`
@@ -290,7 +301,8 @@ export default function ReportResultsPage() {
         regSeries = objToSeries(report.monthly_registrations);
     } else if (report.monthly_stats) {
         regSeries = report.monthly_stats.map(m => ({
-            month: m.month || m.month_start?.slice(0, 7),
+            month: m.month || formatMonth(m.month_start)
+            ,
             count: Number(m.registration_count ?? m.monthly_reg_count)
         }));
     }

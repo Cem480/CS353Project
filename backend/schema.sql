@@ -2022,3 +2022,683 @@ VALUES ('C0000116', 'U0000023', 200000.00, 'Interested in architecture but canno
 
 INSERT INTO apply_financial_aid (course_id, student_id, income, statement, status, evaluator_id)
 VALUES ('C0000111', 'U0000022', 180000.00, 'Requesting aid due to financial constraints.', 'rejected', 'U0000013');
+
+
+-- Users
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001010', 'Melissa', 'Figueroa', 'melissa.figueroa@example.com', '999-140-7666', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1990-06-03', '2024-06-08', 'student');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001011', 'Troy', 'Marsh', 'troy.marsh@example.com', '153-865-2841', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1992-06-06', '2024-09-17', 'student');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001012', 'Kimberly', 'Jackson', 'kimberly.jackson@example.com', '326-678-8265', 'scrypt:32768:8:1$X$EXAMPLEHASH', '2001-04-30', '2024-07-15', 'student');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001013', 'Sandra', 'Brown', 'sandra.brown@example.com', '922-881-4979', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1993-07-21', '2024-06-06', 'student');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001014', 'Leslie', 'Smith', 'leslie.smith@example.com', '081-153-3877', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1989-02-21', '2024-06-20', 'student');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001015', 'Michael', 'Stewart', 'michael.stewart@example.com', '586-152-5914', 'scrypt:32768:8:1$X$EXAMPLEHASH', '2002-06-10', '2025-03-04', 'student');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001016', 'Dawn', 'Griffith', 'dawn.griffith@example.com', '764-909-4642', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1995-06-13', '2024-07-18', 'student');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001017', 'David', 'Lee', 'david.lee@example.com', '707-842-1555', 'scrypt:32768:8:1$X$EXAMPLEHASH', '2000-02-16', '2024-04-15', 'student');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001018', 'Mary', 'Martinez', 'mary.martinez@example.com', '823-538-6487', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1989-12-28', '2024-08-04', 'student');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001019', 'Erin', 'Smith', 'erin.smith@example.com', '520-178-6543', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1993-05-18', '2024-11-07', 'student');
+
+-- Instructors
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001001', 'Rachel', 'James', 'rachel.james@example.com', '213-741-6360', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1988-01-27', '2024-06-17', 'instructor');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001002', 'Anthony', 'Ortiz', 'anthony.ortiz@example.com', '967-642-4735', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1991-08-15', '2024-08-02', 'instructor');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001003', 'Bryan', 'Reyes', 'bryan.reyes@example.com', '801-382-2570', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1992-11-17', '2024-04-14', 'instructor');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001004', 'David', 'Lee', 'david.lee2@example.com', '875-066-2484', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1989-09-03', '2024-07-03', 'instructor');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001005', 'Sandra', 'Powell', 'sandra.powell@example.com', '342-967-0771', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1993-05-29', '2024-10-22', 'instructor');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001006', 'Wesley', 'Cox', 'wesley.cox@example.com', '777-899-1885', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1994-03-07', '2024-05-30', 'instructor');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001007', 'Tanya', 'Torres', 'tanya.torres@example.com', '878-133-0156', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1995-10-22', '2024-12-18', 'instructor');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001008', 'Mary', 'Lopez', 'mary.lopez@example.com', '984-020-6340', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1991-03-27', '2024-09-09', 'instructor');
+
+-- Admins
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001020', 'Nathaniel', 'Ward', 'nathaniel.ward@example.com', '802-048-4970', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1994-06-28', '2024-04-02', 'admin');
+INSERT INTO "user" (id, first_name, last_name, email, phone_no, password, birth_date, registration_date, role)
+VALUES ('U0001021', 'Shawn', 'Bennett', 'shawn.bennett@example.com', '427-665-3159', 'scrypt:32768:8:1$X$EXAMPLEHASH', '1991-01-13', '2024-05-05', 'admin');
+
+-- Role assignments (same as before)
+INSERT INTO student (id, major, account_status) VALUES ('U0001010', 'Bio', 'active');
+INSERT INTO student (id, major, account_status) VALUES ('U0001011', 'CS', 'active');
+INSERT INTO student (id, major, account_status) VALUES ('U0001012', 'Math', 'active');
+INSERT INTO student (id, major, account_status) VALUES ('U0001013', 'Bio', 'active');
+INSERT INTO student (id, major, account_status) VALUES ('U0001014', 'Math', 'active');
+INSERT INTO student (id, major, account_status) VALUES ('U0001015', 'CS', 'active');
+INSERT INTO student (id, major, account_status) VALUES ('U0001016', 'Math', 'active');
+INSERT INTO student (id, major, account_status) VALUES ('U0001017', 'CS', 'active');
+INSERT INTO student (id, major, account_status) VALUES ('U0001018', 'Bio', 'active');
+INSERT INTO student (id, major, account_status) VALUES ('U0001019', 'Math', 'active');
+
+INSERT INTO instructor (id, i_rating, course_count) VALUES ('U0001001', 0.0, 0);
+INSERT INTO instructor (id, i_rating, course_count) VALUES ('U0001002', 0.0, 0);
+INSERT INTO instructor (id, i_rating, course_count) VALUES ('U0001003', 0.0, 0);
+INSERT INTO instructor (id, i_rating, course_count) VALUES ('U0001004', 0.0, 0);
+INSERT INTO instructor (id, i_rating, course_count) VALUES ('U0001005', 0.0, 0);
+INSERT INTO instructor (id, i_rating, course_count) VALUES ('U0001006', 0.0, 0);
+INSERT INTO instructor (id, i_rating, course_count) VALUES ('U0001007', 0.0, 0);
+INSERT INTO instructor (id, i_rating, course_count) VALUES ('U0001008', 0.0, 0);
+
+INSERT INTO admin (id, report_count) VALUES ('U0001020', 0);
+INSERT INTO admin (id, report_count) VALUES ('U0001021', 0);
+
+UPDATE "user"
+SET password = 'scrypt:32768:8:1$HISarEjuybOMY8K6$20619ccfc5dd7475a73030fd68fe1cedb6b27fec3181e90b7afd2bf8c48bc776b65aa42585cb01c8906ae4728c0537773dc1a6441b1df5bd1d5d59e12f8123e2';
+
+-- COURSE: C2000
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES ('C2000', 'Course 1', 'Course 1 - autogenerated for test.', 'Blockchain', 49, '2024-04-01', '2024-04-21', 'accepted', 0, 'https://forum.learnhub.com/course_1', 1, 'U0001001');
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES 
+('C2000', 'S0001', 'Section 1', 'Section 1 of Course 1', 1, 0),
+('C2000', 'S0002', 'Section 2', 'Section 2 of Course 1', 2, 0);
+
+-- Contents for C2000 Section 1
+INSERT INTO content VALUES 
+('C2000', 'S0001', 'CD0001', 'Doc 1', 1, 10, 'document'),
+('C2000', 'S0001', 'CV0001', 'Video 1', 2, 15, 'visual_material'),
+('C2000', 'S0001', 'CT0001', 'Task 1', 3, 20, 'task');
+INSERT INTO document VALUES ('C2000', 'S0001', 'CD0001', 'doc_body_C2000_S0001_CD0001');
+INSERT INTO visual_material VALUES ('C2000', 'S0001', 'CV0001', 15, 'video_body_C2000_S0001_CV0001');
+INSERT INTO task VALUES ('C2000', 'S0001', 'CT0001', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2000', 'S0001', 'CT0001', 5);
+
+-- Contents for C2000 Section 2
+INSERT INTO content VALUES 
+('C2000', 'S0002', 'CD0002', 'Doc 2', 1, 10, 'document'),
+('C2000', 'S0002', 'CV0002', 'Video 2', 2, 15, 'visual_material'),
+('C2000', 'S0002', 'CT0002', 'Task 2', 3, 20, 'task');
+INSERT INTO document VALUES ('C2000', 'S0002', 'CD0002', 'doc_body_C2000_S0002_CD0002');
+INSERT INTO visual_material VALUES ('C2000', 'S0002', 'CV0002', 15, 'video_body_C2000_S0002_CV0002');
+INSERT INTO task VALUES ('C2000', 'S0002', 'CT0002', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2000', 'S0002', 'CT0002', 5);
+
+-- COURSE: C2001
+-- (Repeat above structure with 'C2001', 'S0101', etc.)
+-- COURSE: C2001
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES ('C2001', 'Course 2', 'Course 2 - autogenerated for test.', 'Cognitive Science', 49, '2024-05-01', '2024-05-21', 'accepted', 0, 'https://forum.learnhub.com/course_2', 1, 'U0001002');
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES 
+('C2001', 'S0101', 'Section 1', 'Section 1 of Course 2', 1, 0),
+('C2001', 'S0102', 'Section 2', 'Section 2 of Course 2', 2, 0);
+
+-- Contents for C2001 Section 1
+INSERT INTO content VALUES 
+('C2001', 'S0101', 'CD0101', 'Doc 1', 1, 10, 'document'),
+('C2001', 'S0101', 'CV0101', 'Video 1', 2, 15, 'visual_material'),
+('C2001', 'S0101', 'CT0101', 'Task 1', 3, 20, 'task');
+INSERT INTO document VALUES ('C2001', 'S0101', 'CD0101', 'doc_body_C2001_S0101_CD0101');
+INSERT INTO visual_material VALUES ('C2001', 'S0101', 'CV0101', 15, 'video_body_C2001_S0101_CV0101');
+INSERT INTO task VALUES ('C2001', 'S0101', 'CT0101', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2001', 'S0101', 'CT0101', 5);
+
+-- Contents for C2001 Section 2
+INSERT INTO content VALUES 
+('C2001', 'S0102', 'CD0102', 'Doc 2', 1, 10, 'document'),
+('C2001', 'S0102', 'CV0102', 'Video 2', 2, 15, 'visual_material'),
+('C2001', 'S0102', 'CT0102', 'Task 2', 3, 20, 'task');
+INSERT INTO document VALUES ('C2001', 'S0102', 'CD0102', 'doc_body_C2001_S0102_CD0102');
+INSERT INTO visual_material VALUES ('C2001', 'S0102', 'CV0102', 15, 'video_body_C2001_S0102_CV0102');
+INSERT INTO task VALUES ('C2001', 'S0102', 'CT0102', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2001', 'S0102', 'CT0102', 5);
+
+-- COURSE: C2002
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES ('C2002', 'Course 3', 'Course 3 - autogenerated for test.', 'UX Design', 0, '2024-06-01', '2024-06-21', 'accepted', 0, 'https://forum.learnhub.com/course_3', 2, 'U0001003');
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES 
+('C2002', 'S0201', 'Section 1', 'Section 1 of Course 3', 1, 0),
+('C2002', 'S0202', 'Section 2', 'Section 2 of Course 3', 2, 0);
+
+-- Contents for C2002 Section 1
+INSERT INTO content VALUES 
+('C2002', 'S0201', 'CD0201', 'Doc 1', 1, 10, 'document'),
+('C2002', 'S0201', 'CV0201', 'Video 1', 2, 15, 'visual_material'),
+('C2002', 'S0201', 'CT0201', 'Task 1', 3, 20, 'task');
+INSERT INTO document VALUES ('C2002', 'S0201', 'CD0201', 'doc_body_C2002_S0201_CD0201');
+INSERT INTO visual_material VALUES ('C2002', 'S0201', 'CV0201', 15, 'video_body_C2002_S0201_CV0201');
+INSERT INTO task VALUES ('C2002', 'S0201', 'CT0201', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2002', 'S0201', 'CT0201', 5);
+
+-- Contents for C2002 Section 2
+INSERT INTO content VALUES 
+('C2002', 'S0202', 'CD0202', 'Doc 2', 1, 10, 'document'),
+('C2002', 'S0202', 'CV0202', 'Video 2', 2, 15, 'visual_material'),
+('C2002', 'S0202', 'CT0202', 'Task 2', 3, 20, 'task');
+INSERT INTO document VALUES ('C2002', 'S0202', 'CD0202', 'doc_body_C2002_S0202_CD0202');
+INSERT INTO visual_material VALUES ('C2002', 'S0202', 'CV0202', 15, 'video_body_C2002_S0202_CV0202');
+INSERT INTO task VALUES ('C2002', 'S0202', 'CT0202', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2002', 'S0202', 'CT0202', 5);
+
+-- COURSE: C2003
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES ('C2003', 'Course 4', 'Course 4 - autogenerated for test.', 'Data Science', 149, '2024-07-01', '2024-07-21', 'accepted', 0, 'https://forum.learnhub.com/course_4', 3, 'U0001004');
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES 
+('C2003', 'S0301', 'Section 1', 'Section 1 of Course 4', 1, 0),
+('C2003', 'S0302', 'Section 2', 'Section 2 of Course 4', 2, 0);
+
+INSERT INTO content VALUES 
+('C2003', 'S0301', 'CD0301', 'Doc 1', 1, 10, 'document'),
+('C2003', 'S0301', 'CV0301', 'Video 1', 2, 15, 'visual_material'),
+('C2003', 'S0301', 'CT0301', 'Task 1', 3, 20, 'task');
+INSERT INTO document VALUES ('C2003', 'S0301', 'CD0301', 'doc_body_C2003_S0301_CD0301');
+INSERT INTO visual_material VALUES ('C2003', 'S0301', 'CV0301', 15, 'video_body_C2003_S0301_CV0301');
+INSERT INTO task VALUES ('C2003', 'S0301', 'CT0301', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2003', 'S0301', 'CT0301', 5);
+
+INSERT INTO content VALUES 
+('C2003', 'S0302', 'CD0302', 'Doc 2', 1, 10, 'document'),
+('C2003', 'S0302', 'CV0302', 'Video 2', 2, 15, 'visual_material'),
+('C2003', 'S0302', 'CT0302', 'Task 2', 3, 20, 'task');
+INSERT INTO document VALUES ('C2003', 'S0302', 'CD0302', 'doc_body_C2003_S0302_CD0302');
+INSERT INTO visual_material VALUES ('C2003', 'S0302', 'CV0302', 15, 'video_body_C2003_S0302_CV0302');
+INSERT INTO task VALUES ('C2003', 'S0302', 'CT0302', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2003', 'S0302', 'CT0302', 5);
+
+-- COURSE: C2004
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES ('C2004', 'Course 5', 'Course 5 - autogenerated for test.', 'Economics', 149, '2024-08-01', '2024-08-21', 'accepted', 0, 'https://forum.learnhub.com/course_5', 5, 'U0001005');
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES 
+('C2004', 'S0401', 'Section 1', 'Section 1 of Course 5', 1, 0),
+('C2004', 'S0402', 'Section 2', 'Section 2 of Course 5', 2, 0);
+
+INSERT INTO content VALUES 
+('C2004', 'S0401', 'CD0401', 'Doc 1', 1, 10, 'document'),
+('C2004', 'S0401', 'CV0401', 'Video 1', 2, 15, 'visual_material'),
+('C2004', 'S0401', 'CT0401', 'Task 1', 3, 20, 'task');
+INSERT INTO document VALUES ('C2004', 'S0401', 'CD0401', 'doc_body_C2004_S0401_CD0401');
+INSERT INTO visual_material VALUES ('C2004', 'S0401', 'CV0401', 15, 'video_body_C2004_S0401_CV0401');
+INSERT INTO task VALUES ('C2004', 'S0401', 'CT0401', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2004', 'S0401', 'CT0401', 5);
+
+INSERT INTO content VALUES 
+('C2004', 'S0402', 'CD0402', 'Doc 2', 1, 10, 'document'),
+('C2004', 'S0402', 'CV0402', 'Video 2', 2, 15, 'visual_material'),
+('C2004', 'S0402', 'CT0402', 'Task 2', 3, 20, 'task');
+INSERT INTO document VALUES ('C2004', 'S0402', 'CD0402', 'doc_body_C2004_S0402_CD0402');
+INSERT INTO visual_material VALUES ('C2004', 'S0402', 'CV0402', 15, 'video_body_C2004_S0402_CV0402');
+INSERT INTO task VALUES ('C2004', 'S0402', 'CT0402', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2004', 'S0402', 'CT0402', 5);
+
+-- COURSE: C2005
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES ('C2005', 'Course 6', 'Course 6 - autogenerated for test.', 'Creative Writing', 0, '2024-09-01', '2024-09-21', 'accepted', 0, 'https://forum.learnhub.com/course_6', 3, 'U0001006');
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES 
+('C2005', 'S0501', 'Section 1', 'Section 1 of Course 6', 1, 0),
+('C2005', 'S0502', 'Section 2', 'Section 2 of Course 6', 2, 0);
+
+-- Section 1
+INSERT INTO content VALUES 
+('C2005', 'S0501', 'CD0501', 'Doc 1', 1, 10, 'document'),
+('C2005', 'S0501', 'CV0501', 'Video 1', 2, 15, 'visual_material'),
+('C2005', 'S0501', 'CT0501', 'Task 1', 3, 20, 'task');
+INSERT INTO document VALUES ('C2005', 'S0501', 'CD0501', 'doc_body_C2005_S0501_CD0501');
+INSERT INTO visual_material VALUES ('C2005', 'S0501', 'CV0501', 15, 'video_body_C2005_S0501_CV0501');
+INSERT INTO task VALUES ('C2005', 'S0501', 'CT0501', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2005', 'S0501', 'CT0501', 5);
+
+-- Section 2
+INSERT INTO content VALUES 
+('C2005', 'S0502', 'CD0502', 'Doc 2', 1, 10, 'document'),
+('C2005', 'S0502', 'CV0502', 'Video 2', 2, 15, 'visual_material'),
+('C2005', 'S0502', 'CT0502', 'Task 2', 3, 20, 'task');
+INSERT INTO document VALUES ('C2005', 'S0502', 'CD0502', 'doc_body_C2005_S0502_CD0502');
+INSERT INTO visual_material VALUES ('C2005', 'S0502', 'CV0502', 15, 'video_body_C2005_S0502_CV0502');
+INSERT INTO task VALUES ('C2005', 'S0502', 'CT0502', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2005', 'S0502', 'CT0502', 5);
+
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES ('C2011', 'Course 12', 'Course 12 - autogenerated for test.', 'Philosophy', 99, '2025-03-01', '2025-03-21', 'accepted', 0, 'https://forum.learnhub.com/course_12', 4, 'U0001003');
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES 
+('C2011', 'S1101', 'Section 1', 'Section 1 of Course 12', 1, 0),
+('C2011', 'S1102', 'Section 2', 'Section 2 of Course 12', 2, 0);
+
+INSERT INTO content VALUES 
+('C2011', 'S1101', 'CD1101', 'Doc 1', 1, 10, 'document'),
+('C2011', 'S1101', 'CV1101', 'Video 1', 2, 15, 'visual_material'),
+('C2011', 'S1101', 'CT1101', 'Task 1', 3, 20, 'task');
+INSERT INTO document VALUES ('C2011', 'S1101', 'CD1101', 'doc_body_C2011_S1101_CD1101');
+INSERT INTO visual_material VALUES ('C2011', 'S1101', 'CV1101', 15, 'video_body_C2011_S1101_CV1101');
+INSERT INTO task VALUES ('C2011', 'S1101', 'CT1101', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2011', 'S1101', 'CT1101', 5);
+
+INSERT INTO content VALUES 
+('C2011', 'S1102', 'CD1102', 'Doc 2', 1, 10, 'document'),
+('C2011', 'S1102', 'CV1102', 'Video 2', 2, 15, 'visual_material'),
+('C2011', 'S1102', 'CT1102', 'Task 2', 3, 20, 'task');
+INSERT INTO document VALUES ('C2011', 'S1102', 'CD1102', 'doc_body_C2011_S1102_CD1102');
+INSERT INTO visual_material VALUES ('C2011', 'S1102', 'CV1102', 15, 'video_body_C2011_S1102_CV1102');
+INSERT INTO task VALUES ('C2011', 'S1102', 'CT1102', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2011', 'S1102', 'CT1102', 5);
+
+-- COURSE: C2006
+INSERT INTO course (course_id, title, description, category, price, creation_date, last_update_date, status, enrollment_count, qna_link, difficulty_level, creator_id)
+VALUES ('C2006', 'Course 7', 'Course 7 - autogenerated for test.', 'Digital Art', 149, '2024-09-01', '2024-09-21', 'accepted', 0, 'https://forum.learnhub.com/course_7', 1, 'U0001007');
+INSERT INTO section (course_id, sec_id, title, description, order_number, allocated_time) VALUES 
+('C2006', 'S0601', 'Section 1', 'Section 1 of Course 7', 1, 0),
+('C2006', 'S0602', 'Section 2', 'Section 2 of Course 7', 2, 0);
+
+INSERT INTO content VALUES 
+('C2006', 'S0601', 'CD0601', 'Doc', 1, 10, 'document'),
+('C2006', 'S0601', 'CV0601', 'Video', 2, 15, 'visual_material'),
+('C2006', 'S0601', 'CT0601', 'Task', 3, 20, 'task');
+INSERT INTO document VALUES ('C2006', 'S0601', 'CD0601', 'doc_body_C2006_S0601_CD0601');
+INSERT INTO visual_material VALUES ('C2006', 'S0601', 'CV0601', 15, 'video_body_C2006_S0601_CV0601');
+INSERT INTO task VALUES ('C2006', 'S0601', 'CT0601', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2006', 'S0601', 'CT0601', 5);
+
+-- Repeat for S0602
+INSERT INTO content VALUES 
+('C2006', 'S0602', 'CD0602', 'Doc', 1, 10, 'document'),
+('C2006', 'S0602', 'CV0602', 'Video', 2, 15, 'visual_material'),
+('C2006', 'S0602', 'CT0602', 'Task', 3, 20, 'task');
+INSERT INTO document VALUES ('C2006', 'S0602', 'CD0602', 'doc_body_C2006_S0602_CD0602');
+INSERT INTO visual_material VALUES ('C2006', 'S0602', 'CV0602', 15, 'video_body_C2006_S0602_CV0602');
+INSERT INTO task VALUES ('C2006', 'S0602', 'CT0602', 60, 30, 'assessment', 100);
+INSERT INTO assessment VALUES ('C2006', 'S0602', 'CT0602', 5);
+
+-- Enrollments for U0001010
+INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate)
+VALUES ('C2001', 'U0001010', '2024-05-20', 40);
+INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate)
+VALUES ('C2002', 'U0001010', '2024-10-30', 60);
+INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate)
+VALUES ('C2006', 'U0001010', '2024-09-14', 100);
+
+-- Completions for U0001010 in C2006
+INSERT INTO complete VALUES 
+('C2006', 'S0601', 'CD0601', 'U0001010', TRUE),
+('C2006', 'S0601', 'CV0601', 'U0001010', TRUE),
+('C2006', 'S0601', 'CT0601', 'U0001010', TRUE),
+('C2006', 'S0602', 'CD0602', 'U0001010', TRUE),
+('C2006', 'S0602', 'CV0602', 'U0001010', TRUE),
+('C2006', 'S0602', 'CT0602', 'U0001010', TRUE);
+
+-- Certificate for U0001010
+INSERT INTO certificate (certificate_id, title, body)
+VALUES ('CERT5000', 'Certificate of Completion for C2006', 'Awarded to U0001010 for completing C2006.');
+INSERT INTO earn_certificate VALUES ('U0001010', 'C2006', 'CERT5000', '2024-09-14');
+
+-- Feedback for U0001010
+INSERT INTO feedback (course_id, student_id, rating, comment, feedback_date)
+VALUES ('C2002', 'U0001010', 4, 'Feedback by U0001010 on C2002', '2024-10-30');
+
+-- Enrollments for U0001011
+INSERT INTO enroll VALUES 
+('C2000', 'U0001011', '2024-06-28', 100),
+('C2003', 'U0001011', '2024-10-03', 100),
+('C2004', 'U0001011', '2024-04-15', 100);
+
+-- Completions for U0001011
+INSERT INTO complete VALUES
+-- C2000
+('C2000', 'S0001', 'CD0001', 'U0001011', TRUE),
+('C2000', 'S0001', 'CV0001', 'U0001011', TRUE),
+('C2000', 'S0001', 'CT0001', 'U0001011', TRUE),
+('C2000', 'S0002', 'CD0002', 'U0001011', TRUE),
+('C2000', 'S0002', 'CV0002', 'U0001011', TRUE),
+('C2000', 'S0002', 'CT0002', 'U0001011', TRUE),
+-- C2003
+('C2003', 'S0301', 'CD0301', 'U0001011', TRUE),
+('C2003', 'S0301', 'CV0301', 'U0001011', TRUE),
+('C2003', 'S0301', 'CT0301', 'U0001011', TRUE),
+('C2003', 'S0302', 'CD0302', 'U0001011', TRUE),
+('C2003', 'S0302', 'CV0302', 'U0001011', TRUE),
+('C2003', 'S0302', 'CT0302', 'U0001011', TRUE),
+-- C2004
+('C2004', 'S0401', 'CD0401', 'U0001011', TRUE),
+('C2004', 'S0401', 'CV0401', 'U0001011', TRUE),
+('C2004', 'S0401', 'CT0401', 'U0001011', TRUE),
+('C2004', 'S0402', 'CD0402', 'U0001011', TRUE),
+('C2004', 'S0402', 'CV0402', 'U0001011', TRUE),
+('C2004', 'S0402', 'CT0402', 'U0001011', TRUE);
+
+-- Certificates for U0001011
+INSERT INTO certificate VALUES
+('CERT5001', 'Certificate of Completion for C2000', 'Awarded to U0001011 for completing C2000.'),
+('CERT5002', 'Certificate of Completion for C2003', 'Awarded to U0001011 for completing C2003.'),
+('CERT5003', 'Certificate of Completion for C2004', 'Awarded to U0001011 for completing C2004.');
+INSERT INTO earn_certificate VALUES
+('U0001011', 'C2000', 'CERT5001', '2024-06-28'),
+('U0001011', 'C2003', 'CERT5002', '2024-10-03'),
+('U0001011', 'C2004', 'CERT5003', '2024-04-15');
+
+-- Feedbacks for U0001011
+INSERT INTO feedback VALUES
+('C2000', 'U0001011', 5, 'Feedback by U0001011 on C2000', '2024-06-28'),
+('C2003', 'U0001011', 4, 'Feedback by U0001011 on C2003', '2024-10-03');
+
+-- Enrollments for U0001012
+INSERT INTO enroll VALUES 
+('C2001', 'U0001012', '2024-05-01', 100),
+('C2002', 'U0001012', '2024-08-02', 60),
+('C2011', 'U0001012', '2024-07-15', 80);
+
+-- Completions for U0001012 in C2001
+INSERT INTO complete VALUES
+('C2001', 'S0101', 'CD0101', 'U0001012', TRUE),
+('C2001', 'S0101', 'CV0101', 'U0001012', TRUE),
+('C2001', 'S0101', 'CT0101', 'U0001012', TRUE),
+('C2001', 'S0102', 'CD0102', 'U0001012', TRUE),
+('C2001', 'S0102', 'CV0102', 'U0001012', TRUE),
+('C2001', 'S0102', 'CT0102', 'U0001012', TRUE);
+
+-- Certificate for U0001012
+INSERT INTO certificate VALUES
+('CERT5004', 'Certificate of Completion for C2001', 'Awarded to U0001012 for completing C2001.');
+INSERT INTO earn_certificate VALUES
+('U0001012', 'C2001', 'CERT5004', '2024-05-01');
+
+-- Feedback for U0001012
+INSERT INTO feedback VALUES
+('C2002', 'U0001012', 5, 'Feedback by U0001012 on C2002', '2024-08-02');
+
+-- Enrollments for U0001013
+INSERT INTO enroll VALUES
+('C2002', 'U0001013', '2024-07-11', 100),
+('C2003', 'U0001013', '2024-09-08', 40),
+('C2006', 'U0001013', '2024-10-22', 60);
+
+-- Completions for U0001013 in C2002
+INSERT INTO complete VALUES
+('C2002', 'S0201', 'CD0201', 'U0001013', TRUE),
+('C2002', 'S0201', 'CV0201', 'U0001013', TRUE),
+('C2002', 'S0201', 'CT0201', 'U0001013', TRUE),
+('C2002', 'S0202', 'CD0202', 'U0001013', TRUE),
+('C2002', 'S0202', 'CV0202', 'U0001013', TRUE),
+('C2002', 'S0202', 'CT0202', 'U0001013', TRUE);
+
+-- Certificate for U0001013
+INSERT INTO certificate VALUES
+('CERT5005', 'Certificate of Completion for C2002', 'Awarded to U0001013 for completing C2002.');
+INSERT INTO earn_certificate VALUES
+('U0001013', 'C2002', 'CERT5005', '2024-07-11');
+
+-- Feedbacks for U0001013
+INSERT INTO feedback VALUES
+('C2002', 'U0001013', 4, 'Feedback by U0001013 on C2002', '2024-07-11'),
+('C2006', 'U0001013', 5, 'Feedback by U0001013 on C2006', '2024-10-22');
+
+-- Enrollments for U0001014
+INSERT INTO enroll VALUES
+('C2000', 'U0001014', '2024-06-13', 60),
+('C2003', 'U0001014', '2024-08-18', 100),
+('C2011', 'U0001014', '2024-09-30', 100);
+
+-- Completions for U0001014 in C2003
+INSERT INTO complete VALUES
+('C2003', 'S0301', 'CD0301', 'U0001014', TRUE),
+('C2003', 'S0301', 'CV0301', 'U0001014', TRUE),
+('C2003', 'S0301', 'CT0301', 'U0001014', TRUE),
+('C2003', 'S0302', 'CD0302', 'U0001014', TRUE),
+('C2003', 'S0302', 'CV0302', 'U0001014', TRUE),
+('C2003', 'S0302', 'CT0302', 'U0001014', TRUE);
+
+-- Completions for U0001014 in C2011
+INSERT INTO complete VALUES
+('C2011', 'S1101', 'CD1101', 'U0001014', TRUE),
+('C2011', 'S1101', 'CV1101', 'U0001014', TRUE),
+('C2011', 'S1101', 'CT1101', 'U0001014', TRUE),
+('C2011', 'S1102', 'CD1102', 'U0001014', TRUE),
+('C2011', 'S1102', 'CV1102', 'U0001014', TRUE),
+('C2011', 'S1102', 'CT1102', 'U0001014', TRUE);
+
+-- Certificates for U0001014
+INSERT INTO certificate VALUES
+('CERT5006', 'Certificate of Completion for C2003', 'Awarded to U0001014 for completing C2003.'),
+('CERT5007', 'Certificate of Completion for C2011', 'Awarded to U0001014 for completing C2011.');
+INSERT INTO earn_certificate VALUES
+('U0001014', 'C2003', 'CERT5006', '2024-08-18'),
+('U0001014', 'C2011', 'CERT5007', '2024-09-30');
+
+-- Feedbacks for U0001014
+INSERT INTO feedback VALUES
+('C2003', 'U0001014', 5, 'Feedback by U0001014 on C2003', '2024-08-18');
+
+-- Enrollments for U0001015
+INSERT INTO enroll VALUES
+('C2000', 'U0001015', '2024-05-17', 100),
+('C2001', 'U0001015', '2024-07-05', 100),
+('C2004', 'U0001015', '2024-08-10', 100);
+
+-- Completions for U0001015 in C2000
+INSERT INTO complete VALUES
+('C2000', 'S0001', 'CD0001', 'U0001015', TRUE),
+('C2000', 'S0001', 'CV0001', 'U0001015', TRUE),
+('C2000', 'S0001', 'CT0001', 'U0001015', TRUE),
+('C2000', 'S0002', 'CD0002', 'U0001015', TRUE),
+('C2000', 'S0002', 'CV0002', 'U0001015', TRUE),
+('C2000', 'S0002', 'CT0002', 'U0001015', TRUE);
+
+-- Completions for U0001015 in C2001
+INSERT INTO complete VALUES
+('C2001', 'S0101', 'CD0101', 'U0001015', TRUE),
+('C2001', 'S0101', 'CV0101', 'U0001015', TRUE),
+('C2001', 'S0101', 'CT0101', 'U0001015', TRUE),
+('C2001', 'S0102', 'CD0102', 'U0001015', TRUE),
+('C2001', 'S0102', 'CV0102', 'U0001015', TRUE),
+('C2001', 'S0102', 'CT0102', 'U0001015', TRUE);
+
+-- Completions for U0001015 in C2004
+INSERT INTO complete VALUES
+('C2004', 'S0401', 'CD0401', 'U0001015', TRUE),
+('C2004', 'S0401', 'CV0401', 'U0001015', TRUE),
+('C2004', 'S0401', 'CT0401', 'U0001015', TRUE),
+('C2004', 'S0402', 'CD0402', 'U0001015', TRUE),
+('C2004', 'S0402', 'CV0402', 'U0001015', TRUE),
+('C2004', 'S0402', 'CT0402', 'U0001015', TRUE);
+
+-- Certificates for U0001015
+INSERT INTO certificate VALUES
+('CERT5008', 'Certificate of Completion for C2000', 'Awarded to U0001015 for completing C2000.'),
+('CERT5009', 'Certificate of Completion for C2001', 'Awarded to U0001015 for completing C2001.'),
+('CERT5010', 'Certificate of Completion for C2004', 'Awarded to U0001015 for completing C2004.');
+INSERT INTO earn_certificate VALUES
+('U0001015', 'C2000', 'CERT5008', '2024-05-17'),
+('U0001015', 'C2001', 'CERT5009', '2024-07-05'),
+('U0001015', 'C2004', 'CERT5010', '2024-08-10');
+
+-- Feedbacks for U0001015
+INSERT INTO feedback VALUES
+('C2000', 'U0001015', 5, 'Feedback by U0001015 on C2000', '2024-05-17'),
+('C2001', 'U0001015', 4, 'Feedback by U0001015 on C2001', '2024-07-05');
+
+-- Enrollments for U0001016
+INSERT INTO enroll VALUES
+('C2003', 'U0001016', '2024-06-20', 100),
+('C2004', 'U0001016', '2024-07-15', 100),
+('C2006', 'U0001016', '2024-09-04', 100);
+
+-- Completions for U0001016 in C2003
+INSERT INTO complete VALUES
+('C2003', 'S0301', 'CD0301', 'U0001016', TRUE),
+('C2003', 'S0301', 'CV0301', 'U0001016', TRUE),
+('C2003', 'S0301', 'CT0301', 'U0001016', TRUE),
+('C2003', 'S0302', 'CD0302', 'U0001016', TRUE),
+('C2003', 'S0302', 'CV0302', 'U0001016', TRUE),
+('C2003', 'S0302', 'CT0302', 'U0001016', TRUE);
+
+-- Completions for U0001016 in C2004
+INSERT INTO complete VALUES
+('C2004', 'S0401', 'CD0401', 'U0001016', TRUE),
+('C2004', 'S0401', 'CV0401', 'U0001016', TRUE),
+('C2004', 'S0401', 'CT0401', 'U0001016', TRUE),
+('C2004', 'S0402', 'CD0402', 'U0001016', TRUE),
+('C2004', 'S0402', 'CV0402', 'U0001016', TRUE),
+('C2004', 'S0402', 'CT0402', 'U0001016', TRUE);
+
+-- Completions for U0001016 in C2006
+INSERT INTO complete VALUES
+('C2006', 'S0601', 'CD0601', 'U0001016', TRUE),
+('C2006', 'S0601', 'CV0601', 'U0001016', TRUE),
+('C2006', 'S0601', 'CT0601', 'U0001016', TRUE),
+('C2006', 'S0602', 'CD0602', 'U0001016', TRUE),
+('C2006', 'S0602', 'CV0602', 'U0001016', TRUE),
+('C2006', 'S0602', 'CT0602', 'U0001016', TRUE);
+
+-- Certificates for U0001016
+INSERT INTO certificate VALUES
+('CERT5011', 'Certificate of Completion for C2003', 'Awarded to U0001016 for completing C2003.'),
+('CERT5012', 'Certificate of Completion for C2004', 'Awarded to U0001016 for completing C2004.'),
+('CERT5013', 'Certificate of Completion for C2006', 'Awarded to U0001016 for completing C2006.');
+INSERT INTO earn_certificate VALUES
+('U0001016', 'C2003', 'CERT5011', '2024-06-20'),
+('U0001016', 'C2004', 'CERT5012', '2024-07-15'),
+('U0001016', 'C2006', 'CERT5013', '2024-09-04');
+
+-- Feedbacks for U0001016
+INSERT INTO feedback VALUES
+('C2003', 'U0001016', 5, 'Feedback by U0001016 on C2003', '2024-06-20');
+
+-- Enrollments for U0001017
+INSERT INTO enroll VALUES
+('C2000', 'U0001017', '2024-04-22', 60),
+('C2002', 'U0001017', '2024-06-17', 100),
+('C2011', 'U0001017', '2024-07-29', 40);
+
+-- Completions for U0001017 in C2002
+INSERT INTO complete VALUES
+('C2002', 'S0201', 'CD0201', 'U0001017', TRUE),
+('C2002', 'S0201', 'CV0201', 'U0001017', TRUE),
+('C2002', 'S0201', 'CT0201', 'U0001017', TRUE),
+('C2002', 'S0202', 'CD0202', 'U0001017', TRUE),
+('C2002', 'S0202', 'CV0202', 'U0001017', TRUE),
+('C2002', 'S0202', 'CT0202', 'U0001017', TRUE);
+
+-- Certificate for U0001017
+INSERT INTO certificate VALUES
+('CERT5014', 'Certificate of Completion for C2002', 'Awarded to U0001017 for completing C2002.');
+INSERT INTO earn_certificate VALUES
+('U0001017', 'C2002', 'CERT5014', '2024-06-17');
+
+-- Feedbacks for U0001017
+INSERT INTO feedback VALUES
+('C2000', 'U0001017', 4, 'Feedback by U0001017 on C2000', '2024-04-22'),
+('C2002', 'U0001017', 5, 'Feedback by U0001017 on C2002', '2024-06-17');
+
+-- Enrollments for U0001018
+INSERT INTO enroll VALUES
+('C2001', 'U0001018', '2024-06-11', 40),
+('C2003', 'U0001018', '2024-10-12', 100),
+('C2005', 'U0001018', '2024-09-01', 100);
+
+-- Completions for U0001018 in C2003
+INSERT INTO complete VALUES
+('C2003', 'S0301', 'CD0301', 'U0001018', TRUE),
+('C2003', 'S0301', 'CV0301', 'U0001018', TRUE),
+('C2003', 'S0301', 'CT0301', 'U0001018', TRUE),
+('C2003', 'S0302', 'CD0302', 'U0001018', TRUE),
+('C2003', 'S0302', 'CV0302', 'U0001018', TRUE),
+('C2003', 'S0302', 'CT0302', 'U0001018', TRUE);
+
+-- Completions for U0001018 in C2005
+INSERT INTO complete VALUES
+('C2005', 'S0501', 'CD0501', 'U0001018', TRUE),
+('C2005', 'S0501', 'CV0501', 'U0001018', TRUE),
+('C2005', 'S0501', 'CT0501', 'U0001018', TRUE),
+('C2005', 'S0502', 'CD0502', 'U0001018', TRUE),
+('C2005', 'S0502', 'CV0502', 'U0001018', TRUE),
+('C2005', 'S0502', 'CT0502', 'U0001018', TRUE);
+
+-- Certificates for U0001018
+INSERT INTO certificate VALUES
+('CERT5015', 'Certificate of Completion for C2003', 'Awarded to U0001018 for completing C2003.'),
+('CERT5016', 'Certificate of Completion for C2005', 'Awarded to U0001018 for completing C2005.');
+INSERT INTO earn_certificate VALUES
+('U0001018', 'C2003', 'CERT5015', '2024-10-12'),
+('U0001018', 'C2005', 'CERT5016', '2024-09-01');
+
+-- Feedbacks for U0001018
+INSERT INTO feedback VALUES
+('C2003', 'U0001018', 5, 'Feedback by U0001018 on C2003', '2024-10-12');
+
+-- Enrollments for U0001019
+INSERT INTO enroll VALUES
+('C2002', 'U0001019', '2024-08-07', 100),
+('C2004', 'U0001019', '2024-06-14', 60),
+('C2005', 'U0001019', '2024-09-17', 40);
+
+-- Completions for U0001019 in C2002
+INSERT INTO complete VALUES
+('C2002', 'S0201', 'CD0201', 'U0001019', TRUE),
+('C2002', 'S0201', 'CV0201', 'U0001019', TRUE),
+('C2002', 'S0201', 'CT0201', 'U0001019', TRUE),
+('C2002', 'S0202', 'CD0202', 'U0001019', TRUE),
+('C2002', 'S0202', 'CV0202', 'U0001019', TRUE),
+('C2002', 'S0202', 'CT0202', 'U0001019', TRUE);
+
+-- Certificate for U0001019
+INSERT INTO certificate VALUES
+('CERT5017', 'Certificate of Completion for C2002', 'Awarded to U0001019 for completing C2002.');
+INSERT INTO earn_certificate VALUES
+('U0001019', 'C2002', 'CERT5017', '2024-08-07');
+
+-- Feedbacks for U0001019
+INSERT INTO feedback VALUES
+('C2002', 'U0001019', 5, 'Feedback by U0001019 on C2002', '2024-08-07');
+
+INSERT INTO enroll (course_id, student_id, enroll_date, progress_rate)
+VALUES
+('C2005', 'U0001013', '2025-01-15', 100),
+('C2004', 'U0001018', '2025-01-15', 100),
+('C2011', 'U0001010', '2025-01-15', 100),
+('C2006', 'U0001011', '2025-01-15', 80),
+('C2000', 'U0001019', '2025-02-15', 80),
+('C2003', 'U0001015', '2025-02-15', 60),
+('C2004', 'U0001010', '2025-02-15', 100),
+('C2003', 'U0001019', '2025-03-15', 60),
+('C2004', 'U0001012', '2025-03-15', 100),
+('C2006', 'U0001018', '2025-03-15', 80),
+('C2004', 'U0001013', '2025-03-15', 80),
+('C2000', 'U0001010', '2025-04-15', 60),
+('C2002', 'U0001011', '2025-04-15', 100),
+('C2004', 'U0001017', '2025-04-15', 80),
+('C2011', 'U0001018', '2025-04-15', 60);
+INSERT INTO complete (course_id, sec_id, content_id, student_id, is_completed)
+VALUES
+('C2005', 'S0501', 'CD0501', 'U0001013', TRUE),
+('C2005', 'S0501', 'CV0501', 'U0001013', TRUE),
+('C2005', 'S0501', 'CT0501', 'U0001013', TRUE),
+('C2005', 'S0502', 'CD0502', 'U0001013', TRUE),
+('C2005', 'S0502', 'CV0502', 'U0001013', TRUE),
+('C2005', 'S0502', 'CT0502', 'U0001013', TRUE),
+('C2004', 'S0401', 'CD0401', 'U0001018', TRUE),
+('C2004', 'S0401', 'CV0401', 'U0001018', TRUE),
+('C2004', 'S0401', 'CT0401', 'U0001018', TRUE),
+('C2004', 'S0402', 'CD0402', 'U0001018', TRUE),
+('C2004', 'S0402', 'CV0402', 'U0001018', TRUE),
+('C2004', 'S0402', 'CT0402', 'U0001018', TRUE),
+('C2011', 'S1101', 'CD1101', 'U0001010', TRUE),
+('C2011', 'S1101', 'CV1101', 'U0001010', TRUE),
+('C2011', 'S1101', 'CT1101', 'U0001010', TRUE),
+('C2011', 'S1102', 'CD1102', 'U0001010', TRUE),
+('C2011', 'S1102', 'CV1102', 'U0001010', TRUE),
+('C2011', 'S1102', 'CT1102', 'U0001010', TRUE),
+('C2004', 'S0401', 'CD0401', 'U0001010', TRUE),
+('C2004', 'S0401', 'CV0401', 'U0001010', TRUE),
+('C2004', 'S0401', 'CT0401', 'U0001010', TRUE),
+('C2004', 'S0402', 'CD0402', 'U0001010', TRUE),
+('C2004', 'S0402', 'CV0402', 'U0001010', TRUE),
+('C2004', 'S0402', 'CT0402', 'U0001010', TRUE),
+('C2004', 'S0401', 'CD0401', 'U0001012', TRUE),
+('C2004', 'S0401', 'CV0401', 'U0001012', TRUE),
+('C2004', 'S0401', 'CT0401', 'U0001012', TRUE),
+('C2004', 'S0402', 'CD0402', 'U0001012', TRUE),
+('C2004', 'S0402', 'CV0402', 'U0001012', TRUE),
+('C2004', 'S0402', 'CT0402', 'U0001012', TRUE),
+('C2002', 'S0201', 'CD0201', 'U0001011', TRUE),
+('C2002', 'S0201', 'CV0201', 'U0001011', TRUE),
+('C2002', 'S0201', 'CT0201', 'U0001011', TRUE),
+('C2002', 'S0202', 'CD0202', 'U0001011', TRUE),
+('C2002', 'S0202', 'CV0202', 'U0001011', TRUE),
+('C2002', 'S0202', 'CT0202', 'U0001011', TRUE);
