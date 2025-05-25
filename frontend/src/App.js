@@ -109,8 +109,8 @@ function App() {
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/my-certificates" element={<ProtectedRoute element={<CertificatesPage />} />} />
 
-        {/* Student Financial Aid */}
-        <Route path="/student/fapplications" element={<ProtectedRoute element={<StudentFinancialAidPage />} />} />
+        {/* NEW — Student Financial Aid page */}
+        <Route path="/student/applications" element={<ProtectedRoute element={<StudentFinancialAidPage />} />} />
 
         {/* Instructor-only routes */}
         <Route path="/instructor/dashboard"

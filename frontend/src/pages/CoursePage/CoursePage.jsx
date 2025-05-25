@@ -757,10 +757,38 @@ const CoursePage = () => {
   return (
     <div className="course-page">
       <header className="main-page-header">
-        {role === 'admin' && <AdminHeader />}
-        {role === 'instructor' && <InstructorHeader />}
-        {role === 'student' && <StudentHeader />}
-      </header>
+  <div className="main-page-header-left">
+    <div className="main-page-logo">
+      <h1 onClick={() => navigate('/home')} style={{cursor: 'pointer'}}>LearnHub</h1>
+    </div>
+    <div className="main-page-nav-links">
+      <a href="/home">Home</a>
+      <a href="/degrees">Online Degrees</a>
+      <a href="/my-learning" className="active">My Learning</a>
+      <a href="/my-certificates">My Certificates</a>
+      <a href="/student/applications">My applications</a>
+    </div>
+  </div>
+  <div className="main-page-header-right">
+    <div className="main-page-search-bar">
+      <input type="text" placeholder="Search in course..." />
+      <button className="main-page-search-button">Search</button>
+    </div>
+    <div 
+      className="notification-button" 
+      onClick={() => navigate('/notifications')} 
+      style={{ cursor: 'pointer' }}
+      title="View notifications"
+    >
+      <span className="notification-icon">🔔</span>
+    </div>
+    <div className="main-page-profile-dropdown">
+      <div className="main-page-profile-icon" onClick={() => navigate('/profile')}>
+        {user.user_id.charAt(0).toUpperCase()}
+      </div>
+    </div>
+  </div>
+</header>
       
       {/* Error Modal */}
       {showErrorModal && (

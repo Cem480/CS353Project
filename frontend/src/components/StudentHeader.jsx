@@ -26,7 +26,7 @@ const StudentHeader = () => {
                     <Link to="/degrees" className={location.pathname === '/degrees' ? 'active' : ''}>Online Degrees</Link>
                     <Link to="/my-learning" className={location.pathname === '/my-learning' ? 'active' : ''}>My Learning</Link>
                     <Link to="/my-certificates" className={location.pathname === '/my-certificates' ? 'active' : ''}>My Certificates</Link>
-                    <Link to="/student/fapplications" className={location.pathname === '/student/fapplications' ? 'active' : ''}>My Fapplications</Link>
+                    <Link to="/student/applications" className={location.pathname === '/student/applications' ? 'active' : ''}>My applications</Link>
                 </div>
             </div>
 
