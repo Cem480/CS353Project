@@ -176,15 +176,6 @@ const MyLearningPage = () => {
             })
           )}
         </div>
-
-        <div className="recommendations-section">
-          <h3 className="section-title">Recommended Next Steps</h3>
-          <div className="recommendations-grid">
-            <div className="recommendation-card"><div className="recommendation-icon">🎯</div><h4>Next Course</h4><p>Advanced JavaScript: From Fundamentals to Functional JS</p><button className="outline-button">Explore</button></div>
-            <div className="recommendation-card"><div className="recommendation-icon">📊</div><h4>Practice Project</h4><p>Build a real-world data visualization project</p><button className="outline-button">Start Project</button></div>
-            <div className="recommendation-card"><div className="recommendation-icon">🏆</div><h4>Get Certified</h4><p>Take the Python for Data Science certification exam</p><button className="outline-button">View Details</button></div>
-          </div>
-        </div>
       </div>
     </div>
   );

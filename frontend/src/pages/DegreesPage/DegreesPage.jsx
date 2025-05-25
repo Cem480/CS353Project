@@ -12,13 +12,13 @@ const DegreesPage = () => {
   const userData = getCurrentUser();
   const initialFetchRef = useRef(false);
   const role = userData?.role;
+  
   // State variables
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
   const [sortOption, setSortOption] = useState("relevance");
@@ -37,7 +37,7 @@ const DegreesPage = () => {
     is_approved: true,
     enrollment_count_min: 0,
     enrollment_count_max: 10000,
-    university: "", // This will map to instructor
+    university: "",
     level: ""
   });
 
@@ -45,47 +45,17 @@ const DegreesPage = () => {
   const [universities, setUniversities] = useState([]);
   const [levels, setLevels] = useState([]);
 
-  // Navigation functions for the navbar
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  const toggleProfileDropdown = () => {
-    setShowProfileDropdown(!showProfileDropdown);
-  };
-
-  const getInitials = () => {
-    if (!userData) return 'U';
-
-    const firstName = userData.first_name || '';
-    const lastName = userData.last_name || '';
-
-    if (firstName && lastName) {
-      return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-    } else if (firstName) {
-      return firstName.charAt(0).toUpperCase();
-    } else if (userData.user_id) {
-      return userData.user_id.charAt(0).toUpperCase();
-    }
-
-    return 'U';
-  };
-
   // Effects
   useEffect(() => {
-    // Redirect to login if no user
     if (!userData) {
       navigate('/login');
       return;
     }
 
-    // Fetch courses only once on initial component mount
     if (!initialFetchRef.current) {
       initialFetchRef.current = true;
       fetchCourses();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, userData]);
 
   // Data fetching
@@ -95,7 +65,6 @@ const DegreesPage = () => {
       setLoading(true);
       setError('');
 
-      // Using the correct endpoint for online degrees
       const response = await axios.get('http://localhost:5001/api/degrees');
       const coursesData = response.data;
 
@@ -108,7 +77,6 @@ const DegreesPage = () => {
       setCourses(coursesData);
       setFilteredCourses(coursesData);
 
-      // Extract unique categories, instructors, and levels
       const uniqueCategories = [...new Set(coursesData.map(course => course.category))].filter(Boolean);
       const uniqueInstructors = [...new Set(coursesData.map(course =>
         course.instructor_name || "Unknown"))].filter(Boolean);
@@ -116,7 +84,7 @@ const DegreesPage = () => {
         course.difficulty_level || "Not specified"))].filter(Boolean);
 
       setCategories(uniqueCategories);
-      setUniversities(uniqueInstructors); // Rename this to instructors in the component
+      setUniversities(uniqueInstructors);
       setLevels(uniqueLevels);
     } catch (err) {
       console.error('Error fetching online degrees:', err);
@@ -131,7 +99,6 @@ const DegreesPage = () => {
     try {
       setLoading(true);
 
-      // Build query parameters
       const params = new URLSearchParams();
 
       if (filters.title) {
@@ -146,7 +113,6 @@ const DegreesPage = () => {
         params.append('category', filters.category);
       }
 
-      // Price parameters
       params.append('min_price', filters.priceMin);
       params.append('max_price', filters.priceMax);
 
@@ -154,7 +120,6 @@ const DegreesPage = () => {
         params.append('free_only', 'true');
       }
 
-      // Date parameters
       if (filters.creation_date_from) {
         params.append('creation_start', filters.creation_date_from);
       }
@@ -171,23 +136,17 @@ const DegreesPage = () => {
         params.append('update_end', filters.last_update_date_to);
       }
 
-      // Enrollment parameters
       params.append('enroll_min', filters.enrollment_count_min);
       params.append('enroll_max', filters.enrollment_count_max);
 
-      // Level parameter
       if (filters.level) {
         params.append('level', filters.level);
       }
 
-      // University (instructor) parameter
       if (filters.university) {
-        // This is a bit trickier since we need to search by instructor name
-        // We'll use the general search parameter
         params.append('search', filters.university);
       }
 
-      // Sort parameter
       if (sortOption === 'newest') {
         params.append('sort', 'newest');
       } else if (sortOption === 'enrollment') {
@@ -200,7 +159,6 @@ const DegreesPage = () => {
         params.append('sort', 'relevance');
       }
 
-      // Make the API call with filters
       const response = await axios.get(`http://localhost:5001/api/degrees?${params.toString()}`);
       const filteredData = response.data;
 
@@ -209,7 +167,7 @@ const DegreesPage = () => {
       }
 
       setFilteredCourses(filteredData);
-      setCurrentPage(1); // Reset to first page when filters change
+      setCurrentPage(1);
 
     } catch (err) {
       console.error('Error applying filters:', err);
@@ -228,28 +186,6 @@ const DegreesPage = () => {
     }));
   };
 
-  const clearFilters = () => {
-    setFilters({
-      title: "",
-      description: "",
-      category: "",
-      priceMin: 0,
-      priceMax: 20000,
-      is_free: false,
-      creation_date_from: "",
-      creation_date_to: "",
-      last_update_date_from: "",
-      last_update_date_to: "",
-      is_approved: true,
-      enrollment_count_min: 0,
-      enrollment_count_max: 10000,
-      university: "",
-      level: ""
-    });
-    fetchCourses(); // Refetch courses without filters
-    setCurrentPage(1);
-  };
-
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
@@ -258,8 +194,6 @@ const DegreesPage = () => {
   const handleSortChange = (e) => {
     const sortValue = e.target.value;
     setSortOption(sortValue);
-
-    // Apply current filters with new sort option
     applyFilters();
   };
 
@@ -316,7 +250,6 @@ const DegreesPage = () => {
         {role === 'admin' && <AdminHeader />}
         {role === 'instructor' && <InstructorHeader />}
         {role === 'student' && <StudentHeader />}
-
       </header>
 
       <div className="degrees-container">
@@ -391,19 +324,38 @@ const DegreesPage = () => {
 
             <div className="filter-group">
               <h4>Price</h4>
-              <div className="price-range">
-                <input
-                  type="range"
-                  name="priceMax"
-                  min="0"
-                  max="20000"
-                  step="500"
-                  value={filters.priceMax}
-                  onChange={handleFilterChange}
-                />
-                <div className="price-range-labels">
-                  <span>$0</span>
-                  <span>${filters.priceMax.toLocaleString()}</span>
+              <div className="range-inputs">
+                <div className="range-input-group">
+                  <label>Minimum Price</label>
+                  <input
+                    type="range"
+                    name="priceMin"
+                    min="0"
+                    max="20000"
+                    step="50"
+                    value={filters.priceMin}
+                    onChange={handleFilterChange}
+                  />
+                  <div className="price-range-labels">
+                    <span>$0</span>
+                    <span>${filters.priceMin.toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="range-input-group">
+                  <label>Maximum Price</label>
+                  <input
+                    type="range"
+                    name="priceMax"
+                    min="0"
+                    max="20000"
+                    step="50"
+                    value={filters.priceMax}
+                    onChange={handleFilterChange}
+                  />
+                  <div className="price-range-labels">
+                    <span>$0</span>
+                    <span>${filters.priceMax.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
               <div className="checkbox-group">
@@ -460,19 +412,38 @@ const DegreesPage = () => {
 
             <div className="filter-group">
               <h4>Enrollment Count</h4>
-              <div className="enrollment-range">
-                <input
-                  type="range"
-                  name="enrollment_count_max"
-                  min="0"
-                  max="10000"
-                  step="500"
-                  value={filters.enrollment_count_max}
-                  onChange={handleFilterChange}
-                />
-                <div className="enrollment-range-labels">
-                  <span>0</span>
-                  <span>{filters.enrollment_count_max.toLocaleString()}</span>
+              <div className="range-inputs">
+                <div className="range-input-group">
+                  <label>Minimum Enrollment</label>
+                  <input
+                    type="range"
+                    name="enrollment_count_min"
+                    min="0"
+                    max="10000"
+                    step="10"
+                    value={filters.enrollment_count_min}
+                    onChange={handleFilterChange}
+                  />
+                  <div className="enrollment-range-labels">
+                    <span>0</span>
+                    <span>{filters.enrollment_count_min.toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="range-input-group">
+                  <label>Maximum Enrollment</label>
+                  <input
+                    type="range"
+                    name="enrollment_count_max"
+                    min="0"
+                    max="10000"
+                    step="10"
+                    value={filters.enrollment_count_max}
+                    onChange={handleFilterChange}
+                  />
+                  <div className="enrollment-range-labels">
+                    <span>0</span>
+                    <span>{filters.enrollment_count_max.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             </div>
