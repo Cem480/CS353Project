@@ -41,7 +41,7 @@ CREATE TABLE student (
     account_status VARCHAR(20),
     certificate_count INTEGER DEFAULT 0 CHECK (certificate_count >= 0),
     PRIMARY KEY (id),
-    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE
+    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
@@ -49,7 +49,7 @@ CREATE TABLE admin (
     id VARCHAR(8),
     report_count INTEGER DEFAULT 0 CHECK (report_count >= 0) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE
+    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE instructor (
@@ -57,7 +57,7 @@ CREATE TABLE instructor (
     i_rating FLOAT CHECK (i_rating BETWEEN 0 AND 5),
     course_count INTEGER DEFAULT 0 CHECK (course_count >= 0),
     PRIMARY KEY (id),
-    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE
+    FOREIGN KEY (id) REFERENCES "user"(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 

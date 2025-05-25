@@ -112,7 +112,7 @@ GROUP BY month
 ORDER BY month;
 """
 # ────────────────────────────────────────────────────────────────────────────────
-# SQL: Top-3 students overall (with name & major)
+# SQL: Top-3 students overall (with name & major) students who have at least completed one course
 # ────────────────────────────────────────────────────────────────────────────────
 STUDENT_TOP_SQL = """
 WITH stats AS (
@@ -122,6 +122,7 @@ WITH stats AS (
            AVG(e.progress_rate) AS avg_progress
     FROM student s
     LEFT JOIN enroll e ON e.student_id = s.id
+    WHERE s.id IN (SELECT student_id FROM enroll WHERE progress_rate = 100) 
     GROUP BY s.id, s.certificate_count
 ),
 scores AS (
@@ -225,6 +226,7 @@ major_stats AS (
   FROM months m
   CROSS JOIN student s
   GROUP BY m.m, s.major
+  HAVING COUNT(*) >= 1
 ),
 
 age_stats AS (
