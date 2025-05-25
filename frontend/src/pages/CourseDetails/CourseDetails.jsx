@@ -228,7 +228,7 @@ const CourseDetails = () => {
   const course = courseInfo || {};
   const title = course.title || 'Course Title';
   const description = course.description || 'No course description available.';
-  const university = course.creator_id ? `Instructor ID: ${course.creator_id}` : 'University';
+  const university = course.first_name ? `Instructor: ${course.first_name + " " + course.last_name}` : 'University';
   const level = course.difficulty_level
     ? `Level ${course.difficulty_level}`
     : 'Not specified';
@@ -383,7 +383,7 @@ const CourseDetails = () => {
                   {course.is_free ? 'Enroll Now' : 'Continue with Payment'}
                 </button>
 
-                {!hasAppliedForAid && (
+                {!hasAppliedForAid && !course.is_free && (
                   <button className="course-details-financial-aid-button" onClick={handleFinancialAid}>
                     Financial Aid Available
                   </button>
