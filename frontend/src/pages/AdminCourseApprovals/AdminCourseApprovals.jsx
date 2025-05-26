@@ -68,7 +68,6 @@ const AdminCourseApprovals = () => {
                   <div className="approval-actions">
                     <button className="approve-btn" onClick={() => handleEvaluation(course.course_id, true)}>Approve</button>
                     <button className="reject-btn" onClick={() => handleEvaluation(course.course_id, false)}>Reject</button>
-                    <button className="details-btn" onClick={() => navigate(`/admin/course-details/${course.course_id}`)}>Details</button>
                   </div>
                 </div>
               ))}
